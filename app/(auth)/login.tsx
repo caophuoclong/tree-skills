@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,7 +13,8 @@ import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Button } from '@/src/ui/atoms/Button';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { UserProgress } from '@/src/business-logic/types';
 
@@ -29,10 +30,13 @@ const MOCK_USER: UserProgress = {
   best_streak: 0,
   stamina: 100,
   last_active_date: null,
+  last_login_at: new Date().toISOString(),
   onboarding_done: false,
 };
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,7 +68,7 @@ export default function LoginScreen() {
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <AppText variant="bodyLG" color={Colors.textSecondary}>
+            <AppText variant="bodyLG" color={colors.textSecondary}>
               ← Quay lại
             </AppText>
           </TouchableOpacity>
@@ -73,14 +77,14 @@ export default function LoginScreen() {
             <AppText variant="displayXL" style={styles.title}>
               Đăng nhập
             </AppText>
-            <AppText variant="bodyLG" color={Colors.textSecondary}>
+            <AppText variant="bodyLG" color={colors.textSecondary}>
               Chào mừng bạn trở lại!
             </AppText>
           </View>
 
           <View style={styles.form}>
             <View style={styles.fieldGroup}>
-              <AppText variant="caption" color={Colors.textMuted} style={styles.fieldLabel}>
+              <AppText variant="caption" color={colors.textMuted} style={styles.fieldLabel}>
                 EMAIL
               </AppText>
               <TextInput
@@ -88,7 +92,7 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="email@example.com"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -97,7 +101,7 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.fieldGroup}>
-              <AppText variant="caption" color={Colors.textMuted} style={styles.fieldLabel}>
+              <AppText variant="caption" color={colors.textMuted} style={styles.fieldLabel}>
                 MẬT KHẨU
               </AppText>
               <TextInput
@@ -105,7 +109,7 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 secureTextEntry
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
@@ -125,11 +129,11 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.footer}>
-            <AppText variant="body" color={Colors.textSecondary}>
+            <AppText variant="body" color={colors.textSecondary}>
               Chưa có tài khoản?{' '}
             </AppText>
             <TouchableOpacity onPress={() => router.replace('/(auth)/register')}>
-              <AppText variant="body" color={Colors.brandPrimary} style={styles.link}>
+              <AppText variant="body" color={colors.brandPrimary} style={styles.link}>
                 Đăng ký
               </AppText>
             </TouchableOpacity>
@@ -140,10 +144,10 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   kav: {
     flex: 1,
@@ -165,7 +169,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   title: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   form: {
     gap: Spacing.lg,
@@ -180,18 +184,18 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 56,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.md,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     fontSize: 16,
     fontFamily: 'Inter-Regular',
   },
   submitBtn: {
     marginTop: Spacing.sm,
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 12,

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, Pressable } from 'react-native';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { Alert, Animated, Easing, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
 import { useGrowthStreak } from '@/src/business-logic/hooks/useGrowthStreak';
@@ -9,8 +9,9 @@ import { useStaminaSystem } from '@/src/business-logic/hooks/useStaminaSystem';
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
 import { getDemoNodes } from '@/src/business-logic/data/skill-tree-nodes';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import type { Branch } from '@/src/business-logic/types';
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -34,12 +35,12 @@ function useBranchProgress() {
   });
 }
 
-const BRANCH_COLORS: Record<string, string> = {
-  career: Colors.career,
-  finance: Colors.finance,
-  softskills: Colors.softskills,
-  wellbeing: Colors.wellbeing,
-};
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
 
 // ─── Progress Ring ────────────────────────────────────────────────────────────
 
@@ -50,6 +51,9 @@ interface ProgressRingProps {
 }
 
 function ProgressRing({ percent, color, label }: ProgressRingProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.ringWrapper}>
       <View
@@ -73,9 +77,77 @@ function ProgressRing({ percent, color, label }: ProgressRingProps) {
   );
 }
 
+// ─── XP Shimmer Bar ───────────────────────────────────────────────────────────
+
+function XPShimmerBar({ percent, color }: { percent: number; color: string }) {
+  const shimmerAnim = useRef(new Animated.Value(-1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 2,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmerAnim]);
+
+  const translateX = shimmerAnim.interpolate({
+    inputRange: [-1, 2],
+    outputRange: [-120, 120],
+  });
+
+  return (
+    <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden', marginTop: 8 }}>
+      {/* Fill */}
+      <View
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: `${percent}%`,
+          backgroundColor: color,
+          borderRadius: 3,
+        }}
+      />
+      {/* Shimmer overlay — only visible over the filled portion */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: `${percent}%`,
+          overflow: 'hidden',
+          borderRadius: 3,
+        }}
+      >
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            width: 60,
+            backgroundColor: 'rgba(255,255,255,0.35)',
+            transform: [{ translateX }, { skewX: '-20deg' }],
+          }}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BRANCH_COLORS = useMemo(() => getBranchColors(colors), [colors]);
+
   const { user } = useUserStore();
   const { quests } = useQuestManager();
   const { streak } = useGrowthStreak();
@@ -112,9 +184,9 @@ export default function HomeScreen() {
 
   // Mock notifications
   const notifications = [
-    { id: 1, title: 'Chuỗi mới!', body: 'Bạn đã đạt chuỗi 3 ngày liên tiếp. Tiếp tục phát huy nhé!', time: '2h trước', icon: 'flame', color: Colors.warning },
-    { id: 2, title: 'Nhiệm vụ mới', body: '3 nhiệm vụ Sự nghiệp đã được làm mới.', time: '5h trước', icon: 'flash', color: Colors.career },
-    { id: 3, title: 'Nhắc nhở', body: 'Đừng quên check-in tâm trạng hôm nay.', time: '1 ngày trước', icon: 'happy', color: Colors.wellbeing },
+    { id: 1, title: 'Chuỗi mới!', body: 'Bạn đã đạt chuỗi 3 ngày liên tiếp. Tiếp tục phát huy nhé!', time: '2h trước', icon: 'flame', color: colors.warning },
+    { id: 2, title: 'Nhiệm vụ mới', body: '3 nhiệm vụ Sự nghiệp đã được làm mới.', time: '5h trước', icon: 'flash', color: colors.career },
+    { id: 3, title: 'Nhắc nhở', body: 'Đừng quên check-in tâm trạng hôm nay.', time: '1 ngày trước', icon: 'happy', color: colors.wellbeing },
   ];
 
   return (
@@ -143,14 +215,14 @@ export default function HomeScreen() {
               onPress={() => setNotifVisible(true)}
               activeOpacity={0.7}
             >
-              <Ionicons name="notifications-outline" size={22} color={Colors.textSecondary} />
+              <Ionicons name="notifications-outline" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.iconBtn}
               onPress={() => Alert.alert('Cài đặt', 'Tính năng đang được phát triển.')}
               activeOpacity={0.7}
             >
-              <Ionicons name="settings-outline" size={22} color={Colors.textSecondary} />
+              <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -163,38 +235,38 @@ export default function HomeScreen() {
             {/* Left card: 2x2 progress rings */}
             <View style={[styles.bentoCard, styles.bentoCardLeft]}>
               <View style={styles.ringsGrid}>
-                <ProgressRing percent={careerPct} color={Colors.career} label="Sự nghiệp" />
-                <ProgressRing percent={financePct} color={Colors.finance} label="Tài chính" />
-                <ProgressRing percent={softskillsPct} color={Colors.softskills} label="Kỹ năng" />
-                <ProgressRing percent={wellbeingPct} color={Colors.wellbeing} label="Sức khỏe" />
+                <ProgressRing percent={careerPct} color={colors.career} label="Sự nghiệp" />
+                <ProgressRing percent={financePct} color={colors.finance} label="Tài chính" />
+                <ProgressRing percent={softskillsPct} color={colors.softskills} label="Kỹ năng" />
+                <ProgressRing percent={wellbeingPct} color={colors.wellbeing} label="Sức khỏe" />
               </View>
             </View>
 
             {/* Right column */}
             <View style={styles.bentoRight}>
               {/* Streak card */}
-              <View style={[styles.bentoCard, styles.bentoCardSmall, { borderColor: `${Colors.warning}40` }]}>
-                <View style={[styles.accentBar, { backgroundColor: Colors.warning }]} />
+              <View style={[styles.bentoCard, styles.bentoCardSmall, { borderColor: `${colors.warning}40` }]}>
+                <View style={[styles.accentBar, { backgroundColor: colors.warning }]} />
                 <Text style={styles.streakFire}>🔥</Text>
                 <Text style={styles.streakNumber}>{streak || 12}</Text>
                 <Text style={styles.streakLabel}>CHUỖI NGÀY</Text>
               </View>
 
               {/* Mental Energy card */}
-              <View style={[styles.bentoCard, styles.bentoCardSmall, { borderColor: `${Colors.finance}40` }]}>
-                <View style={[styles.accentBar, { backgroundColor: Colors.finance }]} />
+              <View style={[styles.bentoCard, styles.bentoCardSmall, { borderColor: `${colors.finance}40` }]}>
+                <View style={[styles.accentBar, { backgroundColor: colors.finance }]} />
                 <Text style={styles.energyLabel}>⚡ NĂNG LƯỢNG TINH THẦN</Text>
                 <View style={styles.energyBarTrack}>
                   <View
                     style={[
                       styles.energyBarFill,
-                      { width: `${stamina}%` as any, backgroundColor: stamina < 30 ? Colors.danger : stamina < 70 ? Colors.warning : Colors.finance },
+                      { width: `${stamina}%` as any, backgroundColor: stamina < 30 ? colors.danger : stamina < 70 ? colors.warning : colors.finance },
                     ]}
                   />
                 </View>
                 <View style={styles.energyInfoRow}>
                   <Text style={styles.energyLabelSmall}>THỂ LỰC</Text>
-                  <Text style={[styles.energyPercent, { color: stamina < 30 ? Colors.danger : stamina < 70 ? Colors.warning : Colors.finance }]}>{stamina}%</Text>
+                  <Text style={[styles.energyPercent, { color: stamina < 30 ? colors.danger : stamina < 70 ? colors.warning : colors.finance }]}>{stamina}%</Text>
                 </View>
               </View>
             </View>
@@ -208,15 +280,15 @@ export default function HomeScreen() {
               <Text style={styles.card2Number}>{pendingCount || 3}</Text>
               <Text style={styles.card2Sub}>Đang chờ</Text>
               <View style={styles.dotRow}>
-                <View style={[styles.dot, { backgroundColor: Colors.career }]} />
-                <View style={[styles.dot, { backgroundColor: Colors.finance }]} />
-                <View style={[styles.dot, { backgroundColor: Colors.wellbeing }]} />
+                <View style={[styles.dot, { backgroundColor: colors.career }]} />
+                <View style={[styles.dot, { backgroundColor: colors.finance }]} />
+                <View style={[styles.dot, { backgroundColor: colors.wellbeing }]} />
               </View>
             </View>
 
             {/* Experience card */}
-            <View style={[styles.bentoCard, styles.bentoCard2Right, { borderColor: `${Colors.brandPrimary}40` }]}>
-              <View style={[styles.accentBar, { backgroundColor: Colors.brandPrimary }]} />
+            <View style={[styles.bentoCard, styles.bentoCard2Right, { borderColor: `${colors.brandPrimary}40` }]}>
+              <View style={[styles.accentBar, { backgroundColor: colors.brandPrimary }]} />
               <View style={styles.xpHeaderRow}>
                 <Text style={styles.card2Label}>KINH NGHIỆM</Text>
                 <View style={styles.levelPill}>
@@ -227,11 +299,7 @@ export default function HomeScreen() {
                 {currentXP.toLocaleString()} / {targetXP.toLocaleString()} XP
               </Text>
               <Text style={styles.xpNextLabel}>TIẾP THEO: CẤP {level + 1}</Text>
-              <View style={styles.xpBarTrack}>
-                <View
-                  style={[styles.xpBarFill, { width: `${xpPercent}%` as any }]}
-                />
-              </View>
+              <XPShimmerBar percent={xpPercent} color={colors.brandPrimary} />
               <Text style={styles.xpUntilLabel}>
                 Còn {targetXP - currentXP} XP nữa để lên cấp
               </Text>
@@ -274,7 +342,7 @@ export default function HomeScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.miniQuestContent}>
-                <View style={[styles.miniQuestDot, { backgroundColor: BRANCH_COLORS[quest.branch] ?? Colors.brandPrimary }]} />
+                <View style={[styles.miniQuestDot, { backgroundColor: BRANCH_COLORS[quest.branch] ?? colors.brandPrimary }]} />
                 <Text style={styles.miniQuestTitle} numberOfLines={1}>{quest.title}</Text>
               </View>
               <View style={styles.miniQuestXP}>
@@ -302,7 +370,7 @@ export default function HomeScreen() {
             <View style={styles.notifHeader}>
               <Text style={styles.notifHeaderTitle}>Thông báo</Text>
               <TouchableOpacity onPress={() => setNotifVisible(false)}>
-                <Ionicons name="close-circle" size={28} color={Colors.textMuted} />
+                <Ionicons name="close-circle" size={28} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
             
@@ -329,10 +397,10 @@ export default function HomeScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   scroll: {
     flex: 1,
@@ -361,16 +429,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   avatarInitials: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
   },
   avatarMeta: {
     gap: 2,
@@ -378,14 +446,14 @@ const styles = StyleSheet.create({
   levelLabel: {
     fontSize: 9,
     fontWeight: '700',
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   userName: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   headerIcons: {
     flexDirection: 'row',
@@ -405,7 +473,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -473,7 +541,7 @@ const styles = StyleSheet.create({
   },
   ringLabel: {
     fontSize: 10,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
   },
@@ -485,13 +553,13 @@ const styles = StyleSheet.create({
   streakNumber: {
     fontSize: 30,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 34,
   },
   streakLabel: {
     fontSize: 9,
     fontWeight: '700', // Stronger hierarchy
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginTop: 2,
@@ -501,27 +569,27 @@ const styles = StyleSheet.create({
   energyLabel: {
     fontSize: 9,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
   energyBarTrack: {
     height: 4,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 4,
   },
   energyBarFill: {
     height: 4,
-    backgroundColor: Colors.finance,
+    backgroundColor: colors.finance,
     borderRadius: 2,
   },
   energyPercent: {
     fontSize: 10,
     fontWeight: '700',
-    color: Colors.finance,
+    color: colors.finance,
   },
   energyInfoRow: {
     flexDirection: 'row',
@@ -532,7 +600,7 @@ const styles = StyleSheet.create({
   energyLabelSmall: {
     fontSize: 8,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
 
   // Bento row 2
@@ -551,7 +619,7 @@ const styles = StyleSheet.create({
   card2Label: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: 4,
@@ -559,12 +627,12 @@ const styles = StyleSheet.create({
   card2Number: {
     fontSize: 32,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 36,
   },
   card2Sub: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   dotRow: {
@@ -586,7 +654,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   levelPill: {
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -599,29 +667,29 @@ const styles = StyleSheet.create({
   xpValue: {
     fontSize: 16, // Larger for Clash Display effect
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: 8,
   },
   xpNextLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   xpBarTrack: {
     height: 4,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 2,
     overflow: 'hidden',
     marginTop: 8,
   },
   xpBarFill: {
     height: 4,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 2,
   },
   xpUntilLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 4,
   },
 
@@ -630,7 +698,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderRadius: 16,
     padding: 16,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -672,19 +740,19 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
     marginBottom: 8,
   },
   miniQuestCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   miniQuestContent: {
     flexDirection: 'row',
@@ -700,7 +768,7 @@ const styles = StyleSheet.create({
   miniQuestTitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
   },
   miniQuestXP: {
@@ -712,7 +780,7 @@ const styles = StyleSheet.create({
   miniQuestXPText: {
     fontSize: 10,
     fontWeight: '700',
-    color: Colors.softskills,
+    color: colors.softskills,
   },
 
   // Bottom
@@ -726,13 +794,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   notifContent: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 24,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   notifHeader: {
     flexDirection: 'row',
@@ -743,7 +811,7 @@ const styles = StyleSheet.create({
   notifHeaderTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   notifItem: {
     flexDirection: 'row',
@@ -766,16 +834,16 @@ const styles = StyleSheet.create({
   notifTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   notifBody: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   notifTime: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
 });

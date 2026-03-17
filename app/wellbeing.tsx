@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -13,8 +13,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { AppText } from '@/src/ui/atoms/Text';
 import { GlassView } from '@/src/ui/atoms/GlassView';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
+
 
 const HOTLINE = '1800 599 920';
 
@@ -33,6 +34,8 @@ const CRISIS_RESOURCES = [
 ];
 
 export default function WellbeingScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const handleCopyHotline = () => {
     Alert.alert('Số điện thoại', HOTLINE, [{ text: 'Đóng' }]);
   };
@@ -53,9 +56,9 @@ export default function WellbeingScreen() {
           style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </Pressable>
-        <AppText variant="title" color={Colors.textPrimary} style={styles.headerTitle}>
+        <AppText variant="title" color={colors.textPrimary} style={styles.headerTitle}>
           Sức khoẻ Tinh Thần
         </AppText>
         <View style={styles.headerSpacer} />
@@ -69,10 +72,10 @@ export default function WellbeingScreen() {
         {/* Hero Section */}
         <View style={styles.heroCard}>
           <AppText style={styles.heroEmoji}>💚</AppText>
-          <AppText variant="displayLG" color={Colors.textPrimary} style={styles.heroTitle}>
+          <AppText variant="displayLG" color={colors.textPrimary} style={styles.heroTitle}>
             Bạn không đơn độc
           </AppText>
-          <AppText variant="body" color={Colors.textSecondary} style={styles.heroSubtitle}>
+          <AppText variant="body" color={colors.textSecondary} style={styles.heroSubtitle}>
             Sức khoẻ tinh thần quan trọng như sức khoẻ thể chất
           </AppText>
         </View>
@@ -82,10 +85,10 @@ export default function WellbeingScreen() {
           <View style={styles.hotlineTop}>
             <AppText style={styles.hotlineEmoji}>📞</AppText>
             <View style={styles.hotlineInfo}>
-              <AppText variant="body" color={Colors.textPrimary} style={styles.hotlineHeading}>
+              <AppText variant="body" color={colors.textPrimary} style={styles.hotlineHeading}>
                 Đường dây hỗ trợ tâm lý 24/7
               </AppText>
-              <AppText variant="micro" color={Colors.textMuted}>
+              <AppText variant="micro" color={colors.textMuted}>
                 Miễn phí · Bảo mật · Luôn sẵn sàng
               </AppText>
             </View>
@@ -95,12 +98,12 @@ export default function WellbeingScreen() {
             style={({ pressed }) => [styles.phoneNumberWrap, pressed && styles.phoneNumberPressed]}
             onPress={handleCopyHotline}
           >
-            <AppText variant="displayLG" color={Colors.success} style={styles.phoneNumber}>
+            <AppText variant="displayLG" color={colors.success} style={styles.phoneNumber}>
               {HOTLINE}
             </AppText>
             <View style={styles.copyHint}>
-              <Ionicons name="copy-outline" size={14} color={Colors.textMuted} />
-              <AppText variant="micro" color={Colors.textMuted}>
+              <Ionicons name="copy-outline" size={14} color={colors.textMuted} />
+              <AppText variant="micro" color={colors.textMuted}>
                 Nhấn để sao chép
               </AppText>
             </View>
@@ -119,17 +122,17 @@ export default function WellbeingScreen() {
 
         {/* Self-care Tips */}
         <View style={styles.section}>
-          <AppText variant="title" color={Colors.textPrimary} style={styles.sectionTitle}>
+          <AppText variant="title" color={colors.textPrimary} style={styles.sectionTitle}>
             Chăm sóc bản thân
           </AppText>
           <View style={styles.tipsGrid}>
             {SELF_CARE_TIPS.map((tip) => (
               <GlassView key={tip.title} style={styles.tipCard}>
                 <AppText style={styles.tipEmoji}>{tip.emoji}</AppText>
-                <AppText variant="body" color={Colors.textPrimary} style={styles.tipTitle}>
+                <AppText variant="body" color={colors.textPrimary} style={styles.tipTitle}>
                   {tip.title}
                 </AppText>
-                <AppText variant="micro" color={Colors.textMuted} style={styles.tipDesc}>
+                <AppText variant="micro" color={colors.textMuted} style={styles.tipDesc}>
                   {tip.description}
                 </AppText>
               </GlassView>
@@ -139,7 +142,7 @@ export default function WellbeingScreen() {
 
         {/* Crisis Resources */}
         <GlassView style={styles.crisisCard}>
-          <AppText variant="title" color={Colors.textPrimary} style={styles.sectionTitle}>
+          <AppText variant="title" color={colors.textPrimary} style={styles.sectionTitle}>
             Khi cần giúp đỡ khẩn cấp
           </AppText>
           {CRISIS_RESOURCES.map((resource) => (
@@ -150,22 +153,22 @@ export default function WellbeingScreen() {
             >
               <AppText style={styles.crisisEmoji}>{resource.emoji}</AppText>
               <View style={styles.crisisInfo}>
-                <AppText variant="body" color={Colors.textPrimary} style={styles.crisisLabel}>
+                <AppText variant="body" color={colors.textPrimary} style={styles.crisisLabel}>
                   {resource.label}
                 </AppText>
-                <AppText variant="micro" color={Colors.textMuted}>
+                <AppText variant="micro" color={colors.textMuted}>
                   {resource.sublabel}
                 </AppText>
               </View>
               {resource.number && (
-                <Ionicons name="call-outline" size={18} color={Colors.success} />
+                <Ionicons name="call-outline" size={18} color={colors.success} />
               )}
             </Pressable>
           ))}
         </GlassView>
 
         {/* Disclaimer */}
-        <AppText variant="micro" color={Colors.textMuted} style={styles.disclaimer}>
+        <AppText variant="micro" color={colors.textMuted} style={styles.disclaimer}>
           Ứng dụng này không thay thế cho tư vấn chuyên nghiệp. Nếu bạn đang trong tình trạng khủng hoảng, hãy tìm kiếm sự giúp đỡ ngay lập tức.
         </AppText>
 
@@ -184,10 +187,10 @@ export default function WellbeingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
 
   // Header
@@ -206,7 +209,7 @@ const styles = StyleSheet.create({
   },
   backBtnPressed: {
     opacity: 0.6,
-    backgroundColor: Colors.glassBg,
+    backgroundColor: colors.glassBg,
   },
   headerTitle: {
     flex: 1,
@@ -242,7 +245,7 @@ const styles = StyleSheet.create({
   // Hotline Card
   hotlineCard: {
     padding: Spacing.lg,
-    borderColor: `${Colors.success}40`,
+    borderColor: `${colors.success}40`,
     borderWidth: 1.5,
     gap: Spacing.md,
   },
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
     borderRadius: Radius.md,
     paddingVertical: Spacing.md,
   },
@@ -327,7 +330,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.wellbeing,
+    backgroundColor: colors.wellbeing,
     borderRadius: Radius.md,
     paddingVertical: Spacing.md,
     marginTop: Spacing.sm,

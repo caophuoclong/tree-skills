@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Animated,
   ScrollView,
@@ -12,17 +12,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import type { Quest } from '@/src/business-logic/types';
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const BRANCH_COLORS: Record<string, string> = {
-  career: Colors.career,
-  finance: Colors.finance,
-  softskills: Colors.softskills,
-  wellbeing: Colors.wellbeing,
-};
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
 
 const BRANCH_LABELS: Record<string, string> = {
   career: 'SỰ NGHIỆP',
@@ -40,13 +41,13 @@ const BRANCH_CATEGORY_LABELS: Record<string, string> = {
 
 const WHY_TEXT: Record<string, string> = {
   career:
-    'Building professional connections is one of the highest ROI activities for career growth. Most opportunities come through people you know, not job boards.',
+    'Xây dựng kết nối chuyên nghiệp là một trong những hoạt động mang lại giá trị cao nhất cho sự nghiệp. Hầu hết cơ hội đến từ những người bạn quen biết, không phải từ các trang tuyển dụng.',
   finance:
-    'Financial habits compound over time. Small consistent actions today create the freedom to make bigger choices tomorrow.',
+    'Thói quen tài chính tích lũy theo thời gian. Những hành động nhỏ nhất quán hôm nay tạo ra tự do để đưa ra những lựa chọn lớn hơn vào ngày mai.',
   softskills:
-    'Communication skills are the multiplier for all other skills. Improving how you connect with others unlocks exponential growth.',
+    'Kỹ năng giao tiếp là hệ số nhân cho tất cả các kỹ năng khác. Cải thiện cách bạn kết nối với mọi người sẽ mở ra tăng trưởng vượt bậc trong mọi lĩnh vực.',
   wellbeing:
-    'Your mental and physical state directly affects every other area of your life. Investing in wellbeing is investing in your overall performance.',
+    'Trạng thái tinh thần và thể chất ảnh hưởng trực tiếp đến mọi lĩnh vực khác trong cuộc sống. Đầu tư vào sức khỏe chính là đầu tư vào hiệu suất tổng thể của bạn.',
 };
 
 const RESOURCES: Record<string, { label: string; url: string }[]> = {
@@ -68,7 +69,85 @@ const RESOURCES: Record<string, { label: string; url: string }[]> = {
   ],
 };
 
-function parseSteps(description: string): string[] {
+const QUEST_STEPS: Record<string, string[]> = {
+  // Career – easy
+  career_easy: [
+    'Tìm một không gian yên tĩnh và tắt thông báo điện thoại.',
+    'Thực hiện nhiệm vụ theo mô tả, ghi chú những điều bạn học được.',
+    'Lưu kết quả lại — ảnh chụp màn hình, ghi chú, hoặc file.',
+  ],
+  career_medium: [
+    'Đọc kỹ yêu cầu và chuẩn bị môi trường làm việc phù hợp.',
+    'Thực hiện từng bước theo mô tả nhiệm vụ một cách có chủ đích.',
+    'Ghi lại ít nhất 1 điều bạn học được hoặc cải thiện được.',
+    'Lưu kết quả và đánh dấu hoàn thành.',
+  ],
+  career_hard: [
+    'Dành 5 phút đọc kỹ yêu cầu và lên kế hoạch thực hiện.',
+    'Thực hiện phần chính của nhiệm vụ — tập trung 100%, không multitask.',
+    'Rà soát lại kết quả và điều chỉnh nếu cần.',
+    'Ghi chú 2-3 điều rút ra được và lưu sản phẩm cuối cùng.',
+  ],
+  finance_easy: [
+    'Mở ứng dụng ghi chú hoặc sổ tay.',
+    'Thực hiện nhiệm vụ theo mô tả — không cần hoàn hảo, bắt đầu là đủ.',
+    'Lưu lại kết quả để theo dõi tiến độ sau này.',
+  ],
+  finance_medium: [
+    'Tập hợp các thông tin cần thiết trước khi bắt đầu.',
+    'Thực hiện từng bước theo mô tả một cách cẩn thận.',
+    'Kiểm tra lại con số hoặc thông tin vừa nhập.',
+    'Ghi lại nhận xét của bạn về kết quả.',
+  ],
+  finance_hard: [
+    'Dành 5 phút lên kế hoạch và xác định nguồn thông tin cần dùng.',
+    'Thực hiện phần phân tích hoặc hành động chính của nhiệm vụ.',
+    'Đánh giá kết quả và so sánh với mục tiêu ban đầu.',
+    'Viết tóm tắt ngắn gọn những gì bạn đã thực hiện và học được.',
+  ],
+  softskills_easy: [
+    'Sẵn sàng tinh thần — thư giãn và tập trung vào hiện tại.',
+    'Thực hiện nhiệm vụ theo mô tả — chú ý cảm xúc và phản ứng của bạn.',
+    'Phản chiếu 1-2 phút sau khi hoàn thành.',
+  ],
+  softskills_medium: [
+    'Đọc kỹ yêu cầu và hình dung tình huống thực tế.',
+    'Thực hành kỹ năng theo từng bước được mô tả.',
+    'Nhận xét bản thân: điều gì làm tốt, điều gì cần cải thiện?',
+    'Ghi lại 1 hành động cụ thể để cải thiện lần sau.',
+  ],
+  softskills_hard: [
+    'Chuẩn bị không gian và tâm trạng phù hợp để thực hành.',
+    'Thực hiện bài tập kỹ năng một cách có ý thức và chú tâm.',
+    'Thu thập phản hồi nếu có (từ người khác hoặc tự ghi âm/ghi hình).',
+    'Phân tích điểm mạnh và điểm yếu dựa trên phản hồi.',
+    'Lên kế hoạch luyện tập thêm 1 lần trong tuần này.',
+  ],
+  wellbeing_easy: [
+    'Tìm không gian thoải mái, yên tĩnh.',
+    'Thực hiện nhiệm vụ chậm rãi, không vội vàng.',
+    'Chú ý cảm giác của cơ thể và tâm trí trong lúc thực hiện.',
+  ],
+  wellbeing_medium: [
+    'Đặt điện thoại sang một bên và tạo không gian yên tĩnh.',
+    'Thực hiện từng bước theo mô tả với sự chú tâm đầy đủ.',
+    'Dành 2-3 phút cuối để ngồi yên và cảm nhận sự khác biệt.',
+    'Ghi lại cảm nhận của bạn — điều này rất quan trọng cho việc theo dõi tiến trình.',
+  ],
+  wellbeing_hard: [
+    'Chuẩn bị môi trường: tắt thông báo, chuẩn bị nước uống nếu cần.',
+    'Thực hiện phần chính của nhiệm vụ một cách trọn vẹn.',
+    'Nghỉ ngơi 2 phút giữa chừng nếu cảm thấy mệt.',
+    'Hoàn thành phần còn lại và ghi lại cảm nhận sau khi xong.',
+    'Đặt lịch nhắc để lặp lại hoạt động này ít nhất 2 lần/tuần.',
+  ],
+};
+
+function parseSteps(description: string, branch?: string, difficulty?: string): string[] {
+  const key = `${branch ?? 'career'}_${difficulty ?? 'easy'}`;
+  const steps = QUEST_STEPS[key];
+  if (steps) return steps;
+  // fallback: split description into sentences
   const sentences = description
     .split(/[.!?]+/)
     .map((s) => s.trim())
@@ -79,6 +158,10 @@ function parseSteps(description: string): string[] {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function QuestDetailScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BRANCH_COLORS = useMemo(() => getBranchColors(colors), [colors]);
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { quests, completeQuest } = useQuestManager();
   const xpAnim = React.useRef(new Animated.Value(0)).current;
@@ -89,7 +172,7 @@ export default function QuestDetailScreen() {
 
   const isCompleted = quest ? quest.completed_at !== null : false;
   const branchColor =
-    quest ? (BRANCH_COLORS[quest.branch] ?? Colors.brandPrimary) : Colors.brandPrimary;
+    quest ? (BRANCH_COLORS[quest.branch] ?? colors.brandPrimary) : colors.brandPrimary;
 
   const handleComplete = useCallback(() => {
     if (!quest || isCompleted) return;
@@ -125,14 +208,14 @@ export default function QuestDetailScreen() {
         <View style={styles.notFound}>
           <Text style={styles.notFoundText}>Quest not found.</Text>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  const steps = parseSteps(quest.description);
+  const steps = parseSteps(quest.description, quest.branch, quest.difficulty);
   const resources = RESOURCES[quest.branch] ?? [];
   const whyText = WHY_TEXT[quest.branch] ?? quest.description;
 
@@ -145,7 +228,7 @@ export default function QuestDetailScreen() {
           style={styles.backButton}
           hitSlop={8}
         >
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerBranchLabel, { color: branchColor }]}>
           {BRANCH_CATEGORY_LABELS[quest.branch] ?? 'Quest'}
@@ -175,7 +258,7 @@ export default function QuestDetailScreen() {
               <Text style={styles.tagTextNeutral}>{quest.duration_min} MIN</Text>
             </View>
             <View style={styles.tagChipXP}>
-              <Ionicons name="flash" size={10} color={Colors.softskills} />
+              <Ionicons name="flash" size={10} color={colors.softskills} />
               <Text style={styles.tagTextXP}>+{quest.xp_reward} XP</Text>
             </View>
           </View>
@@ -217,13 +300,13 @@ export default function QuestDetailScreen() {
                 <Ionicons
                   name="link-outline"
                   size={16}
-                  color={Colors.brandPrimary}
+                  color={colors.brandPrimary}
                 />
                 <Text style={styles.resourceText}>{resource.label}</Text>
                 <Ionicons
                   name="open-outline"
                   size={14}
-                  color={Colors.textMuted}
+                  color={colors.textMuted}
                 />
               </View>
             ))}
@@ -240,7 +323,7 @@ export default function QuestDetailScreen() {
         </Text>
         {isCompleted ? (
           <View style={styles.completedBtn}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.finance} />
+            <Ionicons name="checkmark-circle" size={20} color={colors.finance} />
             <Text style={styles.completedBtnText}>Đã hoàn thành</Text>
           </View>
         ) : (
@@ -294,10 +377,10 @@ export default function QuestDetailScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
 
   // Not found
@@ -309,7 +392,7 @@ const styles = StyleSheet.create({
   },
   notFoundText: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   backBtn: {
     padding: 8,
@@ -336,13 +419,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 120,
     alignSelf: 'center',
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.softskills,
-    shadowColor: Colors.softskills,
+    borderColor: colors.softskills,
+    shadowColor: colors.softskills,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -351,15 +434,15 @@ const styles = StyleSheet.create({
   xpFloatText: {
     fontSize: 20,
     fontWeight: '800',
-    color: Colors.softskills,
+    color: colors.softskills,
     textAlign: 'center',
   },
   xpBonusText: {
     fontSize: 14,
-    color: Colors.career, // Use a bright color for bonus
+    color: colors.career, // Use a bright color for bonus
   },
   comboBadge: {
-    backgroundColor: Colors.career,
+    backgroundColor: colors.career,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
@@ -383,7 +466,7 @@ const styles = StyleSheet.create({
 
   // Title card
   titleCard: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 0,
@@ -391,7 +474,7 @@ const styles = StyleSheet.create({
   questTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -411,14 +494,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tagChipNeutral: {
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 9999,
   },
   tagTextNeutral: {
     fontSize: 10,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   tagChipXP: {
@@ -433,7 +516,7 @@ const styles = StyleSheet.create({
   tagTextXP: {
     fontSize: 10,
     fontWeight: '700',
-    color: Colors.softskills,
+    color: colors.softskills,
   },
 
   // Sections
@@ -443,14 +526,14 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
   sectionBody: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
 
@@ -467,7 +550,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -475,11 +558,11 @@ const styles = StyleSheet.create({
   stepNumberText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
   },
   stepText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     flex: 1,
     lineHeight: 20,
     paddingTop: 2,
@@ -494,11 +577,11 @@ const styles = StyleSheet.create({
   },
   resourceRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   resourceText: {
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
   },
 
@@ -513,17 +596,17 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-    backgroundColor: Colors.bgBase,
+    borderTopColor: colors.glassBorder,
+    backgroundColor: colors.bgBase,
   },
   footerNote: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 16,
   },
   completeBtn: {
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     height: 52,
     borderRadius: 26,
     alignItems: 'center',
@@ -540,19 +623,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 52,
     gap: 8,
-    backgroundColor: `${Colors.finance}1A`,
+    backgroundColor: `${colors.finance}1A`,
     borderRadius: 26,
     borderWidth: 1,
-    borderColor: `${Colors.finance}33`,
+    borderColor: `${colors.finance}33`,
   },
   completedBtnText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.finance,
+    color: colors.finance,
   },
   skipText: {
     fontSize: 14,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 12,
   },

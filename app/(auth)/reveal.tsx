@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,8 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useOnboardingStore } from '@/src/business-logic/stores/onboardingStore';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import type { Branch } from '@/src/business-logic/types';
+
 
 // ─── Branch pill config ──────────────────────────────────────────────────────
 
@@ -23,16 +24,19 @@ interface BranchPillData {
   color: string;
 }
 
-const BRANCH_PILLS: BranchPillData[] = [
-  { branch: 'career', label: 'Career', emoji: '📘', color: Colors.career },
-  { branch: 'finance', label: 'Finance', emoji: '💰', color: Colors.finance },
-  { branch: 'softskills', label: 'Soft Skills', emoji: '🎯', color: Colors.softskills },
-  { branch: 'wellbeing', label: 'Well-being', emoji: '💚', color: Colors.wellbeing },
+const getBranchPills = (colors: any): BranchPillData[] => [
+  { branch: 'career', label: 'Career', emoji: '📘', color: colors.career },
+  { branch: 'finance', label: 'Finance', emoji: '💰', color: colors.finance },
+  { branch: 'softskills', label: 'Soft Skills', emoji: '🎯', color: colors.softskills },
+  { branch: 'wellbeing', label: 'Well-being', emoji: '💚', color: colors.wellbeing },
 ];
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function RevealScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BRANCH_PILLS = useMemo(() => getBranchPills(colors), [colors]);
   const treeConfig = useOnboardingStore((s) => s.treeConfig);
   const primaryBranch: Branch = treeConfig?.primaryBranch ?? 'career';
 
@@ -45,7 +49,7 @@ export default function RevealScreen() {
           onPress={() => router.back()}
           hitSlop={8}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -117,10 +121,10 @@ export default function RevealScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
 
   // Header
@@ -147,20 +151,20 @@ const styles = StyleSheet.create({
   // Labels
   journeyLabel: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
   mainTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginTop: 8,
   },
   mainSubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: 32,
@@ -176,7 +180,7 @@ const styles = StyleSheet.create({
   treeCard: {
     width: '100%',
     height: 200,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: 16,
     marginTop: 16,
     overflow: 'hidden',
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
   branchesLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
     textAlign: 'center',
@@ -233,13 +237,13 @@ const styles = StyleSheet.create({
   // CTA
   ctaBtn: {
     width: '100%',
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     height: 52,
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 28,
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -254,7 +258,7 @@ const styles = StyleSheet.create({
   // Footer label
   footerLabel: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 12,
   },

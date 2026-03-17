@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -9,7 +9,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/ui/atoms/Text';
 import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 
 interface XPProgressBarProps {
@@ -19,6 +19,8 @@ interface XPProgressBarProps {
 }
 
 export function XPProgressBar({ current, target, level }: XPProgressBarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const percent = target > 0 ? Math.min(100, (current / target) * 100) : 0;
   const labelScale = useSharedValue(1);
 
@@ -39,24 +41,24 @@ export function XPProgressBar({ current, target, level }: XPProgressBarProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <AppText variant="caption" color={Colors.textSecondary}>
+        <AppText variant="caption" color={colors.textSecondary}>
           XP
         </AppText>
         <Animated.View style={labelStyle}>
-          <AppText variant="caption" color={Colors.brandPrimary} style={styles.level}>
+          <AppText variant="caption" color={colors.brandPrimary} style={styles.level}>
             Lv.{level}
           </AppText>
         </Animated.View>
       </View>
-      <ProgressBar value={percent} color={Colors.brandPrimary} variant="thick" />
-      <AppText variant="micro" color={Colors.textMuted} style={styles.counts}>
+      <ProgressBar value={percent} color={colors.brandPrimary} variant="thick" />
+      <AppText variant="micro" color={colors.textMuted} style={styles.counts}>
         {current.toLocaleString()} / {target.toLocaleString()} XP
       </AppText>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: { gap: 4 },
   header: {
     flexDirection: 'row',

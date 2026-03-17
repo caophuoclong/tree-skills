@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/ui/atoms/Text';
-import { Colors, BranchColor, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Radius, Spacing } from '@/src/ui/tokens/spacing';
 import type { NodeStatus, Branch } from '@/src/business-logic/types';
 
@@ -23,6 +23,13 @@ interface SkillNodeProps {
   style?: ViewStyle;
 }
 
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
+
 export function SkillNode({
   branch,
   status,
@@ -32,7 +39,10 @@ export function SkillNode({
   onPress,
   style,
 }: SkillNodeProps) {
-  const branchColor = BranchColors[branch as BranchColor] ?? Colors.brandPrimary;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
+  const branchColor = BranchColors[branch as string] ?? colors.brandPrimary;
   const glowOpacity = useSharedValue(0.4);
 
   useEffect(() => {
@@ -61,11 +71,11 @@ export function SkillNode({
 
   const nodeStyle: ViewStyle = {
     backgroundColor: isLocked
-      ? '#282839'
+      ? colors.bgBase
       : isCompleted
       ? branchColor
-      : Colors.bgSurface,
-    borderColor: isInProgress ? branchColor : Colors.glassBorder,
+      : colors.bgSurface,
+    borderColor: isInProgress ? branchColor : colors.glassBorder,
     borderWidth: isInProgress ? 2 : 1,
     opacity: isLocked ? 0.4 : 1,
   };
@@ -77,7 +87,7 @@ export function SkillNode({
     >
       <Animated.View style={[styles.node, nodeStyle, isInProgress && glowStyle, style]}>
         {isLocked ? (
-          <Ionicons name="lock-closed" size={16} color={Colors.textMuted} />
+          <Ionicons name="lock-closed" size={16} color={colors.textMuted} />
         ) : isCompleted ? (
           <Ionicons name="checkmark" size={18} color="#FFFFFF" />
         ) : (
@@ -91,7 +101,7 @@ export function SkillNode({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   node: {
     width: 80,
     height: 80,
@@ -103,7 +113,7 @@ const styles = StyleSheet.create({
   },
   label: {
     textAlign: 'center',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     flexWrap: 'wrap',
   },
   completedLabel: {

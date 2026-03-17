@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -8,7 +8,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { GlassView } from '@/src/ui/atoms/GlassView';
 import { AppText } from '@/src/ui/atoms/Text';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { MoodScore } from '@/src/business-logic/types';
 
@@ -34,9 +34,11 @@ function MoodEmoji({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scale = useSharedValue(selected ? 1.3 : 1);
 
-  React.useEffect(() => {
+  useEffect(() => {
     scale.value = withSpring(selected ? 1.3 : 1, { stiffness: 300, damping: 20 });
   }, [selected]);
 
@@ -56,6 +58,8 @@ function MoodEmoji({
 }
 
 export function MoodWidget({ onSelect, selectedScore }: MoodWidgetProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [selected, setSelected] = useState<MoodScore | null>(selectedScore ?? null);
 
   const handleSelect = (score: MoodScore) => {
@@ -66,7 +70,7 @@ export function MoodWidget({ onSelect, selectedScore }: MoodWidgetProps) {
 
   return (
     <GlassView style={styles.container}>
-      <AppText variant="caption" color={Colors.textSecondary} style={styles.label}>
+      <AppText variant="caption" color={colors.textSecondary} style={styles.label}>
         {'Hôm nay bạn cảm thấy thế nào?'}
       </AppText>
       <View style={styles.emojis}>
@@ -83,11 +87,11 @@ export function MoodWidget({ onSelect, selectedScore }: MoodWidgetProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     padding: Spacing.md,
     borderRadius: Radius.md,
-    borderColor: `${Colors.wellbeing}33`,
+    borderColor: `${colors.wellbeing}33`,
   },
   label: {
     marginBottom: Spacing.sm,
@@ -111,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emojiSelected: {
-    backgroundColor: `${Colors.wellbeing}33`,
+    backgroundColor: `${colors.wellbeing}33`,
   },
   emojiText: {
     fontSize: 24,

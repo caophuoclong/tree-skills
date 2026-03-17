@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -14,7 +14,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Typography } from '@/src/ui/tokens/typography';
 import { Radius, Spacing } from '@/src/ui/tokens/spacing';
 
@@ -31,28 +31,28 @@ interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   children: React.ReactNode;
 }
 
-const variantStyles: Record<ButtonVariant, { container: ViewStyle; label: TextStyle }> = {
+const getVariantStyles = (colors: any): Record<ButtonVariant, { container: ViewStyle; label: TextStyle }> => ({
   primary: {
-    container: { backgroundColor: Colors.brandPrimary },
+    container: { backgroundColor: colors.brandPrimary },
     label: { color: '#FFFFFF' },
   },
   secondary: {
     container: {
       backgroundColor: 'transparent',
       borderWidth: 1,
-      borderColor: Colors.brandPrimary,
+      borderColor: colors.brandPrimary,
     },
-    label: { color: Colors.brandPrimary },
+    label: { color: colors.brandPrimary },
   },
   ghost: {
     container: { backgroundColor: 'transparent' },
-    label: { color: Colors.textSecondary },
+    label: { color: colors.textSecondary },
   },
   danger: {
-    container: { backgroundColor: Colors.danger },
+    container: { backgroundColor: colors.danger },
     label: { color: '#FFFFFF' },
   },
-};
+});
 
 export function Button({
   variant = 'primary',
@@ -65,6 +65,9 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const variantStyles = useMemo(() => getVariantStyles(colors), [colors]);
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -114,7 +117,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   base: {
     height: 56,
     borderRadius: Radius.full,

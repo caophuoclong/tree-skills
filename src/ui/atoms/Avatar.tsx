@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 
 type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -26,6 +27,8 @@ function getInitials(name?: string): string {
 }
 
 export function Avatar({ uri, name, size = 'md', style }: AvatarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const dim = SIZE_MAP[size];
   const fontSize = FONT_MAP[size];
 
@@ -44,9 +47,9 @@ export function Avatar({ uri, name, size = 'md', style }: AvatarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

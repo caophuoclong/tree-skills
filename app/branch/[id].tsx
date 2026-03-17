@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -18,7 +18,7 @@ import { AppText } from '@/src/ui/atoms/Text';
 import { SkillTreeBranch } from '@/src/ui/organisms/SkillTreeBranch';
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
 import { getInitialNodes } from '@/src/business-logic/data/skill-tree-nodes';
-import { Colors, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { Branch, SkillNode, NodeStatus } from '@/src/business-logic/types';
 
@@ -35,13 +35,24 @@ const STATUS_LABELS: Record<NodeStatus, string> = {
   completed: 'Hoàn thành',
 };
 
-const STATUS_COLORS: Record<NodeStatus, string> = {
-  locked: Colors.textMuted,
-  in_progress: Colors.brandPrimary,
-  completed: Colors.success,
-};
+const getStatusColors = (colors: any): Record<NodeStatus, string> => ({
+  locked: colors.textMuted,
+  in_progress: colors.brandPrimary,
+  completed: colors.success,
+});
+
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
 
 export default function BranchScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const STATUS_COLORS = useMemo(() => getStatusColors(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
@@ -55,7 +66,7 @@ export default function BranchScreen() {
   }, []);
 
   const branch = (id as Branch) ?? 'career';
-  const branchColor = BranchColors[branch] ?? Colors.brandPrimary;
+  const branchColor = BranchColors[branch] ?? colors.brandPrimary;
   const branchLabel = BRANCH_LABELS[branch] ?? branch;
 
   const branchNodes = nodes.filter((n) => n.branch === branch);
@@ -93,7 +104,7 @@ export default function BranchScreen() {
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="arrow-back" size={22} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
@@ -151,15 +162,15 @@ export default function BranchScreen() {
               </AppText>
 
               {/* Description */}
-              <AppText variant="body" color={Colors.textSecondary} style={styles.modalDesc}>
+              <AppText variant="body" color={colors.textSecondary} style={styles.modalDesc}>
                 {selectedNode.description}
               </AppText>
 
               {/* Stats row */}
               <View style={styles.modalStats}>
                 <View style={styles.statItem}>
-                  <Ionicons name="flash" size={14} color={Colors.brandGlow} />
-                  <AppText variant="caption" color={Colors.textSecondary}>
+                  <Ionicons name="flash" size={14} color={colors.brandGlow} />
+                  <AppText variant="caption" color={colors.textSecondary}>
                     {selectedNode.xp_required} XP cần thiết
                   </AppText>
                 </View>
@@ -168,7 +179,7 @@ export default function BranchScreen() {
 
                 <View style={styles.statItem}>
                   <Ionicons name="list" size={14} color={branchColor} />
-                  <AppText variant="caption" color={Colors.textSecondary}>
+                  <AppText variant="caption" color={colors.textSecondary}>
                     {selectedNode.quests_completed}/{selectedNode.quests_total} nhiệm vụ
                   </AppText>
                 </View>
@@ -177,8 +188,8 @@ export default function BranchScreen() {
               {/* Locked message */}
               {selectedNode.status === 'locked' && (
                 <View style={styles.lockedBanner}>
-                  <Ionicons name="lock-closed" size={14} color={Colors.textMuted} />
-                  <AppText variant="caption" color={Colors.textMuted}>
+                  <Ionicons name="lock-closed" size={14} color={colors.textMuted} />
+                  <AppText variant="caption" color={colors.textMuted}>
                     Chưa mở khóa — hoàn thành các nút trước để tiếp tục
                   </AppText>
                 </View>
@@ -202,10 +213,10 @@ export default function BranchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   header: {
     flexDirection: 'row',
@@ -213,7 +224,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.screenPadding,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   backButton: {
     width: 36,
@@ -221,7 +232,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.md,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
   },
   backButtonPlaceholder: {
     width: 36,
@@ -252,14 +263,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
     padding: Spacing.lg,
     paddingBottom: Spacing.xl,
     gap: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   modalStatusRow: {
     flexDirection: 'row',
@@ -278,7 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   modalTitle: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     fontWeight: '700',
   },
   modalDesc: {
@@ -287,7 +298,7 @@ const styles = StyleSheet.create({
   modalStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
@@ -301,13 +312,13 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 20,
-    backgroundColor: Colors.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   lockedBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    backgroundColor: `${Colors.textMuted}15`,
+    backgroundColor: `${colors.textMuted}15`,
     borderRadius: Radius.md,
     padding: Spacing.md,
   },

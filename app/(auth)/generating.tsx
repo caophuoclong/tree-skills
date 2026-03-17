@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
 import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 
 const STATUS_MESSAGES = [
@@ -21,6 +21,8 @@ const STATUS_MESSAGES = [
 ];
 
 export default function GeneratingScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [statusIndex, setStatusIndex] = useState(0);
   const [progressValue, setProgressValue] = useState(0);
 
@@ -96,23 +98,23 @@ export default function GeneratingScreen() {
         <View style={styles.progressContainer}>
           <ProgressBar
             value={progressValue}
-            color={Colors.brandPrimary}
+            color={colors.brandPrimary}
             variant="thick"
             animated={false}
           />
           <View style={styles.progressRow}>
             <Animated.View style={statusStyle}>
-              <AppText variant="body" color={Colors.textSecondary}>
+              <AppText variant="body" color={colors.textSecondary}>
                 {STATUS_MESSAGES[statusIndex]}
               </AppText>
             </Animated.View>
-            <AppText variant="caption" color={Colors.textMuted}>
+            <AppText variant="caption" color={colors.textMuted}>
               {Math.round(progressValue)}%
             </AppText>
           </View>
         </View>
 
-        <AppText variant="body" color={Colors.textMuted} style={styles.hint}>
+        <AppText variant="body" color={colors.textMuted} style={styles.hint}>
           Chỉ mất vài giây thôi...
         </AppText>
       </View>
@@ -120,10 +122,10 @@ export default function GeneratingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   container: {
     flex: 1,
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
     fontSize: 96,
   },
   headline: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   progressContainer: {

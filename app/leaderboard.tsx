@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,11 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUserStore } from '@/src/business-logic/stores/userStore';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 
 // ─── Types & Data ─────────────────────────────────────────────────────────────
-
-type TimeTab = 'weekly' | 'alltime';
 
 interface LeaderboardEntry {
   id: string;
@@ -26,28 +24,7 @@ interface LeaderboardEntry {
   avatarBg: string;
 }
 
-const MOCK_WEEKLY: LeaderboardEntry[] = [
-  { id: '1', name: 'Sarah Chen', streak: 21, xp: 2840, initials: 'SC', avatarBg: Colors.career },
-  { id: '2', name: 'James Park', streak: 18, xp: 2520, initials: 'JP', avatarBg: Colors.finance },
-  { id: '3', name: 'Aisha Patel', streak: 15, xp: 2100, initials: 'AP', avatarBg: Colors.softskills },
-  { id: '4', name: 'Marcus Lee', streak: 12, xp: 1900, initials: 'ML', avatarBg: Colors.wellbeing },
-  { id: '5', name: 'Zoe Williams', streak: 10, xp: 1650, initials: 'ZW', avatarBg: Colors.brandPrimary },
-  { id: '6', name: 'Noah Kim', streak: 9, xp: 1400, initials: 'NK', avatarBg: Colors.career },
-  { id: '7', name: 'Luna Tran', streak: 7, xp: 1100, initials: 'LT', avatarBg: Colors.finance },
-  { id: '8', name: 'Ethan Nguyen', streak: 5, xp: 850, initials: 'EN', avatarBg: Colors.softskills },
-  { id: 'current', name: 'Alex Kim', streak: 12, xp: 1240, initials: 'AK', avatarBg: Colors.brandPrimary },
-];
-
-const MOCK_ALLTIME: LeaderboardEntry[] = [
-  { id: '1', name: 'Sarah Chen', streak: 89, xp: 12840, initials: 'SC', avatarBg: Colors.career },
-  { id: '2', name: 'James Park', streak: 76, xp: 11200, initials: 'JP', avatarBg: Colors.finance },
-  { id: '3', name: 'Aisha Patel', streak: 65, xp: 9800, initials: 'AP', avatarBg: Colors.softskills },
-  { id: '4', name: 'Marcus Lee', streak: 54, xp: 8400, initials: 'ML', avatarBg: Colors.wellbeing },
-  { id: '5', name: 'Zoe Williams', streak: 48, xp: 7200, initials: 'ZW', avatarBg: Colors.brandPrimary },
-  { id: '6', name: 'Noah Kim', streak: 42, xp: 6100, initials: 'NK', avatarBg: Colors.career },
-  { id: '7', name: 'Luna Tran', streak: 35, xp: 5000, initials: 'LT', avatarBg: Colors.finance },
-  { id: '8', name: 'Ethan Nguyen', streak: 28, xp: 3900, initials: 'EN', avatarBg: Colors.softskills },
-];
+type TimeTab = 'weekly' | 'alltime';
 
 function getMedalEmoji(rank: number): string | null {
   if (rank === 1) return '🥇';
@@ -56,17 +33,15 @@ function getMedalEmoji(rank: number): string | null {
   return null;
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function LeaderboardScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const user = useUserStore((s) => s.user);
   const [activeTab, setActiveTab] = useState<TimeTab>('weekly');
 
-  const data = activeTab === 'weekly' ? MOCK_WEEKLY : MOCK_ALLTIME;
-  const sortedData = [...data].sort((a, b) => b.xp - a.xp);
-  const userRank = sortedData.findIndex(item => item.id === 'current' || item.name === userName) + 1;
-
-  const userName = user?.name ?? 'Alex Kim';
+  // Derive user display values FIRST so they can be used in mock data
+  const userName = user?.name ?? 'Bạn';
   const userXP = user?.total_xp ?? 1240;
   const userStreak = user?.streak ?? 12;
   const userInitials = userName
@@ -75,6 +50,34 @@ export default function LeaderboardScreen() {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
+  const MOCK_WEEKLY: LeaderboardEntry[] = [
+    { id: '1', name: 'Sarah Chen', streak: 21, xp: 2840, initials: 'SC', avatarBg: colors.career },
+    { id: '2', name: 'James Park', streak: 18, xp: 2520, initials: 'JP', avatarBg: colors.finance },
+    { id: '3', name: 'Aisha Patel', streak: 15, xp: 2100, initials: 'AP', avatarBg: colors.softskills },
+    { id: '4', name: 'Marcus Lee', streak: 12, xp: 1900, initials: 'ML', avatarBg: colors.wellbeing },
+    { id: '5', name: 'Zoe Williams', streak: 10, xp: 1650, initials: 'ZW', avatarBg: colors.brandPrimary },
+    { id: '6', name: 'Noah Kim', streak: 9, xp: 1400, initials: 'NK', avatarBg: colors.career },
+    { id: '7', name: 'Luna Tran', streak: 7, xp: 1100, initials: 'LT', avatarBg: colors.finance },
+    { id: '8', name: 'Ethan Nguyen', streak: 5, xp: 850, initials: 'EN', avatarBg: colors.softskills },
+    { id: 'current', name: userName, streak: userStreak, xp: userXP, initials: userInitials, avatarBg: colors.brandPrimary },
+  ];
+
+  const MOCK_ALLTIME: LeaderboardEntry[] = [
+    { id: '1', name: 'Sarah Chen', streak: 89, xp: 12840, initials: 'SC', avatarBg: colors.career },
+    { id: '2', name: 'James Park', streak: 76, xp: 11200, initials: 'JP', avatarBg: colors.finance },
+    { id: '3', name: 'Aisha Patel', streak: 65, xp: 9800, initials: 'AP', avatarBg: colors.softskills },
+    { id: '4', name: 'Marcus Lee', streak: 54, xp: 8400, initials: 'ML', avatarBg: colors.wellbeing },
+    { id: '5', name: 'Zoe Williams', streak: 48, xp: 7200, initials: 'ZW', avatarBg: colors.brandPrimary },
+    { id: '6', name: 'Noah Kim', streak: 42, xp: 6100, initials: 'NK', avatarBg: colors.career },
+    { id: '7', name: 'Luna Tran', streak: 35, xp: 5000, initials: 'LT', avatarBg: colors.finance },
+    { id: '8', name: 'Ethan Nguyen', streak: 28, xp: 3900, initials: 'EN', avatarBg: colors.softskills },
+    { id: 'current', name: userName, streak: userStreak, xp: userXP, initials: userInitials, avatarBg: colors.brandPrimary },
+  ];
+
+  const data = activeTab === 'weekly' ? MOCK_WEEKLY : MOCK_ALLTIME;
+  const sortedData = [...data].sort((a, b) => b.xp - a.xp);
+  const userRank = sortedData.findIndex(item => item.id === 'current') + 1;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -85,7 +88,7 @@ export default function LeaderboardScreen() {
           onPress={() => router.back()}
           hitSlop={8}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Bảng xếp hạng Kiên trì</Text>
         <View style={styles.headerSpacer} />
@@ -129,25 +132,40 @@ export default function LeaderboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Current user card ──────────────────────────── */}
-        <View style={styles.userCard}>
-          <View style={[styles.accentBar, { backgroundColor: Colors.brandPrimary }]} />
-          <View style={styles.userCardRow}>
-            <View style={[styles.userAvatar, { backgroundColor: Colors.brandPrimary }]}>
-              <Text style={styles.userAvatarText}>{userInitials}</Text>
+        {(() => {
+          // Compute the person directly above us to show gap
+          const myIndex = sortedData.findIndex(item => item.id === 'current');
+          const personAbove = myIndex > 0 ? sortedData[myIndex - 1] : null;
+          const xpGap = personAbove ? personAbove.xp - userXP : 0;
+          return (
+            <View style={styles.userCard}>
+              <View style={[styles.accentBar, { backgroundColor: colors.brandPrimary }]} />
+              <View style={styles.userCardRow}>
+                <View style={[styles.userAvatar, { backgroundColor: colors.brandPrimary }]}>
+                  <Text style={styles.userAvatarText}>{userInitials}</Text>
+                </View>
+                <View style={styles.userInfo}>
+                  <Text style={styles.userInfoName}>{userName}</Text>
+                  <Text style={styles.userInfoStreak}>
+                    Hạng #{userRank > 0 ? userRank : '—'} · Chuỗi {userStreak} ngày 🔥
+                  </Text>
+                  {personAbove && xpGap > 0 && (
+                    <Text style={[styles.userRankGap, { color: colors.softskills }]}>
+                      Còn {xpGap.toLocaleString()} XP nữa để vượt {personAbove.name}
+                    </Text>
+                  )}
+                </View>
+                <Text style={styles.userXP}>{userXP.toLocaleString()} XP</Text>
+              </View>
+              <View style={styles.userProgressTrack}>
+                <View style={styles.userProgressFill} />
+              </View>
             </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userInfoName}>{userName} (Hạng {userRank})</Text>
-              <Text style={styles.userInfoStreak}>Chuỗi {userStreak} ngày 🔥</Text>
-            </View>
-            <Text style={styles.userXP}>{userXP.toLocaleString()} XP</Text>
-          </View>
-          <View style={styles.userProgressTrack}>
-            <View style={styles.userProgressFill} />
-          </View>
-        </View>
+          );
+        })()}
 
         {/* ── Top Performers label ───────────────────────── */}
-        <Text style={styles.topLabel}>DẪN ĐẦU HẠNG PHÊ</Text>
+        <Text style={styles.topLabel}>BẢNG XẾP HẠNG TUẦN</Text>
 
         {/* ── Ranked list ────────────────────────────────── */}
         <View style={styles.listContainer}>
@@ -195,10 +213,10 @@ export default function LeaderboardScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
 
   // Header
@@ -218,7 +236,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginLeft: 8,
   },
   headerSpacer: {
@@ -230,7 +248,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   tab: {
     paddingVertical: 8,
@@ -241,10 +259,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   tabTextActive: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   tabUnderline: {
     position: 'absolute',
@@ -252,7 +270,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 1,
   },
 
@@ -303,21 +321,26 @@ const styles = StyleSheet.create({
   userInfoName: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   userInfoStreak: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
+  },
+  userRankGap: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 3,
   },
   userXP: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
   },
   userProgressTrack: {
     height: 3,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 2,
     marginTop: 12,
     overflow: 'hidden',
@@ -325,7 +348,7 @@ const styles = StyleSheet.create({
   userProgressFill: {
     height: 3,
     width: '52%',
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 2,
   },
 
@@ -333,7 +356,7 @@ const styles = StyleSheet.create({
   topLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -368,7 +391,7 @@ const styles = StyleSheet.create({
   rankNum: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   listAvatar: {
     width: 36,
@@ -389,23 +412,23 @@ const styles = StyleSheet.create({
   listName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   listStreak: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   listXP: {
     fontSize: 14,
     fontWeight: '800', // Bolder
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
 
   // Quote
   quote: {
     fontSize: 13,
     fontStyle: 'italic',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 24,
     paddingHorizontal: 20,

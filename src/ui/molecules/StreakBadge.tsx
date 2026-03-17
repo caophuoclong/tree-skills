@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/ui/atoms/Text';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 
 const MILESTONES = [7, 14, 30, 60, 100];
@@ -20,6 +20,8 @@ interface StreakBadgeProps {
 }
 
 export function StreakBadge({ count, protected: isProtected = false, size = 'sm' }: StreakBadgeProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scale = useSharedValue(1);
   const prevCount = useRef(count);
 
@@ -48,12 +50,12 @@ export function StreakBadge({ count, protected: isProtected = false, size = 'sm'
       <AppText style={[styles.fire, isLarge && styles.fireLg]}>{'🔥'}</AppText>
       <AppText
         variant={isLarge ? 'displayLG' : 'title'}
-        color={Colors.warning}
+        color={colors.warning}
         style={styles.count}
       >
         {count}
       </AppText>
-      <AppText variant="caption" color={Colors.textMuted}>
+      <AppText variant="caption" color={colors.textMuted}>
         {'ngày'}
       </AppText>
       {isProtected && (
@@ -63,7 +65,7 @@ export function StreakBadge({ count, protected: isProtected = false, size = 'sm'
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -71,10 +73,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: Radius.md,
-    backgroundColor: `${Colors.warning}1A`,
+    backgroundColor: `${colors.warning}1A`,
   },
   glow: {
-    shadowColor: Colors.warning,
+    shadowColor: colors.warning,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 8,

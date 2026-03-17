@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -21,6 +21,7 @@ interface CheckboxProps {
 }
 
 export function Checkbox({ checked, onToggle, disabled = false, size = 24, style }: CheckboxProps) {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -47,7 +48,7 @@ export function Checkbox({ checked, onToggle, disabled = false, size = 24, style
       <Ionicons
         name={checked ? 'checkmark-circle' : 'ellipse-outline'}
         size={size}
-        color={checked ? Colors.brandPrimary : Colors.textMuted}
+        color={checked ? colors.brandPrimary : colors.textMuted}
       />
     </AnimatedTouchable>
   );

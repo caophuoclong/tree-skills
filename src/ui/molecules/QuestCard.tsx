@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -9,9 +9,11 @@ import { GlassView } from '@/src/ui/atoms/GlassView';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Badge } from '@/src/ui/atoms/Badge';
 import { Checkbox } from '@/src/ui/atoms/Checkbox';
-import { Colors, BranchColor, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { Quest } from '@/src/business-logic/types';
+import type { BranchColor } from '@/src/ui/tokens/colors';
 
 interface QuestCardProps {
   quest: Quest;
@@ -19,9 +21,19 @@ interface QuestCardProps {
   onPress?: (questId: string) => void;
 }
 
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
+
 export function QuestCard({ quest, onComplete, onPress }: QuestCardProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const isCompleted = quest.completed_at !== null;
-  const branchColor = BranchColors[quest.branch as BranchColor] ?? Colors.brandPrimary;
+  const branchColor = BranchColors[quest.branch as string] ?? colors.brandPrimary;
 
   const opacity = useSharedValue(isCompleted ? 0.5 : 1);
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -68,7 +80,7 @@ export function QuestCard({ quest, onComplete, onPress }: QuestCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -99,12 +111,12 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   title: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: Spacing.xs,
   },
   completed: {
     textDecorationLine: 'line-through',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   checkboxContainer: {
     paddingRight: Spacing.md,

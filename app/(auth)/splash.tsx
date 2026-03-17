@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -11,10 +11,12 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 
 export default function SplashScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const glowOpacity = useSharedValue(0.4);
   const glowScale = useSharedValue(0.9);
   const logoOpacity = useSharedValue(0);
@@ -93,7 +95,7 @@ export default function SplashScreen() {
           <AppText variant="displayXL" style={styles.appName}>
             Life Skill Tree
           </AppText>
-          <AppText variant="bodyLG" color={Colors.textSecondary} style={styles.subtitle}>
+          <AppText variant="bodyLG" color={colors.textSecondary} style={styles.subtitle}>
             Hành trình phát triển bản thân
           </AppText>
         </Animated.View>
@@ -102,10 +104,10 @@ export default function SplashScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   container: {
     flex: 1,
@@ -127,21 +129,21 @@ const styles = StyleSheet.create({
   glowRingOuter: {
     width: 160,
     height: 160,
-    backgroundColor: `${Colors.brandPrimary}20`,
+    backgroundColor: `${colors.brandPrimary}20`,
   },
   glowRingInner: {
     width: 120,
     height: 120,
-    backgroundColor: `${Colors.brandPrimary}40`,
+    backgroundColor: `${colors.brandPrimary}40`,
   },
   orb: {
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 20,
@@ -155,7 +157,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   appName: {
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 0.5,
   },

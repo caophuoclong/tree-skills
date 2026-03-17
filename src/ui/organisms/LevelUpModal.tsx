@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Modal, View, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -10,7 +10,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Button } from '@/src/ui/atoms/Button';
 import { AppText } from '@/src/ui/atoms/Text';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -24,6 +24,8 @@ interface LevelUpModalProps {
 }
 
 export function LevelUpModal({ visible, newLevel, unlockReward, weeklyXP, onDismiss }: LevelUpModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(0);
   const titleScale = useSharedValue(0.3);
@@ -53,25 +55,25 @@ export function LevelUpModal({ visible, newLevel, unlockReward, weeklyXP, onDism
           <View style={styles.glowOrb} />
 
           <Animated.View style={titleStyle}>
-            <AppText variant="displayXL" color={Colors.brandPrimary} style={styles.title}>
+            <AppText variant="displayXL" color={colors.brandPrimary} style={styles.title}>
               LEVEL UP!
             </AppText>
           </Animated.View>
 
-          <AppText variant="displayLG" color={Colors.textPrimary} style={styles.levelText}>
+          <AppText variant="displayLG" color={colors.textPrimary} style={styles.levelText}>
             Level {newLevel}
           </AppText>
 
           {unlockReward && (
             <View style={styles.unlockCard}>
-              <AppText variant="body" color={Colors.textPrimary}>
+              <AppText variant="body" color={colors.textPrimary}>
                 🔓 {unlockReward}
               </AppText>
             </View>
           )}
 
           {weeklyXP !== undefined && (
-            <AppText variant="body" color={Colors.textSecondary} style={styles.xpSummary}>
+            <AppText variant="body" color={colors.textSecondary} style={styles.xpSummary}>
               Bạn đã kiếm được {weeklyXP.toLocaleString()} XP tuần này
             </AppText>
           )}
@@ -85,7 +87,7 @@ export function LevelUpModal({ visible, newLevel, unlockReward, weeklyXP, onDism
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
@@ -103,12 +105,12 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     opacity: 0.1,
     top: -60,
   },
   title: {
-    textShadowColor: Colors.brandPrimary,
+    textShadowColor: colors.brandPrimary,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
     letterSpacing: 4,
@@ -117,9 +119,9 @@ const styles = StyleSheet.create({
     marginTop: -Spacing.xs,
   },
   unlockCard: {
-    backgroundColor: `${Colors.brandPrimary}1A`,
+    backgroundColor: `${colors.brandPrimary}1A`,
     borderWidth: 1,
-    borderColor: `${Colors.brandPrimary}33`,
+    borderColor: `${colors.brandPrimary}33`,
     borderRadius: 12,
     padding: Spacing.md,
     width: '100%',

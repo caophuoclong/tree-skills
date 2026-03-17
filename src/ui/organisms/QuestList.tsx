@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { QuestCard } from '@/src/ui/molecules/QuestCard';
 import { StaminaBar } from '@/src/ui/molecules/StaminaBar';
 import { AppText } from '@/src/ui/atoms/Text';
 import { GlassView } from '@/src/ui/atoms/GlassView';
 import { Icon } from '@/src/ui/atoms/Icon';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { Quest } from '@/src/business-logic/types';
 
@@ -18,6 +19,8 @@ interface QuestListProps {
 }
 
 export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPressQuest }: QuestListProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const completedCount = quests.filter((q) => q.completed_at !== null).length;
   const isStaminaGate = stamina === 0;
 
@@ -30,18 +33,18 @@ export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPress
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <AppText variant="title" color={Colors.textPrimary}>
+        <AppText variant="title" color={colors.textPrimary}>
           Daily Quests
         </AppText>
         <View style={styles.progressPill}>
-          <AppText variant="caption" color={Colors.brandPrimary}>
+          <AppText variant="caption" color={colors.brandPrimary}>
             {completedCount}/{quests.length} hoàn thành
           </AppText>
         </View>
       </View>
 
       {resetTime && (
-        <AppText variant="micro" color={Colors.textMuted} style={styles.resetTime}>
+        <AppText variant="micro" color={colors.textMuted} style={styles.resetTime}>
           Reset lúc {resetTime}
         </AppText>
       )}
@@ -54,8 +57,8 @@ export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPress
       {/* Stamina gate warning */}
       {isStaminaGate && (
         <GlassView style={styles.gateWarning}>
-          <Icon name="warning" size="sm" color={Colors.danger} />
-          <AppText variant="caption" color={Colors.danger} style={styles.gateText}>
+          <Icon name="warning" size="sm" color={colors.danger} />
+          <AppText variant="caption" color={colors.danger} style={styles.gateText}>
             Stamina = 0%. Hoàn thành Wellbeing quest trước để tiếp tục.
           </AppText>
         </GlassView>
@@ -74,7 +77,7 @@ export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPress
       ) : (
         <View style={styles.emptyState}>
           <AppText style={styles.emptyIcon}>🌱</AppText>
-          <AppText variant="body" color={Colors.textSecondary} style={styles.emptyText}>
+          <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
             Không có quest hôm nay — quay lại ngày mai!
           </AppText>
         </View>
@@ -83,7 +86,7 @@ export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPress
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: { gap: Spacing.sm },
   header: {
     flexDirection: 'row',
@@ -92,7 +95,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   progressPill: {
-    backgroundColor: `${Colors.brandPrimary}1A`,
+    backgroundColor: `${colors.brandPrimary}1A`,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
     borderRadius: Radius.full,
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     padding: Spacing.sm,
     borderRadius: Radius.md,
-    borderColor: `${Colors.danger}33`,
+    borderColor: `${colors.danger}33`,
     marginBottom: Spacing.sm,
   },
   gateText: { flex: 1 },

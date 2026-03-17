@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text as RNText, StyleSheet, TextProps } from 'react-native';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Typography } from '@/src/ui/tokens/typography';
 
 interface AppTextProps extends TextProps {
@@ -9,9 +9,10 @@ interface AppTextProps extends TextProps {
 }
 
 export function AppText({ variant = 'body', color, style, children, ...props }: AppTextProps) {
+  const { colors } = useTheme();
   return (
     <RNText
-      style={[Typography[variant], { color: color ?? Colors.textPrimary }, style]}
+      style={[Typography[variant], { color: color ?? colors.textPrimary }, style]}
       {...props}
     >
       {children}

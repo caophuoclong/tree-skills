@@ -1,16 +1,19 @@
 import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { TouchableOpacity, View, StyleSheet, Modal, Text, Pressable } from 'react-native';
-import { Colors } from '@/src/ui/tokens';
+import { useTheme } from '@/src/ui/tokens';
+
 
 function FABButton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [menuVisible, setMenuVisible] = useState(false);
 
   const menuOptions = [
-    { icon: 'flash', label: 'Log hoạt động', color: Colors.career, onPress: () => { setMenuVisible(false); router.push('/(tabs)/quests'); } },
-    { icon: 'star', label: 'Quest gợi ý', color: Colors.softskills, onPress: () => { setMenuVisible(false); router.push('/(tabs)/quests'); } },
-    { icon: 'happy', label: 'Check-in tâm trạng', color: Colors.wellbeing, onPress: () => { setMenuVisible(false); router.push('/(tabs)'); } },
+    { icon: 'flash', label: 'Log hoạt động', color: colors.career, onPress: () => { setMenuVisible(false); router.push('/(tabs)/quests'); } },
+    { icon: 'star', label: 'Quest gợi ý', color: colors.softskills, onPress: () => { setMenuVisible(false); router.push('/(tabs)/quests'); } },
+    { icon: 'happy', label: 'Check-in tâm trạng', color: colors.wellbeing, onPress: () => { setMenuVisible(false); router.push('/(tabs)'); } },
   ];
 
   return (
@@ -57,20 +60,23 @@ function FABButton() {
 }
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.bgSurface,
-          borderTopColor: Colors.glassBorder,
+          backgroundColor: colors.bgSurface,
+          borderTopColor: colors.glassBorder,
           borderTopWidth: 1,
           height: 72,
           paddingBottom: 10,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: Colors.brandPrimary,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: colors.brandPrimary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '500',
@@ -124,7 +130,7 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   fabContainer: {
     flex: 1,
     alignItems: 'center',
@@ -137,10 +143,10 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -153,13 +159,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuContent: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     width: '90%',
     borderRadius: 24,
     padding: 16,
     marginBottom: 100, // Above the tab bar
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
@@ -183,6 +189,6 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
 });

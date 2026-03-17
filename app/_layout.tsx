@@ -5,12 +5,15 @@ import 'react-native-reanimated';
 
 import { queryClient } from '@/src/business-logic/api/query-client';
 import { LevelUpModal, LoginBonusModal } from '@/src/ui/molecules';
+import { useTheme } from '@/src/ui/tokens';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function RootLayout() {
+  const { isDark, colors } = useTheme();
+
   return (
     <QueryClientProvider client={queryClient}>
       <Stack screenOptions={{ headerShown: false }}>
@@ -20,8 +23,9 @@ export default function RootLayout() {
         <Stack.Screen name="quest/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="leaderboard" />
         <Stack.Screen name="wellbeing" />
+        <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
       </Stack>
-      <StatusBar style="light" backgroundColor="#0D0D0F" />
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.bgBase} />
       <LevelUpModal />
       <LoginBonusModal />
     </QueryClientProvider>

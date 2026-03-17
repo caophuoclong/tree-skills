@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -12,17 +12,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
 import { useStaminaSystem } from '@/src/business-logic/hooks/useStaminaSystem';
-import { Colors } from '@/src/ui/tokens/colors';
+import { getComboMultiplier } from '@/src/business-logic/hooks/useXPEngine';
+import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { useTheme } from '@/src/ui/tokens';
 import type { Quest } from '@/src/business-logic/types';
+
 
 // ─── Branch helpers ───────────────────────────────────────────────────────────
 
-const BRANCH_COLORS: Record<string, string> = {
-  career: Colors.career,
-  finance: Colors.finance,
-  softskills: Colors.softskills,
-  wellbeing: Colors.wellbeing,
-};
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
 
 const BRANCH_LABELS: Record<string, string> = {
   career: 'SỰ NGHIỆP',
@@ -39,7 +42,10 @@ interface QuestItemProps {
 }
 
 function QuestItem({ quest, onComplete }: QuestItemProps) {
-  const branchColor = BRANCH_COLORS[quest.branch] ?? Colors.brandPrimary;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BRANCH_COLORS = useMemo(() => getBranchColors(colors), [colors]);
+  const branchColor = BRANCH_COLORS[quest.branch] ?? colors.brandPrimary;
   const isCompleted = quest.completed_at !== null;
 
   return (
@@ -71,7 +77,7 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
           <Ionicons
             name="checkmark-circle"
             size={20}
-            color={Colors.brandPrimary}
+            color={colors.brandPrimary}
           />
         ) : (
           <TouchableOpacity
@@ -103,8 +109,14 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function QuestsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { quests, completedCount, totalCount, completeQuest } = useQuestManager();
   const { stamina } = useStaminaSystem();
+  const { dailyStats } = useUserStore();
+  const combo = dailyStats.session_combo;
+  const multiplier = getComboMultiplier(combo);
+  const comboActive = combo >= 3;
 
   const handleComplete = useCallback(
     (questId: string) => {
@@ -157,6 +169,33 @@ export default function QuestsScreen() {
           </View>
         </View>
 
+        {/* ── Combo Banner ───────────────────────────────────── */}
+        {comboActive && (
+          <View style={[styles.comboBanner, {
+            borderColor: combo >= 5 ? `${colors.softskills}60` : `${colors.career}60`,
+            shadowColor: combo >= 5 ? colors.softskills : colors.career,
+          }]}>
+            <Text style={styles.comboFire}>
+              {combo >= 5 ? '🔥🔥🔥' : combo >= 4 ? '🔥🔥' : '🔥'}
+            </Text>
+            <View style={styles.comboTextGroup}>
+              <Text style={styles.comboLabel}>COMBO ĐANG HOẠT ĐỘNG</Text>
+              <Text style={styles.comboValue}>
+                {combo} quest liên tiếp · XP x{multiplier.toFixed(2)}
+              </Text>
+            </View>
+            <View style={[styles.comboMultiplierPill, {
+              backgroundColor: combo >= 5 ? `${colors.softskills}25` : `${colors.career}25`,
+            }]}>
+              <Text style={[styles.comboMultiplierText, {
+                color: combo >= 5 ? colors.softskills : colors.career,
+              }]}>
+                x{multiplier.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* ── Quest Cards ────────────────────────────────────── */}
         <View style={styles.questList}>
           {quests.length === 0 ? (
@@ -184,15 +223,15 @@ export default function QuestsScreen() {
             <Text style={styles.challengesTitle}>Thử thách đang chạy</Text>
           </View>
 
-          <View style={[styles.challengeCard, { borderColor: `${Colors.wellbeing}40` }]}>
-            <View style={[styles.accentBar, { backgroundColor: Colors.wellbeing }]} />
+          <View style={[styles.challengeCard, { borderColor: `${colors.wellbeing}40` }]}>
+            <View style={[styles.accentBar, { backgroundColor: colors.wellbeing }]} />
             <View style={styles.challengeCardMain}>
               <View style={styles.challengeTag}>
                 <Text style={styles.challengeTagText}>SỰ KIỆN CÓ HẠN</Text>
               </View>
               <Text style={styles.challengeTitle}>7 Ngày Kỷ luật Thép</Text>
               <View style={styles.challengeStats}>
-                <Ionicons name="people-outline" size={14} color={Colors.textMuted} />
+                <Ionicons name="people-outline" size={14} color={colors.textMuted} />
                 <Text style={styles.challengeSubtitle}>
                   2.4k người đang tham gia
                 </Text>
@@ -203,7 +242,7 @@ export default function QuestsScreen() {
               <View style={styles.challengeProgressHeader}>
                 <Text style={styles.challengeProgressLabel}>Ngày 3/7</Text>
                 <View style={styles.challengeRewards}>
-                  <Ionicons name="gift-outline" size={14} color={Colors.softskills} />
+                  <Ionicons name="gift-outline" size={14} color={colors.softskills} />
                   <Text style={styles.challengeRewardText}>+500 XP</Text>
                 </View>
               </View>
@@ -222,10 +261,10 @@ export default function QuestsScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   scroll: {
     flex: 1,
@@ -245,7 +284,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   staminaRow: {
     flexDirection: 'row',
@@ -258,18 +297,18 @@ const styles = StyleSheet.create({
   staminaBarTrack: {
     width: 52,
     height: 4,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 2,
     overflow: 'hidden',
   },
   staminaBarFill: {
     height: 4,
-    backgroundColor: Colors.finance,
+    backgroundColor: colors.finance,
     borderRadius: 2,
   },
   staminaText: {
     fontSize: 11,
-    color: Colors.finance,
+    color: colors.finance,
     fontWeight: '600',
     minWidth: 30,
   },
@@ -283,25 +322,25 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     flexShrink: 0,
   },
   progressBarTrack: {
     flex: 1,
     height: 4,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: 4,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 2,
   },
   completePill: {
     backgroundColor: 'rgba(124,106,247,0.15)',
     borderWidth: 1,
-    borderColor: Colors.brandPrimary,
+    borderColor: colors.brandPrimary,
     borderRadius: 9999,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -309,7 +348,50 @@ const styles = StyleSheet.create({
   completePillText: {
     fontSize: 10,
     fontWeight: '700',
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
+  },
+
+  // Combo Banner
+  comboBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  comboFire: {
+    fontSize: 22,
+  },
+  comboTextGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  comboLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 1.5,
+  },
+  comboValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  comboMultiplierPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  comboMultiplierText: {
+    fontSize: 16,
+    fontWeight: '800',
   },
 
   // Quest List
@@ -353,7 +435,7 @@ const styles = StyleSheet.create({
   },
   durationText: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginLeft: 8,
   },
   checkbox: {
@@ -366,12 +448,12 @@ const styles = StyleSheet.create({
   questTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: 8,
   },
   questTitleDone: {
     textDecorationLine: 'line-through',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   xpBadge: {
     backgroundColor: 'rgba(251,191,36,0.15)',
@@ -384,7 +466,7 @@ const styles = StyleSheet.create({
   xpBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.softskills,
+    color: colors.softskills,
   },
 
   // Empty state
@@ -398,7 +480,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -419,7 +501,7 @@ const styles = StyleSheet.create({
   challengesTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   challengeCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -428,7 +510,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -447,13 +529,13 @@ const styles = StyleSheet.create({
   challengeTagText: {
     fontSize: 9,
     fontWeight: '800',
-    color: Colors.wellbeing,
+    color: colors.wellbeing,
     letterSpacing: 1.5,
   },
   challengeTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 6,
   },
   challengeStats: {
@@ -463,7 +545,7 @@ const styles = StyleSheet.create({
   },
   challengeSubtitle: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   challengeProgressWrapper: {
     gap: 8,
@@ -476,7 +558,7 @@ const styles = StyleSheet.create({
   challengeProgressLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   challengeRewards: {
     flexDirection: 'row',
@@ -486,17 +568,17 @@ const styles = StyleSheet.create({
   challengeRewardText: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.softskills,
+    color: colors.softskills,
   },
   challengeProgressBarTrack: {
     height: 6,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 3,
     overflow: 'hidden',
   },
   challengeProgressBarFill: {
     height: 6,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 3,
   },
 

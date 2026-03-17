@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Radius } from '@/src/ui/tokens/spacing';
 
 interface GlassViewProps {
@@ -12,11 +13,13 @@ interface GlassViewProps {
 }
 
 export function GlassView({ children, style, intensity = 20, radius = Radius.lg }: GlassViewProps) {
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   if (Platform.OS === 'ios') {
     return (
       <BlurView
         intensity={intensity}
-        tint="dark"
+        tint={isDark ? 'dark' : 'light'}
         style={[styles.base, { borderRadius: radius }, style]}
       >
         {children}
@@ -32,14 +35,14 @@ export function GlassView({ children, style, intensity = 20, radius = Radius.lg 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   base: {
-    backgroundColor: Colors.glassBg,
+    backgroundColor: colors.glassBg,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   androidFallback: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
   },
 });

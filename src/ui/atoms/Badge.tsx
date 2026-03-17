@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Colors, BranchColor, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Typography } from '@/src/ui/tokens/typography';
 import { Radius, Spacing } from '@/src/ui/tokens/spacing';
 
 type BadgeVariant = 'xp' | 'branch' | 'duration' | 'level' | 'milestone';
+type BranchColor = 'career' | 'finance' | 'softskills' | 'wellbeing';
 
 interface BadgeProps {
   variant: BadgeVariant;
@@ -13,16 +15,26 @@ interface BadgeProps {
   style?: ViewStyle;
 }
 
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
+
 export function Badge({ variant, value, branch, style }: BadgeProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const getStyle = (): { container: ViewStyle; text: any } => {
     switch (variant) {
       case 'xp':
         return {
-          container: { backgroundColor: Colors.brandPrimary },
+          container: { backgroundColor: colors.brandPrimary },
           text: { color: '#FFFFFF' },
         };
       case 'branch': {
-        const color = branch ? BranchColors[branch] : Colors.brandPrimary;
+        const color = branch ? BranchColors[branch as string] : colors.brandPrimary;
         return {
           container: { backgroundColor: `${color}33` }, // 20% opacity
           text: { color },
@@ -30,18 +42,18 @@ export function Badge({ variant, value, branch, style }: BadgeProps) {
       }
       case 'duration':
         return {
-          container: { backgroundColor: Colors.bgSurface, borderWidth: 1, borderColor: Colors.glassBorder },
-          text: { color: Colors.textSecondary },
+          container: { backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.glassBorder },
+          text: { color: colors.textSecondary },
         };
       case 'level':
         return {
-          container: { backgroundColor: `${Colors.brandPrimary}33` },
-          text: { color: Colors.brandPrimary },
+          container: { backgroundColor: `${colors.brandPrimary}33` },
+          text: { color: colors.brandPrimary },
         };
       case 'milestone':
         return {
-          container: { backgroundColor: `${Colors.warning}33` },
-          text: { color: Colors.warning },
+          container: { backgroundColor: `${colors.warning}33` },
+          text: { color: colors.warning },
         };
     }
   };
@@ -63,7 +75,7 @@ export function Badge({ variant, value, branch, style }: BadgeProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   base: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 3,

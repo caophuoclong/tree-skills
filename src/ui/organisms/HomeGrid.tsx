@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BentoCard } from '@/src/ui/molecules/BentoCard';
@@ -8,7 +8,8 @@ import { XPProgressBar } from '@/src/ui/molecules/XPProgressBar';
 import { MoodWidget } from '@/src/ui/molecules/MoodWidget';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Icon } from '@/src/ui/atoms/Icon';
-import { Colors, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Spacing } from '@/src/ui/tokens/spacing';
 import type { Branch, MoodScore } from '@/src/business-logic/types';
 
@@ -33,6 +34,13 @@ interface HomeGridProps {
   onMoodSelect?: (score: MoodScore) => void;
 }
 
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
+
 export function HomeGrid({
   userName,
   level,
@@ -45,6 +53,9 @@ export function HomeGrid({
   hasMoodToday,
   onMoodSelect,
 }: HomeGridProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const router = useRouter();
 
   return (
@@ -52,16 +63,16 @@ export function HomeGrid({
       {/* Row 1: Skill Tree Progress (2col) + Streak (1col) */}
       <View style={styles.row}>
         <BentoCard cols={2} onPress={() => router.push('/(tabs)/tree')} style={styles.treeCard}>
-          <AppText variant="caption" color={Colors.textMuted}>Skill Progress</AppText>
+          <AppText variant="caption" color={colors.textMuted}>Skill Progress</AppText>
           <View style={styles.branchRings}>
             {branchProgress.map((bp) => (
               <View key={bp.branch} style={styles.branchItem}>
-                <View style={[styles.ring, { borderColor: BranchColors[bp.branch] }]}>
-                  <AppText variant="micro" color={BranchColors[bp.branch]}>
+                <View style={[styles.ring, { borderColor: BranchColors[bp.branch as string] }]}>
+                  <AppText variant="micro" color={BranchColors[bp.branch as string]}>
                     {bp.percent}%
                   </AppText>
                 </View>
-                <AppText variant="micro" color={Colors.textMuted} style={styles.branchLabel}>
+                <AppText variant="micro" color={colors.textMuted} style={styles.branchLabel}>
                   {bp.branch === 'softskills' ? 'Soft' : bp.branch.charAt(0).toUpperCase() + bp.branch.slice(1)}
                 </AppText>
               </View>
@@ -72,7 +83,7 @@ export function HomeGrid({
         <View style={styles.colGap} />
 
         <BentoCard cols={1} style={styles.streakCard}>
-          <AppText variant="micro" color={Colors.textMuted}>Streak</AppText>
+          <AppText variant="micro" color={colors.textMuted}>Streak</AppText>
           <StreakBadge count={streak} size="sm" />
         </BentoCard>
       </View>
@@ -91,11 +102,11 @@ export function HomeGrid({
       {/* Row 2: Quests (1col) + XP Progress (2col) */}
       <View style={styles.row}>
         <BentoCard cols={1} onPress={() => router.push('/(tabs)/quests')} style={styles.questCard}>
-          <Icon name="checkmark-circle" size="sm" color={Colors.brandPrimary} />
-          <AppText variant="title" color={Colors.textPrimary} style={styles.questCount}>
+          <Icon name="checkmark-circle" size="sm" color={colors.brandPrimary} />
+          <AppText variant="title" color={colors.textPrimary} style={styles.questCount}>
             {pendingQuestCount}
           </AppText>
-          <AppText variant="micro" color={Colors.textMuted}>quests hôm nay</AppText>
+          <AppText variant="micro" color={colors.textMuted}>quests hôm nay</AppText>
         </BentoCard>
 
         <View style={styles.colGap} />
@@ -116,7 +127,7 @@ export function HomeGrid({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   grid: {
     paddingHorizontal: Spacing.screenPadding,
   },

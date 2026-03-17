@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,17 +11,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useOnboarding } from '@/src/business-logic/hooks/useOnboarding';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import type { Branch } from '@/src/business-logic/types';
+
 
 // ─── Branch config ───────────────────────────────────────────────────────────
 
-const BRANCH_COLORS: Record<Branch, string> = {
-  career: Colors.career,
-  finance: Colors.finance,
-  softskills: Colors.softskills,
-  wellbeing: Colors.wellbeing,
-};
+const getBranchColors = (colors: any): Record<Branch, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
 
 const BRANCH_ICONS: Record<Branch, string> = {
   career: '🚀',
@@ -53,6 +54,9 @@ interface OptionCardProps {
 }
 
 function OptionCard({ branch, selected, onPress }: OptionCardProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BRANCH_COLORS = useMemo(() => getBranchColors(colors), [colors]);
   const color = BRANCH_COLORS[branch];
   return (
     <TouchableOpacity
@@ -81,7 +85,7 @@ function OptionCard({ branch, selected, onPress }: OptionCardProps) {
         <Text style={styles.optionTitle}>{BRANCH_TITLES[branch]}</Text>
         <Text style={styles.optionSubtitle}>{BRANCH_SUBTITLES[branch]}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
     </TouchableOpacity>
   );
 }
@@ -89,6 +93,8 @@ function OptionCard({ branch, selected, onPress }: OptionCardProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function AssessmentScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     currentQuestion,
     currentIndex,
@@ -126,7 +132,7 @@ export default function AssessmentScreen() {
           <Ionicons
             name="chevron-back"
             size={20}
-            color={canGoBack ? Colors.textSecondary : 'transparent'}
+            color={canGoBack ? colors.textSecondary : 'transparent'}
           />
           {canGoBack && (
             <Text style={styles.backText}>Back</Text>
@@ -183,10 +189,10 @@ export default function AssessmentScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
 
   // Loading
@@ -197,7 +203,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
 
   // Header row
@@ -216,18 +222,18 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   stepLabel: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
 
   // Progress
   progressTrack: {
     height: 3,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     marginHorizontal: 20,
     borderRadius: 2,
     overflow: 'hidden',
@@ -235,7 +241,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: 3,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 2,
   },
 
@@ -255,15 +261,15 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 26,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 34,
   },
   titleAccent: {
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
   },
   titleSub: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 24,
   },
 
@@ -272,7 +278,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionCard: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -299,11 +305,11 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   optionSubtitle: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
 });

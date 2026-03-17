@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -10,7 +10,7 @@ import { GlassView } from '@/src/ui/atoms/GlassView';
 import { AppText } from '@/src/ui/atoms/Text';
 import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
 import { Button } from '@/src/ui/atoms/Button';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { Branch } from '@/src/business-logic/types';
 
@@ -37,6 +37,8 @@ function OptionCard({
   option: AssessmentOption;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scale = useSharedValue(1);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -55,7 +57,7 @@ function OptionCard({
     <TouchableOpacity onPress={handlePress} activeOpacity={0.85}>
       <Animated.View style={animStyle}>
         <GlassView style={styles.optionCard}>
-          <AppText variant="bodyLG" color={Colors.textPrimary}>
+          <AppText variant="bodyLG" color={colors.textPrimary}>
             {option.label}
           </AppText>
         </GlassView>
@@ -74,6 +76,8 @@ export function OnboardingStep({
   onSkip,
   showSkip = false,
 }: OnboardingStepProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const progress = ((currentIndex + 1) / total) * 100;
 
   return (
@@ -87,7 +91,7 @@ export function OnboardingStep({
         ) : (
           <View style={styles.navBtn} />
         )}
-        <AppText variant="caption" color={Colors.textMuted}>
+        <AppText variant="caption" color={colors.textMuted}>
           Câu {currentIndex + 1}/{total}
         </AppText>
         {showSkip ? (
@@ -100,10 +104,10 @@ export function OnboardingStep({
       </View>
 
       {/* Progress bar */}
-      <ProgressBar value={progress} color={Colors.brandPrimary} variant="thin" style={styles.progress} />
+      <ProgressBar value={progress} color={colors.brandPrimary} variant="thin" style={styles.progress} />
 
       {/* Question */}
-      <AppText variant="displayLG" color={Colors.textPrimary} style={styles.question}>
+      <AppText variant="displayLG" color={colors.textPrimary} style={styles.question}>
         {question}
       </AppText>
 
@@ -117,7 +121,7 @@ export function OnboardingStep({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: Spacing.screenPadding,

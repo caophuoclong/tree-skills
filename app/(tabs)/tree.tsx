@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Modal,
   Pressable,
@@ -13,18 +13,18 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
+import { useQuestStore } from '@/src/business-logic/stores/questStore';
 import { getDemoNodes } from '@/src/business-logic/data/skill-tree-nodes';
-import { Colors, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import type { Branch, SkillNode } from '@/src/business-logic/types';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const BRANCHES: { id: Branch; label: string }[] = [
-  { id: 'career', label: 'Sự nghiệp' },
-  { id: 'finance', label: 'Tài chính' },
-  { id: 'softskills', label: 'Kỹ năng mềm' },
-  { id: 'wellbeing', label: 'Sức khỏe' },
-];
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
 
 const BRANCH_NAMES: Record<Branch, string> = {
   career: 'Tech & Career',
@@ -48,6 +48,8 @@ interface NodeCircleProps {
 }
 
 function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isCompleted = node.status === 'completed';
   const isInProgress = node.status === 'in_progress';
   const isLocked = node.status === 'locked';
@@ -101,7 +103,7 @@ function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
         )}
         {isLocked && <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.2)" />}
       </View>
-      <Text style={[styles.nodeLabel, isLocked && { color: Colors.textMuted }]} numberOfLines={2}>
+      <Text style={[styles.nodeLabel, isLocked && { color: colors.textMuted }]} numberOfLines={2}>
         {node.title}
       </Text>
     </TouchableOpacity>
@@ -111,9 +113,22 @@ function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function TreeScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
+  const BRANCHES: { id: Branch; label: string }[] = useMemo(() => [
+    { id: 'career', label: 'Sự nghiệp' },
+    { id: 'finance', label: 'Tài chính' },
+    { id: 'softskills', label: 'Kỹ năng mềm' },
+    { id: 'wellbeing', label: 'Sức khỏe' },
+  ], []);
   const { nodes, activeBranch, setNodes, setActiveBranch } = useSkillTreeStore();
+  const { dailyQuests } = useQuestStore();
   const [selectedNode, setSelectedNode] = React.useState<SkillNode | null>(null);
   const [modalVisible, setModalVisible] = React.useState(false);
+
+  // Get today's first incomplete quest for the banner
+  const todayBannerQuest = dailyQuests.find((q) => !q.completed_at) ?? dailyQuests[0] ?? null;
 
   const handleNodePress = (node: SkillNode) => {
     setSelectedNode(node);
@@ -148,10 +163,10 @@ export default function TreeScreen() {
         </View>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="search-outline" size={22} color={Colors.textSecondary} />
+            <Ionicons name="search-outline" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={22} color={Colors.textSecondary} />
+            <Ionicons name="notifications-outline" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -172,8 +187,16 @@ export default function TreeScreen() {
               style={[
                 styles.tab,
                 isActive
-                  ? { backgroundColor: `${color}26` }
-                  : { backgroundColor: 'transparent' },
+                  ? {
+                      backgroundColor: `${color}20`,
+                      borderColor: `${color}60`,
+                      borderWidth: 1,
+                      shadowColor: color,
+                      shadowOpacity: 0.4,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }
+                  : { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'transparent' },
               ]}
               onPress={() => setActiveBranch(branch.id)}
               activeOpacity={0.8}
@@ -181,7 +204,7 @@ export default function TreeScreen() {
               <Text
                 style={[
                   styles.tabText,
-                  { color: isActive ? color : Colors.textMuted },
+                  { color: isActive ? color : colors.textMuted },
                   isActive && styles.tabTextActive,
                 ]}
               >
@@ -193,7 +216,14 @@ export default function TreeScreen() {
       </ScrollView>
 
       {/* ── Current branch card ────────────────────────────── */}
-      <View style={styles.branchCard}>
+      <View style={[styles.branchCard, {
+        borderWidth: 1,
+        borderColor: `${branchColor}30`,
+        shadowColor: branchColor,
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 3,
+      }]}>
         <Text style={styles.branchCardLabel}>NHÁNH HIỆN TẠI</Text>
         <Text style={styles.branchCardName}>{BRANCH_NAMES[activeBranch]}</Text>
         <Text style={styles.branchCardTier}>Cấp độ: Trung cấp</Text>
@@ -224,8 +254,13 @@ export default function TreeScreen() {
         {/* Tier 1 — Foundation (top, already unlocked/done) */}
         {tier1.length > 0 && (
           <View style={styles.tierSection}>
-            <Text style={styles.tierLabel}>{TIER_LABELS[1]}</Text>
-            <View style={styles.connectorLine} />
+            <Text style={[styles.tierLabel, { color: branchColor, opacity: 0.8 }]}>{TIER_LABELS[1]}</Text>
+            <View style={[styles.connectorLine, {
+              backgroundColor: `${branchColor}60`,
+              shadowColor: branchColor,
+              shadowOpacity: 0.5,
+              shadowRadius: 4,
+            }]} />
             <View style={styles.nodesRow}>
               {tier1.map((node) => (
                 <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
@@ -234,16 +269,26 @@ export default function TreeScreen() {
           </View>
         )}
 
-        {/* Connector */}
+        {/* Connector tier1 → tier2 */}
         {tier1.length > 0 && tier2.length > 0 && (
-          <View style={styles.tierConnector} />
+          <View style={[styles.tierConnector, {
+            backgroundColor: `${branchColor}40`,
+            shadowColor: branchColor,
+            shadowOpacity: 0.4,
+            shadowRadius: 6,
+          }]} />
         )}
 
         {/* Tier 2 — Intermediate */}
         {tier2.length > 0 && (
           <View style={styles.tierSection}>
-            <Text style={styles.tierLabel}>{TIER_LABELS[2]}</Text>
-            <View style={styles.connectorLine} />
+            <Text style={[styles.tierLabel, { color: branchColor, opacity: 0.7 }]}>{TIER_LABELS[2]}</Text>
+            <View style={[styles.connectorLine, {
+              backgroundColor: `${branchColor}50`,
+              shadowColor: branchColor,
+              shadowOpacity: 0.4,
+              shadowRadius: 4,
+            }]} />
             <View style={styles.nodesRow}>
               {tier2.map((node) => (
                 <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
@@ -252,16 +297,26 @@ export default function TreeScreen() {
           </View>
         )}
 
-        {/* Connector */}
+        {/* Connector tier2 → tier3 */}
         {tier2.length > 0 && tier3.length > 0 && (
-          <View style={[styles.tierConnector, { backgroundColor: `${branchColor}40`, shadowColor: branchColor, shadowOpacity: 0.3, shadowRadius: 5 }]} />
+          <View style={[styles.tierConnector, {
+            backgroundColor: `${branchColor}30`,
+            shadowColor: branchColor,
+            shadowOpacity: 0.3,
+            shadowRadius: 5,
+          }]} />
         )}
 
         {/* Tier 3 — Advanced (bottom, locked until lower tiers done) */}
         {tier3.length > 0 && (
           <View style={styles.tierSection}>
-            <Text style={styles.tierLabel}>{TIER_LABELS[3]}</Text>
-            <View style={styles.connectorLine} />
+            <Text style={[styles.tierLabel, { color: branchColor, opacity: 0.6 }]}>{TIER_LABELS[3]}</Text>
+            <View style={[styles.connectorLine, {
+              backgroundColor: `${branchColor}35`,
+              shadowColor: branchColor,
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }]} />
             <View style={styles.nodesRow}>
               {tier3.map((node) => (
                 <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
@@ -271,9 +326,16 @@ export default function TreeScreen() {
         )}
 
         {/* Today's Quest Banner */}
-        <View style={styles.questBanner}>
+        <View style={[styles.questBanner, {
+          backgroundColor: `${branchColor}E6`,
+          shadowColor: branchColor,
+          shadowOpacity: 0.4,
+          shadowRadius: 12,
+          elevation: 6,
+        }]}>
           <Text style={styles.questBannerText}>
-            ✦ Nhiệm vụ hôm nay: Coding Sprint
+            ✦ Nhiệm vụ hôm nay:{' '}
+            {todayBannerQuest?.title ?? 'Không có nhiệm vụ mới'}
           </Text>
         </View>
 
@@ -309,7 +371,7 @@ export default function TreeScreen() {
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close-circle" size={28} color={Colors.textMuted} />
+                <Ionicons name="close-circle" size={28} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -333,7 +395,7 @@ export default function TreeScreen() {
             <TouchableOpacity 
               style={[
                 styles.sheetButton, 
-                { backgroundColor: selectedNode?.status === 'locked' ? Colors.bgElevated : branchColor }
+                { backgroundColor: selectedNode?.status === 'locked' ? colors.bgElevated : branchColor }
               ]}
               disabled={selectedNode?.status === 'locked'}
               onPress={() => {
@@ -355,10 +417,10 @@ export default function TreeScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
 
   // Header
@@ -376,11 +438,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   headerSub: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   headerIcons: {
     flexDirection: 'row',
@@ -422,26 +484,26 @@ const styles = StyleSheet.create({
   branchCard: {
     marginHorizontal: 20,
     marginTop: 16,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: 12,
     padding: 16,
   },
   branchCardLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
   branchCardName: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: 4,
   },
   branchCardTier: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   branchProgressRow: {
@@ -452,13 +514,13 @@ const styles = StyleSheet.create({
   },
   branchProgressText: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     flexShrink: 0,
   },
   branchProgressTrack: {
     flex: 1,
     height: 4,
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -485,7 +547,7 @@ const styles = StyleSheet.create({
   tierLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -522,7 +584,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -534,7 +596,7 @@ const styles = StyleSheet.create({
   },
   nodeLabel: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 14,
@@ -545,7 +607,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginHorizontal: 0,
     width: '100%',
-    backgroundColor: `${Colors.brandPrimary}E6`,
+    backgroundColor: `${colors.brandPrimary}E6`,
     borderRadius: 14,
     padding: 14,
     alignItems: 'center',
@@ -563,13 +625,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheetContent: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 24,
     minHeight: 350,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -590,7 +652,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   sheetBranch: {
     fontSize: 12,
@@ -600,7 +662,7 @@ const styles = StyleSheet.create({
   sheetDescription: {
     fontSize: 15,
     lineHeight: 24,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 24,
   },
   sheetStats: {
@@ -614,13 +676,13 @@ const styles = StyleSheet.create({
   sheetStatLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
     letterSpacing: 1,
   },
   sheetStatValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   sheetButton: {
     height: 56,

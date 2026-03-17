@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -10,11 +10,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUserStore } from '../../business-logic/stores/userStore';
-import { Colors } from '../tokens';
+import { useTheme } from '../tokens';
+
 
 const { width } = Dimensions.get('window');
 
 export function LevelUpModal() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { levelUpReward, setLevelUpReward } = useUserStore();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -73,7 +76,7 @@ export function LevelUpModal() {
         >
           {/* Decorative elements */}
           <View style={styles.sparkleContainer}>
-             <Ionicons name="sparkles" size={80} color={Colors.softskills} style={styles.bgSparkle} />
+             <Ionicons name="sparkles" size={80} color={colors.softskills} style={styles.bgSparkle} />
           </View>
 
           <View style={styles.iconCircle}>
@@ -88,7 +91,7 @@ export function LevelUpModal() {
           <Text style={styles.messageText}>{levelUpReward.message}</Text>
           
           <View style={styles.unlockCard}>
-            <Ionicons name="lock-open" size={20} color={Colors.finance} />
+            <Ionicons name="lock-open" size={20} color={colors.finance} />
             <Text style={styles.unlockText}>{levelUpReward.unlocks}</Text>
           </View>
 
@@ -101,7 +104,7 @@ export function LevelUpModal() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -110,13 +113,13 @@ const styles = StyleSheet.create({
   },
   container: {
     width: width * 0.85,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: 32,
     padding: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    shadowColor: Colors.brandPrimary,
+    borderColor: colors.glassBorder,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
@@ -134,11 +137,11 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 15,
@@ -146,14 +149,14 @@ const styles = StyleSheet.create({
   congratsText: {
     fontSize: 14,
     fontWeight: '800',
-    color: Colors.brandGlow,
+    color: colors.brandGlow,
     letterSpacing: 4,
     marginBottom: 8,
   },
   levelText: {
     fontSize: 28,
     fontWeight: '900',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 24,
@@ -185,16 +188,16 @@ const styles = StyleSheet.create({
   unlockText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.finance,
+    color: colors.finance,
   },
   button: {
     width: '100%',
     height: 60,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 10,

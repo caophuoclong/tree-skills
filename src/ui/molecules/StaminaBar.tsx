@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -12,17 +12,18 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/ui/atoms/Text';
 import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
+
 import { Spacing } from '@/src/ui/tokens/spacing';
 
 interface StaminaBarProps {
   value: number; // 0–100
 }
 
-function getStaminaColor(value: number): string {
-  if (value >= 70) return Colors.staminaOk;
-  if (value >= 30) return Colors.staminaMid;
-  return Colors.staminaLow;
+function getStaminaColor(value: number, colors: any): string {
+  if (value >= 70) return colors.staminaOk;
+  if (value >= 30) return colors.staminaMid;
+  return colors.staminaLow;
 }
 
 function getStaminaLabel(value: number): string {
@@ -33,7 +34,9 @@ function getStaminaLabel(value: number): string {
 }
 
 export function StaminaBar({ value }: StaminaBarProps) {
-  const color = getStaminaColor(value);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const color = useMemo(() => getStaminaColor(value, colors), [value, colors]);
   const shakeX = useSharedValue(0);
   const pulseOpacity = useSharedValue(1);
 
@@ -85,8 +88,8 @@ export function StaminaBar({ value }: StaminaBarProps) {
         <ProgressBar value={value} color={color} variant="thick" />
         {value === 0 && (
           <View style={styles.warningRow}>
-            <Ionicons name="warning" size={12} color={Colors.danger} />
-            <AppText variant="micro" color={Colors.danger} style={styles.warningText}>
+            <Ionicons name="warning" size={12} color={colors.danger} />
+            <AppText variant="micro" color={colors.danger} style={styles.warningText}>
               Hoàn thành Wellbeing quest để tiếp tục
             </AppText>
           </View>
@@ -96,7 +99,7 @@ export function StaminaBar({ value }: StaminaBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: { gap: Spacing.xs },
   header: {
     flexDirection: 'row',

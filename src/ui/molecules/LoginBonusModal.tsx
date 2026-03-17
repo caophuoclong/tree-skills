@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   Animated,
   Modal,
@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
 
 export function LoginBonusModal() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const reward = useUserStore((s) => s.loginBonusReward);
   const setReward = useUserStore((s) => s.setLoginBonusReward);
   const updateXP = useUserStore((s) => s.updateXP);
@@ -89,7 +91,7 @@ export function LoginBonusModal() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
-    backgroundColor: '#1A1A2E',
+    backgroundColor: colors.bgSurface,
     borderRadius: 32,
     padding: 32,
     alignItems: 'center',
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: `${Colors.brandPrimary}20`,
+    backgroundColor: `${colors.brandPrimary}20`,
     zIndex: -1,
   },
   header: {
@@ -127,13 +129,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 10,
@@ -154,34 +156,34 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: `${Colors.softskills}20`,
+    backgroundColor: `${colors.softskills}20`,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.softskills,
-    shadowColor: Colors.softskills,
+    borderColor: colors.softskills,
+    shadowColor: colors.softskills,
     shadowOpacity: 0.5,
     shadowRadius: 15,
   },
   xpText: {
     fontSize: 28,
     fontWeight: '800',
-    color: Colors.softskills,
+    color: colors.softskills,
   },
   xpLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.softskills,
+    color: colors.softskills,
     marginTop: -4,
   },
   claimButton: {
     width: '100%',
     height: 56,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.brandPrimary,
+    shadowColor: colors.brandPrimary,
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SkillNode } from '@/src/ui/molecules/SkillNode';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Button } from '@/src/ui/atoms/Button';
-import { Colors, BranchColor, BranchColors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 import type { SkillNode as SkillNodeType, Branch } from '@/src/business-logic/types';
 
@@ -16,9 +16,19 @@ interface SkillTreeBranchProps {
   activeNodeId?: string;
 }
 
+const getBranchColors = (colors: any): Record<string, string> => ({
+  career: colors.career,
+  finance: colors.finance,
+  softskills: colors.softskills,
+  wellbeing: colors.wellbeing,
+});
+
 export function SkillTreeBranch({ branch, nodes, activeNodeId }: SkillTreeBranchProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const router = useRouter();
-  const branchColor = BranchColors[branch as BranchColor] ?? Colors.brandPrimary;
+  const branchColor = BranchColors[branch as string] ?? colors.brandPrimary;
 
   const tiers = [1, 2, 3].map((tier) => nodes.filter((n) => n.tier === tier));
 
@@ -81,7 +91,7 @@ export function SkillTreeBranch({ branch, nodes, activeNodeId }: SkillTreeBranch
             fullWidth
             onPress={() => router.push('/(tabs)/quests')}
           >
-            Today's Quest
+            Today&apos;s Quest
           </Button>
         </View>
       )}
@@ -89,7 +99,7 @@ export function SkillTreeBranch({ branch, nodes, activeNodeId }: SkillTreeBranch
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   scroll: { flex: 1 },
   content: {
     paddingHorizontal: Spacing.screenPadding,

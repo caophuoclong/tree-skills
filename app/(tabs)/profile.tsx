@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Alert,
   ScrollView,
@@ -13,8 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUserStore } from '@/src/business-logic/stores/userStore';
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 import type { Branch } from '@/src/business-logic/types';
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,9 @@ interface BranchRowProps {
 }
 
 function BranchProgressRow({ label, percent, color }: BranchRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.branchRow}>
       <Text style={styles.branchLabel}>{label}</Text>
@@ -65,6 +69,8 @@ function BranchProgressRow({ label, percent, color }: BranchRowProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const user = useUserStore((s) => s.user);
   const logout = useUserStore((s) => s.logout);
   const nodes = useSkillTreeStore((s) => s.nodes);
@@ -82,14 +88,14 @@ export default function ProfileScreen() {
   const wellbeingPct = getBranchPercent(nodes, 'wellbeing') || 30;
   
   const milestones = [
-    { id: 1, title: 'Tân binh', description: 'Đạt 3 ngày liên tiếp', icon: 'medal-outline', unlocked: streak >= 3, color: Colors.career },
-    { id: 2, title: 'Kiên trì', description: 'Đạt 7 ngày liên tiếp', icon: 'ribbon-outline', unlocked: streak >= 7, color: Colors.finance },
-    { id: 3, title: 'Kỷ luật', description: 'Đạt 14 ngày liên tiếp', icon: 'shield-checkmark-outline', unlocked: streak >= 14, color: Colors.softskills },
-    { id: 4, title: 'Huyền thoại', description: 'Đạt 30 ngày liên tiếp', icon: 'star-outline', unlocked: streak >= 30, color: Colors.wellbeing },
-    { id: 5, title: 'Bậc thầy Sự nghiệp', description: 'Hoàn thành nhánh Sự nghiệp', icon: 'briefcase', unlocked: careerPct >= 100, color: Colors.career },
-    { id: 6, title: 'Bậc thầy Tài chính', description: 'Hoàn thành nhánh Tài chính', icon: 'wallet', unlocked: financePct >= 100, color: Colors.finance },
-    { id: 7, title: 'Bậc thầy Kỹ năng', description: 'Hoàn thành nhánh Kỹ năng mềm', icon: 'people', unlocked: softskillsPct >= 100, color: Colors.softskills },
-    { id: 8, title: 'Bậc thầy Sức khỏe', description: 'Hoàn thành nhánh Sức khỏe', icon: 'pulse', unlocked: wellbeingPct >= 100, color: Colors.wellbeing },
+    { id: 1, title: 'Tân binh', description: 'Đạt 3 ngày liên tiếp', icon: 'medal-outline', unlocked: streak >= 3, color: colors.career },
+    { id: 2, title: 'Kiên trì', description: 'Đạt 7 ngày liên tiếp', icon: 'ribbon-outline', unlocked: streak >= 7, color: colors.finance },
+    { id: 3, title: 'Kỷ luật', description: 'Đạt 14 ngày liên tiếp', icon: 'shield-checkmark-outline', unlocked: streak >= 14, color: colors.softskills },
+    { id: 4, title: 'Huyền thoại', description: 'Đạt 30 ngày liên tiếp', icon: 'star-outline', unlocked: streak >= 30, color: colors.wellbeing },
+    { id: 5, title: 'Bậc thầy Sự nghiệp', description: 'Hoàn thành nhánh Sự nghiệp', icon: 'briefcase', unlocked: careerPct >= 100, color: colors.career },
+    { id: 6, title: 'Bậc thầy Tài chính', description: 'Hoàn thành nhánh Tài chính', icon: 'wallet', unlocked: financePct >= 100, color: colors.finance },
+    { id: 7, title: 'Bậc thầy Kỹ năng', description: 'Hoàn thành nhánh Kỹ năng mềm', icon: 'people', unlocked: softskillsPct >= 100, color: colors.softskills },
+    { id: 8, title: 'Bậc thầy Sức khỏe', description: 'Hoàn thành nhánh Sức khỏe', icon: 'pulse', unlocked: wellbeingPct >= 100, color: colors.wellbeing },
   ];
 
   const handleLogout = () => {
@@ -137,14 +143,14 @@ export default function ProfileScreen() {
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={Colors.textMuted}
+            color={colors.textMuted}
             style={styles.premiumChevron}
           />
         </View>
 
         {/* ── Streak card ────────────────────────────────── */}
         <View style={styles.streakCard}>
-          <View style={[styles.accentBar, { backgroundColor: Colors.warning }]} />
+          <View style={[styles.accentBar, { backgroundColor: colors.warning }]} />
           <Text style={styles.streakTitle}>🔥 Chuỗi {streak} ngày</Text>
           <Text style={styles.streakBest}>Kỷ lục: {bestStreak} ngày</Text>
         </View>
@@ -176,10 +182,10 @@ export default function ProfileScreen() {
             {milestones.map((m) => (
               <View key={m.id} style={[styles.milestoneCard, !m.unlocked && styles.milestoneLocked, m.unlocked && { borderColor: `${m.color}60` }]}>
                 {m.unlocked && <View style={[styles.accentBar, { backgroundColor: m.color }]} />}
-                <View style={[styles.milestoneIcon, { backgroundColor: m.unlocked ? `${m.color}20` : Colors.bgElevated }]}>
-                  <Ionicons name={m.icon as any} size={24} color={m.unlocked ? m.color : Colors.textMuted} />
+                <View style={[styles.milestoneIcon, { backgroundColor: m.unlocked ? `${m.color}20` : colors.bgElevated }]}>
+                  <Ionicons name={m.icon as any} size={24} color={m.unlocked ? m.color : colors.textMuted} />
                 </View>
-                <Text style={[styles.milestoneTitle, !m.unlocked && { color: Colors.textMuted }]}>{m.title}</Text>
+                <Text style={[styles.milestoneTitle, !m.unlocked && { color: colors.textMuted }]}>{m.title}</Text>
                 <Text style={styles.milestoneDesc}>{m.description}</Text>
               </View>
             ))}
@@ -193,41 +199,41 @@ export default function ProfileScreen() {
             <BranchProgressRow
               label="Sự nghiệp"
               percent={careerPct}
-              color={Colors.career}
+              color={colors.career}
             />
             <BranchProgressRow
               label="Tài chính"
               percent={financePct}
-              color={Colors.finance}
+              color={colors.finance}
             />
             <BranchProgressRow
               label="Kỹ năng mềm"
               percent={softskillsPct}
-              color={Colors.softskills}
+              color={colors.softskills}
             />
             <BranchProgressRow
               label="Sức khỏe"
               percent={wellbeingPct}
-              color={Colors.wellbeing}
+              color={colors.wellbeing}
             />
           </View>
         </View>
 
         <TouchableOpacity
           style={styles.settingsRow}
-          onPress={() => Alert.alert('Cài đặt', 'Tính năng đang phát triển')}
+          onPress={() => router.push('/settings')}
           activeOpacity={0.8}
         >
           <Ionicons
             name="settings-outline"
             size={18}
-            color={Colors.textPrimary}
+            color={colors.textPrimary}
           />
           <Text style={styles.settingsText}>Cài đặt</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={Colors.textMuted}
+            color={colors.textMuted}
           />
         </TouchableOpacity>
 
@@ -240,13 +246,13 @@ export default function ProfileScreen() {
           <Ionicons
             name="trophy-outline"
             size={18}
-            color={Colors.textPrimary}
+            color={colors.textPrimary}
           />
           <Text style={styles.settingsText}>Bảng xếp hạng</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={Colors.textMuted}
+            color={colors.textMuted}
           />
         </TouchableOpacity>
 
@@ -259,15 +265,15 @@ export default function ProfileScreen() {
           <Ionicons
             name="log-out-outline"
             size={18}
-            color={Colors.danger}
+            color={colors.danger}
           />
-          <Text style={[styles.settingsText, { color: Colors.danger }]}>
+          <Text style={[styles.settingsText, { color: colors.danger }]}>
             Đăng xuất
           </Text>
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={Colors.textMuted}
+            color={colors.textMuted}
           />
         </TouchableOpacity>
 
@@ -279,10 +285,10 @@ export default function ProfileScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgBase,
+    backgroundColor: colors.bgBase,
   },
   scroll: {
     flex: 1,
@@ -305,22 +311,22 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderWidth: 3,
-    borderColor: Colors.brandPrimary,
+    borderColor: colors.brandPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitials: {
     fontSize: 24,
     fontWeight: '800', // Display bold
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   levelBadge: {
     position: 'absolute',
     bottom: -4,
     right: -4,
-    backgroundColor: Colors.brandPrimary,
+    backgroundColor: colors.brandPrimary,
     borderRadius: 9999,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -333,18 +339,18 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   userSubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
 
   // Premium banner
   premiumBanner: {
     marginHorizontal: 20,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     borderRadius: 12,
     padding: 14,
     flexDirection: 'row',
@@ -352,18 +358,18 @@ const styles = StyleSheet.create({
   },
   premiumStar: {
     fontSize: 16,
-    color: Colors.brandPrimary,
+    color: colors.brandPrimary,
     marginRight: 8,
   },
   premiumTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
   },
   premiumRenew: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginRight: 4,
   },
   premiumChevron: {
@@ -392,11 +398,11 @@ const styles = StyleSheet.create({
   streakTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   streakBest: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
   },
 
@@ -419,11 +425,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   statLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
     lineHeight: 13,
@@ -437,7 +443,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   branchRows: {
@@ -478,13 +484,13 @@ const styles = StyleSheet.create({
   milestoneTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 4,
   },
   milestoneDesc: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
   },
   branchRow: {
@@ -494,12 +500,12 @@ const styles = StyleSheet.create({
   },
   branchLabel: {
     fontSize: 13,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
   },
   branchPercent: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     width: 36,
     textAlign: 'right',
   },
@@ -530,7 +536,7 @@ const styles = StyleSheet.create({
   },
   settingsText: {
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
   },
 

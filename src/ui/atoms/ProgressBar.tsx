@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { Colors } from '@/src/ui/tokens/colors';
+import { useTheme } from '@/src/ui/tokens';
 
 type ProgressBarVariant = 'thin' | 'thick';
 
@@ -19,11 +19,14 @@ interface ProgressBarProps {
 
 export function ProgressBar({
   value,
-  color = Colors.brandPrimary,
+  color,
   variant = 'thin',
   style,
   animated = true,
 }: ProgressBarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const fillColor = color || colors.brandPrimary;
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -44,16 +47,16 @@ export function ProgressBar({
   return (
     <View style={[styles.track, { height, borderRadius: height / 2 }, style]}>
       <Animated.View
-        style={[styles.fill, { backgroundColor: color, height, borderRadius: height / 2 }, animatedFill]}
+        style={[styles.fill, { backgroundColor: fillColor, height, borderRadius: height / 2 }, animatedFill]}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   track: {
     width: '100%',
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: colors.bgSurface,
     overflow: 'hidden',
   },
   fill: {
