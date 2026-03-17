@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback } from 'react';
 import {
+  Animated,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,17 +25,17 @@ const BRANCH_COLORS: Record<string, string> = {
 };
 
 const BRANCH_LABELS: Record<string, string> = {
-  career: 'CAREER',
-  finance: 'FINANCE',
-  softskills: 'SOFT SKILLS',
-  wellbeing: 'WELLBEING',
+  career: 'SỰ NGHIỆP',
+  finance: 'TÀI CHÍNH',
+  softskills: 'KỸ NĂNG MỀM',
+  wellbeing: 'SỨC KHỎE',
 };
 
 const BRANCH_CATEGORY_LABELS: Record<string, string> = {
-  career: 'Career Quest',
-  finance: 'Finance Quest',
-  softskills: 'Soft Skills Quest',
-  wellbeing: 'Wellbeing Quest',
+  career: 'Nhiệm vụ Sự nghiệp',
+  finance: 'Nhiệm vụ Tài chính',
+  softskills: 'Nhiệm vụ Kỹ năng mềm',
+  wellbeing: 'Nhiệm vụ Sức khoẻ',
 };
 
 const WHY_TEXT: Record<string, string> = {
@@ -80,6 +81,9 @@ function parseSteps(description: string): string[] {
 export default function QuestDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { quests, completeQuest } = useQuestManager();
+  const xpAnim = React.useRef(new Animated.Value(0)).current;
+  const [showXP, setShowXP] = React.useState(false);
+  const [xpResult, setXpResult] = React.useState<{ bonusXP: number; multiplier: number } | null>(null);
 
   const quest: Quest | undefined = quests.find((q) => q.quest_id === id);
 
@@ -89,9 +93,31 @@ export default function QuestDetailScreen() {
 
   const handleComplete = useCallback(() => {
     if (!quest || isCompleted) return;
-    completeQuest(quest.quest_id);
-    setTimeout(() => router.back(), 600);
-  }, [quest, isCompleted, completeQuest]);
+    const result = completeQuest(quest.quest_id);
+    
+    if (result) {
+      setXpResult({ bonusXP: result.bonusXP, multiplier: result.multiplier });
+    }
+
+    // XP Animation
+    setShowXP(true);
+    Animated.sequence([
+      Animated.timing(xpAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(xpAnim, {
+        toValue: 0,
+        duration: 200,
+        delay: 600,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setShowXP(false);
+      router.back();
+    });
+  }, [quest, isCompleted, completeQuest, xpAnim]);
 
   if (!quest) {
     return (
@@ -155,15 +181,15 @@ export default function QuestDetailScreen() {
           </View>
         </View>
 
-        {/* ── Why This Matters ──────────────────────────────── */}
+        {/* ── Tại sao điều này quan trọng ──────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>WHY THIS MATTERS</Text>
+          <Text style={styles.sectionLabel}>TẠI SAO ĐIỀU NÀY QUAN TRỌNG</Text>
           <Text style={styles.sectionBody}>{whyText}</Text>
         </View>
 
-        {/* ── How to Complete ───────────────────────────────── */}
+        {/* ── Cách hoàn thành ───────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>HOW TO COMPLETE</Text>
+          <Text style={styles.sectionLabel}>CÁCH HOÀN THÀNH</Text>
           <View style={styles.stepsContainer}>
             {steps.map((step, index) => (
               <View key={index} style={styles.stepRow}>
@@ -176,10 +202,10 @@ export default function QuestDetailScreen() {
           </View>
         </View>
 
-        {/* ── Resources ────────────────────────────────────── */}
+        {/* ── Tài nguyên tham khảo ────────────────────────── */}
         {resources.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>RESOURCES</Text>
+            <Text style={styles.sectionLabel}>TÀI NGUYÊN THAM KHẢO</Text>
             {resources.map((resource, index) => (
               <View
                 key={index}
@@ -210,12 +236,12 @@ export default function QuestDetailScreen() {
       {/* ── Footer ───────────────────────────────────────── */}
       <View style={styles.footer}>
         <Text style={styles.footerNote}>
-          ⚡ No Stamina cost · Pure XP gain
+          ⚡ Không tốn Thể lực · Nhận XP thuần
         </Text>
         {isCompleted ? (
           <View style={styles.completedBtn}>
             <Ionicons name="checkmark-circle" size={20} color={Colors.finance} />
-            <Text style={styles.completedBtnText}>Completed</Text>
+            <Text style={styles.completedBtnText}>Đã hoàn thành</Text>
           </View>
         ) : (
           <TouchableOpacity
@@ -223,13 +249,45 @@ export default function QuestDetailScreen() {
             onPress={handleComplete}
             activeOpacity={0.85}
           >
-            <Text style={styles.completeBtnText}>Mark as Complete</Text>
+            <Text style={styles.completeBtnText}>Đánh dấu hoàn thành</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-          <Text style={styles.skipText}>Skip for today</Text>
+          <Text style={styles.skipText}>Bỏ qua hôm nay</Text>
         </TouchableOpacity>
       </View>
+
+      {/* XP Floating Animation */}
+      {showXP && (
+        <Animated.View
+          style={[
+            styles.xpFloat,
+            {
+              opacity: xpAnim,
+              transform: [
+                {
+                  translateY: xpAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -120],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Text style={styles.xpFloatText}>
+            +{quest?.xp_reward} XP
+            {xpResult && xpResult.bonusXP > 0 && (
+              <Text style={styles.xpBonusText}> +{xpResult.bonusXP} COMBO</Text>
+            )}
+          </Text>
+          {xpResult && xpResult.multiplier > 1 && (
+            <View style={styles.comboBadge}>
+              <Text style={styles.comboText}>X{xpResult.multiplier} MULTIPLIER</Text>
+            </View>
+          )}
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -271,6 +329,47 @@ const styles = StyleSheet.create({
   headerBranchLabel: {
     fontSize: 16,
     fontWeight: '600',
+  },
+
+  // XP Float
+  xpFloat: {
+    position: 'absolute',
+    bottom: 120,
+    alignSelf: 'center',
+    backgroundColor: Colors.bgSurface,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.softskills,
+    shadowColor: Colors.softskills,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  xpFloatText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: Colors.softskills,
+    textAlign: 'center',
+  },
+  xpBonusText: {
+    fontSize: 14,
+    color: Colors.career, // Use a bright color for bonus
+  },
+  comboBadge: {
+    backgroundColor: Colors.career,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  comboText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#000000',
+    letterSpacing: 1,
   },
 
   // Scroll

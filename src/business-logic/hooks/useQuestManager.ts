@@ -16,7 +16,7 @@ export interface QuestManagerResult {
   completedCount: number;
   totalCount: number;
   isLoading: boolean;
-  completeQuest: (questId: string) => void;
+  completeQuest: (questId: string) => { reward: any | null; bonusXP: number; multiplier: number } | undefined;
   resetQuests: () => void;
   canCompleteQuest: (branch: Branch) => boolean;
 }
@@ -29,7 +29,7 @@ export function useQuestManager(): QuestManagerResult {
     completeQuest: storeComplete,
     resetQuests,
   } = useQuestStore();
-  const { user } = useUserStore();
+  const { user, incrementDailyQuestCount } = useUserStore();
   const { addXP } = useXPEngine();
   const { xpMultiplier, canComplete, onQuestComplete } = useStaminaSystem();
   const { recordActivity } = useGrowthStreak();
@@ -55,12 +55,17 @@ export function useQuestManager(): QuestManagerResult {
       if (!canComplete(quest.branch)) return;
 
       const xpEarned = Math.floor(quest.xp_reward * xpMultiplier);
-      addXP(xpEarned);
+      incrementDailyQuestCount(quest.branch);
+      const result = addXP(xpEarned);
+      
       onQuestComplete(quest.branch);
       recordActivity();
       storeComplete(questId);
+
+      // We could return result here if we want the UI to show a toast
+      return result;
     },
-    [dailyQuests, canComplete, xpMultiplier, addXP, onQuestComplete, recordActivity, storeComplete],
+    [dailyQuests, canComplete, xpMultiplier, addXP, onQuestComplete, recordActivity, storeComplete, incrementDailyQuestCount],
   );
 
   const completedCount = dailyQuests.filter((q) => q.completed_at !== null).length;
@@ -69,7 +74,7 @@ export function useQuestManager(): QuestManagerResult {
     quests: dailyQuests,
     completedCount,
     totalCount: dailyQuests.length,
-    isLoading: dailyQuests.length === 0,
+    isLoading: dailyQuests.length === 0 && !lastResetDate,
     completeQuest,
     resetQuests,
     canCompleteQuest: canComplete,

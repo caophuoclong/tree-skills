@@ -6,3 +6,5 @@ export { XPProgressBar } from './XPProgressBar';
 export { StreakBadge } from './StreakBadge';
 export { MoodWidget } from './MoodWidget';
 export { BranchProgressRow } from './BranchProgressRow';
+export { LevelUpModal } from './LevelUpModal';
+export { LoginBonusModal } from './LoginBonusModal';

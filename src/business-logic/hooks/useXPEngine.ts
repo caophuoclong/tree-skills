@@ -59,21 +59,33 @@ function getLevelUpReward(level: number): LevelUpReward {
   return rewards[level] ?? { level, message: `Lên level ${level}!`, unlocks: 'Tiếp tục phát triển' };
 }
 
+export function getComboMultiplier(combo: number): number {
+  if (combo >= 5) return 2.0;
+  if (combo >= 4) return 1.75;
+  if (combo >= 3) return 1.5;
+  return 1.0;
+}
+
 export interface XPEngineResult {
-  addXP: (amount: number) => LevelUpReward | null;
+  addXP: (amount: number) => { reward: LevelUpReward | null; bonusXP: number; multiplier: number };
   getXPThreshold: (level: number) => number;
   computeLevel: (totalXP: number) => { level: number; currentXP: number; xpToNext: number };
 }
 
 export function useXPEngine(): XPEngineResult {
-  const { user, updateXP, setUser } = useUserStore();
+  const { user, setUser, setLevelUpReward } = useUserStore();
 
   const addXP = useCallback(
-    (amount: number): LevelUpReward | null => {
-      if (!user) return null;
+    (amount: number): { reward: LevelUpReward | null; bonusXP: number; multiplier: number } => {
+      if (!user) return { reward: null, bonusXP: 0, multiplier: 1 };
+
+      const dailyStats = useUserStore.getState().dailyStats;
+      const multiplier = getComboMultiplier(dailyStats.session_combo);
+      const totalAmount = Math.round(amount * multiplier);
+      const bonusXP = totalAmount - amount;
 
       const prevLevel = user.level;
-      const newTotalXP = user.total_xp + amount;
+      const newTotalXP = user.total_xp + totalAmount;
       const { level: newLevel, currentXP, xpToNext } = computeLevel(newTotalXP);
 
       setUser({
@@ -84,12 +96,15 @@ export function useXPEngine(): XPEngineResult {
         xp_to_next_level: xpToNext,
       });
 
+      let levelReward: LevelUpReward | null = null;
       if (newLevel > prevLevel) {
-        return getLevelUpReward(newLevel);
+        levelReward = getLevelUpReward(newLevel);
+        setLevelUpReward(levelReward);
       }
-      return null;
+
+      return { reward: levelReward, bonusXP, multiplier };
     },
-    [user, setUser],
+    [user, setUser, setLevelUpReward],
   );
 
   return { addXP, getXPThreshold, computeLevel };

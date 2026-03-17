@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { queryClient } from '@/src/business-logic/api/query-client';
+import { LevelUpModal, LoginBonusModal } from '@/src/ui/molecules';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -21,6 +22,8 @@ export default function RootLayout() {
         <Stack.Screen name="wellbeing" />
       </Stack>
       <StatusBar style="light" backgroundColor="#0D0D0F" />
+      <LevelUpModal />
+      <LoginBonusModal />
     </QueryClientProvider>
   );
 }

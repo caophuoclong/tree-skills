@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
 import {
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
@@ -17,10 +20,10 @@ import type { Branch, SkillNode } from '@/src/business-logic/types';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BRANCHES: { id: Branch; label: string }[] = [
-  { id: 'career', label: 'Career' },
-  { id: 'finance', label: 'Finance' },
-  { id: 'softskills', label: 'Soft Skills' },
-  { id: 'wellbeing', label: 'Well-being' },
+  { id: 'career', label: 'Sự nghiệp' },
+  { id: 'finance', label: 'Tài chính' },
+  { id: 'softskills', label: 'Kỹ năng mềm' },
+  { id: 'wellbeing', label: 'Sức khỏe' },
 ];
 
 const BRANCH_NAMES: Record<Branch, string> = {
@@ -31,9 +34,9 @@ const BRANCH_NAMES: Record<Branch, string> = {
 };
 
 const TIER_LABELS: Record<number, string> = {
-  3: 'TIER 3 · ADVANCED',
-  2: 'TIER 2 · INTERMEDIATE',
-  1: 'TIER 1 · FOUNDATION',
+  3: 'CẤP ĐỘ 3 · NÂNG CAO',
+  2: 'CẤP ĐỘ 2 · TRUNG CẤP',
+  1: 'CẤP ĐỘ 1 · NỀN TẢNG',
 };
 
 // ─── Node component ───────────────────────────────────────────────────────────
@@ -41,9 +44,10 @@ const TIER_LABELS: Record<number, string> = {
 interface NodeCircleProps {
   node: SkillNode;
   branchColor: string;
+  onPress: (node: SkillNode) => void;
 }
 
-function NodeCircle({ node, branchColor }: NodeCircleProps) {
+function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
   const isCompleted = node.status === 'completed';
   const isInProgress = node.status === 'in_progress';
   const isLocked = node.status === 'locked';
@@ -56,43 +60,51 @@ function NodeCircle({ node, branchColor }: NodeCircleProps) {
   };
 
   return (
-    <View style={styles.nodeWrapper}>
+    <TouchableOpacity 
+      style={styles.nodeWrapper}
+      onPress={() => onPress(node)}
+      activeOpacity={0.8}
+    >
       <View
         style={[
           styles.nodeCircle,
           isCompleted && {
-            backgroundColor: `${Colors.brandPrimary}33`,
-            borderColor: Colors.brandPrimary,
+            backgroundColor: `${branchColor}20`,
+            borderColor: branchColor,
             borderWidth: 2,
+            shadowColor: branchColor,
+            shadowOpacity: 0.5,
+            shadowRadius: 10,
           },
           isInProgress && {
             borderColor: branchColor,
-            borderWidth: 2.5,
+            borderWidth: 3,
             shadowColor: branchColor,
             shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.5,
-            shadowRadius: 12,
-            elevation: 8,
+            shadowOpacity: 0.8,
+            shadowRadius: 15,
+            elevation: 10,
           },
           isLocked && {
             backgroundColor: '#1A1A2E',
-            borderColor: 'rgba(255,255,255,0.1)',
+            borderColor: 'rgba(255,255,255,0.05)',
             borderWidth: 1.5,
+            opacity: 0.4,
           },
         ]}
       >
         {isCompleted && (
-          <Ionicons name="checkmark" size={24} color={Colors.brandPrimary} />
+          <Ionicons name="checkmark" size={24} color={branchColor} />
         )}
         {isInProgress && (
           <Text style={styles.nodeIcon}>{ICONS[node.branch]}</Text>
         )}
-        {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
+        {isLocked && <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.2)" />}
       </View>
-      <Text style={styles.nodeLabel} numberOfLines={2}>
+      <Text style={[styles.nodeLabel, isLocked && { color: Colors.textMuted }]} numberOfLines={2}>
         {node.title}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -100,6 +112,13 @@ function NodeCircle({ node, branchColor }: NodeCircleProps) {
 
 export default function TreeScreen() {
   const { nodes, activeBranch, setNodes, setActiveBranch } = useSkillTreeStore();
+  const [selectedNode, setSelectedNode] = React.useState<SkillNode | null>(null);
+  const [modalVisible, setModalVisible] = React.useState(false);
+
+  const handleNodePress = (node: SkillNode) => {
+    setSelectedNode(node);
+    setModalVisible(true);
+  };
 
   useEffect(() => {
     if (nodes.length === 0) {
@@ -124,8 +143,8 @@ export default function TreeScreen() {
       {/* ── Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Skill Tree</Text>
-          <Text style={styles.headerSub}>Gen Z Growth Path</Text>
+          <Text style={styles.headerTitle}>Cây kỹ năng</Text>
+          <Text style={styles.headerSub}>Lộ trình phát triển bản thân</Text>
         </View>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconBtn}>
@@ -175,12 +194,12 @@ export default function TreeScreen() {
 
       {/* ── Current branch card ────────────────────────────── */}
       <View style={styles.branchCard}>
-        <Text style={styles.branchCardLabel}>CURRENT BRANCH</Text>
+        <Text style={styles.branchCardLabel}>NHÁNH HIỆN TẠI</Text>
         <Text style={styles.branchCardName}>{BRANCH_NAMES[activeBranch]}</Text>
-        <Text style={styles.branchCardTier}>Tier: Intermediate</Text>
+        <Text style={styles.branchCardTier}>Cấp độ: Trung cấp</Text>
         <View style={styles.branchProgressRow}>
           <Text style={styles.branchProgressText}>
-            {completedCount}/{totalCount} nodes completed
+            {completedCount}/{totalCount} nút đã hoàn tất
           </Text>
           <View style={styles.branchProgressTrack}>
             <View
@@ -209,7 +228,7 @@ export default function TreeScreen() {
             <View style={styles.connectorLine} />
             <View style={styles.nodesRow}>
               {tier1.map((node) => (
-                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} />
+                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
               ))}
             </View>
           </View>
@@ -227,7 +246,7 @@ export default function TreeScreen() {
             <View style={styles.connectorLine} />
             <View style={styles.nodesRow}>
               {tier2.map((node) => (
-                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} />
+                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
               ))}
             </View>
           </View>
@@ -235,7 +254,7 @@ export default function TreeScreen() {
 
         {/* Connector */}
         {tier2.length > 0 && tier3.length > 0 && (
-          <View style={styles.tierConnector} />
+          <View style={[styles.tierConnector, { backgroundColor: `${branchColor}40`, shadowColor: branchColor, shadowOpacity: 0.3, shadowRadius: 5 }]} />
         )}
 
         {/* Tier 3 — Advanced (bottom, locked until lower tiers done) */}
@@ -245,7 +264,7 @@ export default function TreeScreen() {
             <View style={styles.connectorLine} />
             <View style={styles.nodesRow}>
               {tier3.map((node) => (
-                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} />
+                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
               ))}
             </View>
           </View>
@@ -254,12 +273,82 @@ export default function TreeScreen() {
         {/* Today's Quest Banner */}
         <View style={styles.questBanner}>
           <Text style={styles.questBannerText}>
-            ✦ Today's Quest: Coding Sprint
+            ✦ Nhiệm vụ hôm nay: Coding Sprint
           </Text>
         </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* ── Node Detail Bottom Sheet ─────────────────────── */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={styles.sheetContent}>
+            <View style={styles.sheetHeader}>
+              <View style={[styles.sheetIcon, { backgroundColor: `${branchColor}20` }]}>
+                <Ionicons 
+                  name={selectedNode?.branch === 'career' ? 'briefcase' : 
+                        selectedNode?.branch === 'finance' ? 'cash' : 
+                        selectedNode?.branch === 'softskills' ? 'chatbubbles' : 'leaf'} 
+                  size={24} 
+                  color={branchColor} 
+                />
+              </View>
+              <View style={styles.sheetHeaderText}>
+                <Text style={styles.sheetTitle}>{selectedNode?.title}</Text>
+                <Text style={[styles.sheetBranch, { color: branchColor }]}>
+                  {activeBranch.toUpperCase()} · CẤP {selectedNode?.tier}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close-circle" size={28} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.sheetDescription}>
+              {selectedNode?.description ?? 'Nâng cao kỹ năng của bạn với các nhiệm vụ thực tế và nhận phần thưởng XP tương xứng.'}
+            </Text>
+
+            <View style={styles.sheetStats}>
+              <View style={styles.sheetStatItem}>
+                <Text style={styles.sheetStatLabel}>XP YÊU CẦU</Text>
+                <Text style={styles.sheetStatValue}>{selectedNode?.xp_required ?? 100} XP</Text>
+              </View>
+              <View style={styles.sheetStatItem}>
+                <Text style={styles.sheetStatLabel}>TIẾN ĐỘ</Text>
+                <Text style={styles.sheetStatValue}>
+                  {selectedNode?.quests_completed}/{selectedNode?.quests_total} Nhiệm vụ
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={[
+                styles.sheetButton, 
+                { backgroundColor: selectedNode?.status === 'locked' ? Colors.bgElevated : branchColor }
+              ]}
+              disabled={selectedNode?.status === 'locked'}
+              onPress={() => {
+                setModalVisible(false);
+                // In a real app, we might check if this node has specific quests
+                router.push('/(tabs)/quests');
+              }}
+            >
+              <Text style={styles.sheetButtonText}>
+                {selectedNode?.status === 'locked' ? 'Chưa đủ điều kiện unlock' : 'Bắt đầu ngay'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -418,7 +507,7 @@ const styles = StyleSheet.create({
 
   // Tier connector
   tierConnector: {
-    width: 2,
+    width: 3,
     height: 40,
     backgroundColor: 'rgba(255,255,255,0.1)',
     marginVertical: 8,
@@ -464,6 +553,85 @@ const styles = StyleSheet.create({
   questBannerText: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Modal / Bottom Sheet
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheetContent: {
+    backgroundColor: Colors.bgSurface,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    minHeight: 350,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 20,
+  },
+  sheetIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetHeaderText: {
+    flex: 1,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  sheetBranch: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  sheetDescription: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: Colors.textSecondary,
+    marginBottom: 24,
+  },
+  sheetStats: {
+    flexDirection: 'row',
+    gap: 32,
+    marginBottom: 32,
+  },
+  sheetStatItem: {
+    gap: 4,
+  },
+  sheetStatLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 1,
+  },
+  sheetStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  sheetButton: {
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 'auto',
+  },
+  sheetButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

@@ -39,6 +39,7 @@ export interface UserProgress {
   best_streak: number;
   stamina: number;
   last_active_date: string | null;
+  last_login_at: string | null;
   onboarding_done: boolean;
 }
 
@@ -46,6 +47,7 @@ export interface DailyStats {
   quests_completed_today: number;
   wellbeing_quests_today: number;
   career_finance_quests_today: number;
+  session_combo: number;
 }
 
 export type OnboardingAnswer = {

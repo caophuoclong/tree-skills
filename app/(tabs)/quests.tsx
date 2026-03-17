@@ -25,10 +25,10 @@ const BRANCH_COLORS: Record<string, string> = {
 };
 
 const BRANCH_LABELS: Record<string, string> = {
-  career: 'CAREER',
-  finance: 'FINANCE',
-  softskills: 'SOFT SKILLS',
-  wellbeing: 'WELLBEING',
+  career: 'SỰ NGHIỆP',
+  finance: 'TÀI CHÍNH',
+  softskills: 'KỸ NĂNG MỀM',
+  wellbeing: 'SỨC KHỎE',
 };
 
 // ─── Quest Card ───────────────────────────────────────────────────────────────
@@ -46,11 +46,12 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
     <TouchableOpacity
       style={[
         styles.questCard,
-        { borderLeftColor: branchColor, opacity: isCompleted ? 0.6 : 1 },
+        { borderColor: `${branchColor}40`, opacity: isCompleted ? 0.6 : 1 },
       ]}
       onPress={() => router.push(`/quest/${quest.quest_id}`)}
       activeOpacity={0.85}
     >
+      <View style={[styles.accentBar, { backgroundColor: branchColor }]} />
       {/* Top row */}
       <View style={styles.questCardTop}>
         <View style={styles.questCardTopLeft}>
@@ -64,7 +65,7 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
               {BRANCH_LABELS[quest.branch] ?? quest.branch}
             </Text>
           </View>
-          <Text style={styles.durationText}>· {quest.duration_min} MIN</Text>
+          <Text style={styles.durationText}>· {quest.duration_min} PHÚT</Text>
         </View>
         {isCompleted ? (
           <Ionicons
@@ -123,7 +124,7 @@ export default function QuestsScreen() {
       >
         {/* ── Header ─────────────────────────────────────────── */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Today's Quests</Text>
+          <Text style={styles.headerTitle}>Nhiệm vụ hôm nay</Text>
           <View style={styles.staminaRow}>
             <Text style={styles.staminaIcon}>⚡</Text>
             <View style={styles.staminaBarTrack}>
@@ -140,7 +141,7 @@ export default function QuestsScreen() {
 
         {/* ── Progress row ───────────────────────────────────── */}
         <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>Daily Completion</Text>
+          <Text style={styles.progressLabel}>Tiến độ hoàn thành</Text>
           <View style={styles.progressBarTrack}>
             <View
               style={[
@@ -151,7 +152,7 @@ export default function QuestsScreen() {
           </View>
           <View style={styles.completePill}>
             <Text style={styles.completePillText}>
-              {completedCount}/{totalCount} COMPLETE
+              XONG {completedCount}/{totalCount}
             </Text>
           </View>
         </View>
@@ -162,7 +163,7 @@ export default function QuestsScreen() {
             <View style={styles.emptyState}>
               <Text style={styles.emptyEmoji}>🌱</Text>
               <Text style={styles.emptyText}>
-                No quests yet. Complete onboarding to get started!
+                Chưa có nhiệm vụ nào. Hãy hoàn thành onboarding để bắt đầu!
               </Text>
             </View>
           ) : (
@@ -180,15 +181,36 @@ export default function QuestsScreen() {
         <View style={styles.challengesSection}>
           <View style={styles.challengesHeader}>
             <Text style={styles.challengesTrophyEmoji}>🏆</Text>
-            <Text style={styles.challengesTitle}>Active Challenges</Text>
+            <Text style={styles.challengesTitle}>Thử thách đang chạy</Text>
           </View>
 
-          <View style={styles.challengeCard}>
-            <Text style={styles.challengeEventLabel}>LIMITED EVENT</Text>
-            <Text style={styles.challengeTitle}>7 Days Hard Discipline</Text>
-            <Text style={styles.challengeSubtitle}>
-              Join 2.4k others in this sprint
-            </Text>
+          <View style={[styles.challengeCard, { borderColor: `${Colors.wellbeing}40` }]}>
+            <View style={[styles.accentBar, { backgroundColor: Colors.wellbeing }]} />
+            <View style={styles.challengeCardMain}>
+              <View style={styles.challengeTag}>
+                <Text style={styles.challengeTagText}>SỰ KIỆN CÓ HẠN</Text>
+              </View>
+              <Text style={styles.challengeTitle}>7 Ngày Kỷ luật Thép</Text>
+              <View style={styles.challengeStats}>
+                <Ionicons name="people-outline" size={14} color={Colors.textMuted} />
+                <Text style={styles.challengeSubtitle}>
+                  2.4k người đang tham gia
+                </Text>
+              </View>
+            </View>
+            
+            <View style={styles.challengeProgressWrapper}>
+              <View style={styles.challengeProgressHeader}>
+                <Text style={styles.challengeProgressLabel}>Ngày 3/7</Text>
+                <View style={styles.challengeRewards}>
+                  <Ionicons name="gift-outline" size={14} color={Colors.softskills} />
+                  <Text style={styles.challengeRewardText}>+500 XP</Text>
+                </View>
+              </View>
+              <View style={styles.challengeProgressBarTrack}>
+                <View style={[styles.challengeProgressBarFill, { width: '42%' }]} />
+              </View>
+            </View>
           </View>
         </View>
 
@@ -295,10 +317,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   questCard: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 16,
-    borderLeftWidth: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
   questCardTop: {
     flexDirection: 'row',
@@ -391,30 +422,82 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   challengeCard: {
-    backgroundColor: Colors.bgSurface,
-    borderRadius: 16,
-    height: 120,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
-    padding: 16,
-    justifyContent: 'center',
+    shadowColor: Colors.brandPrimary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
-  challengeEventLabel: {
+  challengeCardMain: {
+    marginBottom: 16,
+  },
+  challengeTag: {
+    backgroundColor: 'rgba(244,114,182,0.1)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  challengeTagText: {
     fontSize: 9,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 4,
+    fontWeight: '800',
+    color: Colors.wellbeing,
+    letterSpacing: 1.5,
   },
   challengeTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  challengeStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   challengeSubtitle: {
     fontSize: 12,
+    color: Colors.textMuted,
+  },
+  challengeProgressWrapper: {
+    gap: 8,
+  },
+  challengeProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  challengeProgressLabel: {
+    fontSize: 11,
+    fontWeight: '600',
     color: Colors.textSecondary,
+  },
+  challengeRewards: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  challengeRewardText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.softskills,
+  },
+  challengeProgressBarTrack: {
+    height: 6,
+    backgroundColor: Colors.bgElevated,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  challengeProgressBarFill: {
+    height: 6,
+    backgroundColor: Colors.brandPrimary,
+    borderRadius: 3,
   },
 
   // Bottom

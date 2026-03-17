@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -35,6 +35,7 @@ const MOCK_WEEKLY: LeaderboardEntry[] = [
   { id: '6', name: 'Noah Kim', streak: 9, xp: 1400, initials: 'NK', avatarBg: Colors.career },
   { id: '7', name: 'Luna Tran', streak: 7, xp: 1100, initials: 'LT', avatarBg: Colors.finance },
   { id: '8', name: 'Ethan Nguyen', streak: 5, xp: 850, initials: 'EN', avatarBg: Colors.softskills },
+  { id: 'current', name: 'Alex Kim', streak: 12, xp: 1240, initials: 'AK', avatarBg: Colors.brandPrimary },
 ];
 
 const MOCK_ALLTIME: LeaderboardEntry[] = [
@@ -62,8 +63,10 @@ export default function LeaderboardScreen() {
   const [activeTab, setActiveTab] = useState<TimeTab>('weekly');
 
   const data = activeTab === 'weekly' ? MOCK_WEEKLY : MOCK_ALLTIME;
+  const sortedData = [...data].sort((a, b) => b.xp - a.xp);
+  const userRank = sortedData.findIndex(item => item.id === 'current' || item.name === userName) + 1;
 
-  const userName = user?.name ?? 'Minh Khoa';
+  const userName = user?.name ?? 'Alex Kim';
   const userXP = user?.total_xp ?? 1240;
   const userStreak = user?.streak ?? 12;
   const userInitials = userName
@@ -84,7 +87,7 @@ export default function LeaderboardScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Leaderboard of Persistence</Text>
+        <Text style={styles.headerTitle}>Bảng xếp hạng Kiên trì</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -100,7 +103,7 @@ export default function LeaderboardScreen() {
               activeTab === 'weekly' && styles.tabTextActive,
             ]}
           >
-            Weekly
+            Hàng tuần
           </Text>
           {activeTab === 'weekly' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
@@ -114,7 +117,7 @@ export default function LeaderboardScreen() {
               activeTab === 'alltime' && styles.tabTextActive,
             ]}
           >
-            All Time
+            Tất cả
           </Text>
           {activeTab === 'alltime' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
@@ -127,13 +130,14 @@ export default function LeaderboardScreen() {
       >
         {/* ── Current user card ──────────────────────────── */}
         <View style={styles.userCard}>
+          <View style={[styles.accentBar, { backgroundColor: Colors.brandPrimary }]} />
           <View style={styles.userCardRow}>
             <View style={[styles.userAvatar, { backgroundColor: Colors.brandPrimary }]}>
               <Text style={styles.userAvatarText}>{userInitials}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userInfoName}>{userName}</Text>
-              <Text style={styles.userInfoStreak}>{userStreak}-day streak 🔥</Text>
+              <Text style={styles.userInfoName}>{userName} (Hạng {userRank})</Text>
+              <Text style={styles.userInfoStreak}>Chuỗi {userStreak} ngày 🔥</Text>
             </View>
             <Text style={styles.userXP}>{userXP.toLocaleString()} XP</Text>
           </View>
@@ -143,11 +147,11 @@ export default function LeaderboardScreen() {
         </View>
 
         {/* ── Top Performers label ───────────────────────── */}
-        <Text style={styles.topLabel}>TOP PERFORMERS</Text>
+        <Text style={styles.topLabel}>DẪN ĐẦU HẠNG PHÊ</Text>
 
         {/* ── Ranked list ────────────────────────────────── */}
         <View style={styles.listContainer}>
-          {data.map((entry, index) => {
+          {sortedData.map((entry, index) => {
             const rank = index + 1;
             const medal = getMedalEmoji(rank);
             return (
@@ -169,8 +173,8 @@ export default function LeaderboardScreen() {
                   <Text style={styles.listAvatarText}>{entry.initials}</Text>
                 </View>
                 <View style={styles.listInfo}>
-                  <Text style={styles.listName}>{entry.name}</Text>
-                  <Text style={styles.listStreak}>{entry.streak}-day streak</Text>
+                  <Text style={styles.listName}>{entry.name} {entry.id === 'current' ? '(Bạn)' : ''}</Text>
+                  <Text style={styles.listStreak}>Chuỗi {entry.streak} ngày</Text>
                 </View>
                 <Text style={styles.listXP}>{entry.xp.toLocaleString()} XP</Text>
               </View>
@@ -180,7 +184,7 @@ export default function LeaderboardScreen() {
 
         {/* ── Quote ─────────────────────────────────────── */}
         <Text style={styles.quote}>
-          "You're ranked by consistency, not results."
+          &quot;Bạn được xếp hạng bởi sự kiên trì, không phải kết quả.&quot;
         </Text>
 
         <View style={{ height: 100 }} />
@@ -261,12 +265,20 @@ const styles = StyleSheet.create({
 
   // User card
   userCard: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: `${Colors.brandPrimary}33`,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
   userCardRow: {
     flexDirection: 'row',
@@ -329,9 +341,11 @@ const styles = StyleSheet.create({
 
   // List
   listContainer: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   listRow: {
     flexDirection: 'row',
@@ -383,7 +397,7 @@ const styles = StyleSheet.create({
   },
   listXP: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800', // Bolder
     color: Colors.textPrimary,
   },
 

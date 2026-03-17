@@ -80,12 +80,23 @@ export default function ProfileScreen() {
   const financePct = getBranchPercent(nodes, 'finance') || 60;
   const softskillsPct = getBranchPercent(nodes, 'softskills') || 40;
   const wellbeingPct = getBranchPercent(nodes, 'wellbeing') || 30;
+  
+  const milestones = [
+    { id: 1, title: 'Tân binh', description: 'Đạt 3 ngày liên tiếp', icon: 'medal-outline', unlocked: streak >= 3, color: Colors.career },
+    { id: 2, title: 'Kiên trì', description: 'Đạt 7 ngày liên tiếp', icon: 'ribbon-outline', unlocked: streak >= 7, color: Colors.finance },
+    { id: 3, title: 'Kỷ luật', description: 'Đạt 14 ngày liên tiếp', icon: 'shield-checkmark-outline', unlocked: streak >= 14, color: Colors.softskills },
+    { id: 4, title: 'Huyền thoại', description: 'Đạt 30 ngày liên tiếp', icon: 'star-outline', unlocked: streak >= 30, color: Colors.wellbeing },
+    { id: 5, title: 'Bậc thầy Sự nghiệp', description: 'Hoàn thành nhánh Sự nghiệp', icon: 'briefcase', unlocked: careerPct >= 100, color: Colors.career },
+    { id: 6, title: 'Bậc thầy Tài chính', description: 'Hoàn thành nhánh Tài chính', icon: 'wallet', unlocked: financePct >= 100, color: Colors.finance },
+    { id: 7, title: 'Bậc thầy Kỹ năng', description: 'Hoàn thành nhánh Kỹ năng mềm', icon: 'people', unlocked: softskillsPct >= 100, color: Colors.softskills },
+    { id: 8, title: 'Bậc thầy Sức khỏe', description: 'Hoàn thành nhánh Sức khỏe', icon: 'pulse', unlocked: wellbeingPct >= 100, color: Colors.wellbeing },
+  ];
 
   const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất không?', [
+      { text: 'Hủy', style: 'cancel' },
       {
-        text: 'Log Out',
+        text: 'Đăng xuất',
         style: 'destructive',
         onPress: () => {
           logout();
@@ -109,20 +120,20 @@ export default function ProfileScreen() {
               <Text style={styles.avatarInitials}>{initials}</Text>
             </View>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>Lvl {level}</Text>
+              <Text style={styles.levelBadgeText}>Cấp {level}</Text>
             </View>
           </View>
           <Text style={styles.userName}>{name}</Text>
           <Text style={styles.userSubtitle}>
-            Level {level} · {currentXP.toLocaleString()} XP
+            Cấp {level} · {currentXP.toLocaleString()} XP
           </Text>
         </View>
 
         {/* ── Premium banner ─────────────────────────────── */}
         <View style={styles.premiumBanner}>
           <Text style={styles.premiumStar}>✦</Text>
-          <Text style={styles.premiumTitle}>Premium · Active</Text>
-          <Text style={styles.premiumRenew}>Renews Apr 17</Text>
+          <Text style={styles.premiumTitle}>Gói Premium · Đang kích hoạt</Text>
+          <Text style={styles.premiumRenew}>Hết hạn 17 Thg 4</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
@@ -133,61 +144,78 @@ export default function ProfileScreen() {
 
         {/* ── Streak card ────────────────────────────────── */}
         <View style={styles.streakCard}>
-          <Text style={styles.streakTitle}>🔥 {streak}-day streak</Text>
-          <Text style={styles.streakBest}>Best: {bestStreak} days</Text>
+          <View style={[styles.accentBar, { backgroundColor: Colors.warning }]} />
+          <Text style={styles.streakTitle}>🔥 Chuỗi {streak} ngày</Text>
+          <Text style={styles.streakBest}>Kỷ lục: {bestStreak} ngày</Text>
         </View>
 
         {/* ── Stats row ──────────────────────────────────── */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>47</Text>
-            <Text style={styles.statLabel}>Quests Done</Text>
+            <Text style={styles.statLabel}>Nhiệm vụ xong</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>23</Text>
-            <Text style={styles.statLabel}>Days Active</Text>
+            <Text style={styles.statLabel}>Ngày hoạt động</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{bestStreak}</Text>
-            <Text style={styles.statLabel}>Best Streak</Text>
+            <Text style={styles.statLabel}>Kỷ lục chuỗi</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>3/4</Text>
-            <Text style={styles.statLabel}>Branches</Text>
+            <Text style={styles.statLabel}>Nhánh kỹ năng</Text>
           </View>
+        </View>
+
+        {/* ── Milestone Badges ─────────────────────────── */}
+        <View style={styles.milestoneSection}>
+          <Text style={styles.sectionTitle}>Huy hiệu cột mốc</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.milestoneList}>
+            {milestones.map((m) => (
+              <View key={m.id} style={[styles.milestoneCard, !m.unlocked && styles.milestoneLocked, m.unlocked && { borderColor: `${m.color}60` }]}>
+                {m.unlocked && <View style={[styles.accentBar, { backgroundColor: m.color }]} />}
+                <View style={[styles.milestoneIcon, { backgroundColor: m.unlocked ? `${m.color}20` : Colors.bgElevated }]}>
+                  <Ionicons name={m.icon as any} size={24} color={m.unlocked ? m.color : Colors.textMuted} />
+                </View>
+                <Text style={[styles.milestoneTitle, !m.unlocked && { color: Colors.textMuted }]}>{m.title}</Text>
+                <Text style={styles.milestoneDesc}>{m.description}</Text>
+              </View>
+            ))}
+          </ScrollView>
         </View>
 
         {/* ── Skill Branch Progress ──────────────────────── */}
         <View style={styles.branchSection}>
-          <Text style={styles.branchSectionTitle}>Skill Branch Progress</Text>
+          <Text style={styles.sectionTitle}>Tiến độ nhánh kỹ năng</Text>
           <View style={styles.branchRows}>
             <BranchProgressRow
-              label="Career"
+              label="Sự nghiệp"
               percent={careerPct}
               color={Colors.career}
             />
             <BranchProgressRow
-              label="Finance"
+              label="Tài chính"
               percent={financePct}
               color={Colors.finance}
             />
             <BranchProgressRow
-              label="Soft Skills"
+              label="Kỹ năng mềm"
               percent={softskillsPct}
               color={Colors.softskills}
             />
             <BranchProgressRow
-              label="Well-being"
+              label="Sức khỏe"
               percent={wellbeingPct}
               color={Colors.wellbeing}
             />
           </View>
         </View>
 
-        {/* ── Settings row ───────────────────────────────── */}
         <TouchableOpacity
           style={styles.settingsRow}
-          onPress={() => router.push('/leaderboard')}
+          onPress={() => Alert.alert('Cài đặt', 'Tính năng đang phát triển')}
           activeOpacity={0.8}
         >
           <Ionicons
@@ -195,7 +223,7 @@ export default function ProfileScreen() {
             size={18}
             color={Colors.textPrimary}
           />
-          <Text style={styles.settingsText}>Settings</Text>
+          <Text style={styles.settingsText}>Cài đặt</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
@@ -214,7 +242,7 @@ export default function ProfileScreen() {
             size={18}
             color={Colors.textPrimary}
           />
-          <Text style={styles.settingsText}>Leaderboard</Text>
+          <Text style={styles.settingsText}>Bảng xếp hạng</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
@@ -234,7 +262,7 @@ export default function ProfileScreen() {
             color={Colors.danger}
           />
           <Text style={[styles.settingsText, { color: Colors.danger }]}>
-            Log Out
+            Đăng xuất
           </Text>
           <Ionicons
             name="chevron-forward"
@@ -285,7 +313,7 @@ const styles = StyleSheet.create({
   },
   avatarInitials: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '800', // Display bold
     color: Colors.textPrimary,
   },
   levelBadge: {
@@ -346,10 +374,20 @@ const styles = StyleSheet.create({
   streakCard: {
     marginHorizontal: 20,
     marginTop: 16,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
   streakTitle: {
     fontSize: 22,
@@ -371,10 +409,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   statValue: {
     fontSize: 20,
@@ -392,9 +432,9 @@ const styles = StyleSheet.create({
   // Branch section
   branchSection: {
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 24,
   },
-  branchSectionTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: Colors.textPrimary,
@@ -402,6 +442,50 @@ const styles = StyleSheet.create({
   },
   branchRows: {
     gap: 12,
+  },
+
+  // Milestones
+  milestoneSection: {
+    marginTop: 24,
+  },
+  milestoneList: {
+    paddingLeft: 20,
+    paddingRight: 10,
+    gap: 12,
+    flexDirection: 'row',
+  },
+  milestoneCard: {
+    width: 130,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  milestoneLocked: {
+    opacity: 0.6,
+  },
+  milestoneIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  milestoneTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  milestoneDesc: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    textAlign: 'center',
   },
   branchRow: {
     flexDirection: 'row',
@@ -435,12 +519,14 @@ const styles = StyleSheet.create({
   settingsRow: {
     marginHorizontal: 20,
     marginTop: 8,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   settingsText: {
     fontSize: 14,
