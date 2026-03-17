@@ -274,6 +274,55 @@ export function getInitialNodes(activeBranch?: string): SkillNode[] {
   });
 }
 
+// ─── Demo progress nodes for realistic UI display ─────────────────────────────
+// career 6/8 ≈ 75%, finance 4/7 ≈ 57%, softskills 6/7 ≈ 86%, wellbeing 2/6 ≈ 33%
+
+const DEMO_STATUSES: Record<string, SkillNode['status']> = {
+  // Career
+  career_t1_1: 'completed',
+  career_t1_2: 'completed',
+  career_t2_1: 'completed',
+  career_t2_2: 'completed',
+  career_t2_3: 'completed',
+  career_t3_1: 'in_progress',
+  career_t3_2: 'locked',
+  career_t3_3: 'locked',
+  // Finance
+  finance_t1_1: 'completed',
+  finance_t1_2: 'completed',
+  finance_t2_1: 'completed',
+  finance_t2_2: 'completed',
+  finance_t3_1: 'in_progress',
+  finance_t3_2: 'locked',
+  finance_t3_3: 'locked',
+  // Soft Skills
+  softskills_t1_1: 'completed',
+  softskills_t1_2: 'completed',
+  softskills_t2_1: 'completed',
+  softskills_t2_2: 'completed',
+  softskills_t2_3: 'completed',
+  softskills_t3_1: 'completed',
+  softskills_t3_2: 'in_progress',
+  // Wellbeing
+  wellbeing_t1_1: 'completed',
+  wellbeing_t1_2: 'completed',
+  wellbeing_t2_1: 'in_progress',
+  wellbeing_t2_2: 'locked',
+  wellbeing_t3_1: 'locked',
+  wellbeing_t3_2: 'locked',
+};
+
+export function getDemoNodes(): SkillNode[] {
+  return RAW_NODES.map((node) => {
+    const status = DEMO_STATUSES[node.node_id] ?? 'locked';
+    return {
+      ...node,
+      status,
+      quests_completed: status === 'completed' ? node.quests_total : status === 'in_progress' ? Math.floor(node.quests_total / 2) : 0,
+    } as SkillNode;
+  });
+}
+
 export function getNodesByBranch(nodes: SkillNode[], branch: string): SkillNode[] {
   return nodes.filter((n) => n.branch === branch).sort((a, b) => a.tier - b.tier);
 }

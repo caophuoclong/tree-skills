@@ -125,8 +125,16 @@ export default function QuestsScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Today's Quests</Text>
           <View style={styles.staminaRow}>
-            <View style={styles.staminaDot} />
-            <Text style={styles.staminaText}>{stamina}% stamina</Text>
+            <Text style={styles.staminaIcon}>⚡</Text>
+            <View style={styles.staminaBarTrack}>
+              <View
+                style={[
+                  styles.staminaBarFill,
+                  { width: `${stamina}%` as any },
+                ]}
+              />
+            </View>
+            <Text style={styles.staminaText}>{stamina}%</Text>
           </View>
         </View>
 
@@ -207,6 +215,9 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
   headerTitle: {
@@ -218,18 +229,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
   },
-  staminaDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  staminaIcon: {
+    fontSize: 13,
+  },
+  staminaBarTrack: {
+    width: 52,
+    height: 4,
+    backgroundColor: Colors.bgElevated,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  staminaBarFill: {
+    height: 4,
     backgroundColor: Colors.finance,
+    borderRadius: 2,
   },
   staminaText: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.finance,
-    fontWeight: '500',
+    fontWeight: '600',
+    minWidth: 30,
   },
 
   // Progress row

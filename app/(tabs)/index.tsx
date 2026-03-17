@@ -1,14 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
 import { useGrowthStreak } from '@/src/business-logic/hooks/useGrowthStreak';
 import { useStaminaSystem } from '@/src/business-logic/hooks/useStaminaSystem';
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { getDemoNodes } from '@/src/business-logic/data/skill-tree-nodes';
 import { Colors } from '@/src/ui/tokens/colors';
 import type { Branch } from '@/src/business-logic/types';
 
@@ -68,7 +68,16 @@ export default function HomeScreen() {
   const { quests } = useQuestManager();
   const { streak } = useGrowthStreak();
   const { stamina } = useStaminaSystem();
+  const { nodes, setNodes } = useSkillTreeStore();
   const branchProgress = useBranchProgress();
+
+  // Seed demo progress data so rings display realistic values immediately
+  useEffect(() => {
+    if (nodes.length === 0) {
+      setNodes(getDemoNodes());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const name = user?.name ?? 'Alex Kim';
   const level = user?.level ?? 4;
@@ -77,10 +86,10 @@ export default function HomeScreen() {
   const xpPercent = Math.round((currentXP / targetXP) * 100);
   const pendingCount = quests.filter((q) => q.completed_at === null).length;
 
-  const careerPct = branchProgress.find((b) => b.branch === 'career')?.percent ?? 76;
-  const financePct = branchProgress.find((b) => b.branch === 'finance')?.percent ?? 60;
-  const softskillsPct = branchProgress.find((b) => b.branch === 'softskills')?.percent ?? 85;
-  const wellbeingPct = branchProgress.find((b) => b.branch === 'wellbeing')?.percent ?? 40;
+  const careerPct = branchProgress.find((b) => b.branch === 'career')?.percent ?? 0;
+  const financePct = branchProgress.find((b) => b.branch === 'finance')?.percent ?? 0;
+  const softskillsPct = branchProgress.find((b) => b.branch === 'softskills')?.percent ?? 0;
+  const wellbeingPct = branchProgress.find((b) => b.branch === 'wellbeing')?.percent ?? 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

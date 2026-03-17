@@ -38,12 +38,13 @@ export function useQuestManager(): QuestManagerResult {
   useEffect(() => {
     const today = getTodayString();
     if (lastResetDate !== today || dailyQuests.length === 0) {
-      if (user) {
-        const primaryBranch =
-          (user as unknown as { primaryBranch?: Branch }).primaryBranch ?? 'career';
-        const pool = getDailyQuestPool(primaryBranch, user.stamina);
-        setDailyQuests(pool);
-      }
+      // Use user's branch if available, fall back to 'career' for demo/guests
+      const primaryBranch = user
+        ? ((user as unknown as { primaryBranch?: Branch }).primaryBranch ?? 'career')
+        : 'career';
+      const stamina = user?.stamina ?? 100;
+      const pool = getDailyQuestPool(primaryBranch, stamina);
+      setDailyQuests(pool);
     }
   }, [user, dailyQuests.length, lastResetDate, setDailyQuests]);
 

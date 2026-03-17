@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
-import { getInitialNodes } from '@/src/business-logic/data/skill-tree-nodes';
+import { getDemoNodes } from '@/src/business-logic/data/skill-tree-nodes';
 import { Colors, BranchColors } from '@/src/ui/tokens/colors';
 import type { Branch, SkillNode } from '@/src/business-logic/types';
 
@@ -103,7 +103,7 @@ export default function TreeScreen() {
 
   useEffect(() => {
     if (nodes.length === 0) {
-      setNodes(getInitialNodes());
+      setNodes(getDemoNodes());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -202,13 +202,13 @@ export default function TreeScreen() {
         contentContainerStyle={styles.treeContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tier 3 */}
-        {tier3.length > 0 && (
+        {/* Tier 1 — Foundation (top, already unlocked/done) */}
+        {tier1.length > 0 && (
           <View style={styles.tierSection}>
-            <Text style={styles.tierLabel}>{TIER_LABELS[3]}</Text>
+            <Text style={styles.tierLabel}>{TIER_LABELS[1]}</Text>
             <View style={styles.connectorLine} />
             <View style={styles.nodesRow}>
-              {tier3.map((node) => (
+              {tier1.map((node) => (
                 <NodeCircle key={node.node_id} node={node} branchColor={branchColor} />
               ))}
             </View>
@@ -216,11 +216,11 @@ export default function TreeScreen() {
         )}
 
         {/* Connector */}
-        {tier3.length > 0 && tier2.length > 0 && (
+        {tier1.length > 0 && tier2.length > 0 && (
           <View style={styles.tierConnector} />
         )}
 
-        {/* Tier 2 */}
+        {/* Tier 2 — Intermediate */}
         {tier2.length > 0 && (
           <View style={styles.tierSection}>
             <Text style={styles.tierLabel}>{TIER_LABELS[2]}</Text>
@@ -234,17 +234,17 @@ export default function TreeScreen() {
         )}
 
         {/* Connector */}
-        {tier2.length > 0 && tier1.length > 0 && (
+        {tier2.length > 0 && tier3.length > 0 && (
           <View style={styles.tierConnector} />
         )}
 
-        {/* Tier 1 */}
-        {tier1.length > 0 && (
+        {/* Tier 3 — Advanced (bottom, locked until lower tiers done) */}
+        {tier3.length > 0 && (
           <View style={styles.tierSection}>
-            <Text style={styles.tierLabel}>{TIER_LABELS[1]}</Text>
+            <Text style={styles.tierLabel}>{TIER_LABELS[3]}</Text>
             <View style={styles.connectorLine} />
             <View style={styles.nodesRow}>
-              {tier1.map((node) => (
+              {tier3.map((node) => (
                 <NodeCircle key={node.node_id} node={node} branchColor={branchColor} />
               ))}
             </View>
@@ -307,6 +307,9 @@ const styles = StyleSheet.create({
   // Branch tabs
   tabsScroll: {
     marginTop: 16,
+    height: 40,
+    flexGrow: 0,
+    flexShrink: 0,
   },
   tabsContent: {
     paddingHorizontal: 20,
