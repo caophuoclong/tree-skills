@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "react-native-architecture": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "f9a0f18d522b307981b6f188b8501c9c9326adeb8aca5b46b679731dc69681ae"
+    },
+    "react-native-best-practices": {
+      "source": "callstackincubator/agent-skills",
+      "sourceType": "github",
+      "computedHash": "cc54bc37531c0221b2bfde241ef18c5f6e22423665955587f6dd63b0454355d8"
+    },
+    "react-native-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "c8ece49ec9bee77e02ac3ef32bd76c82fb62372b0690928d937d9957381083aa"
+    },
+    "vercel-react-native-skills": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "2e9088a7333666d8c2833b8ff58bd51b955501c42b4c7244f72b4cbf22dafcc4"
+    }
+  }
+}
