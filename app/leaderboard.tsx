@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { Emoji } from '@/src/ui/atoms';
 import { useTheme } from '@/src/ui/tokens';
 
 // ─── Types & Data ─────────────────────────────────────────────────────────────
@@ -147,7 +148,7 @@ export default function LeaderboardScreen() {
                 <View style={styles.userInfo}>
                   <Text style={styles.userInfoName}>{userName}</Text>
                   <Text style={styles.userInfoStreak}>
-                    Hạng #{userRank > 0 ? userRank : '—'} · Chuỗi {userStreak} ngày 🔥
+                    Hạng #{userRank > 0 ? userRank : '—'} · Chuỗi {userStreak} ngày <Emoji size={11}>🔥</Emoji>
                   </Text>
                   {personAbove && xpGap > 0 && (
                     <Text style={[styles.userRankGap, { color: colors.softskills }]}>
@@ -182,7 +183,7 @@ export default function LeaderboardScreen() {
               >
                 <View style={styles.rankCol}>
                   {medal ? (
-                    <Text style={styles.medalEmoji}>{medal}</Text>
+                    <Emoji size={18}>{medal}</Emoji>
                   ) : (
                     <Text style={styles.rankNum}>{rank}</Text>
                   )}

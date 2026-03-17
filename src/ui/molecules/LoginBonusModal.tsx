@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@/src/ui/tokens';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { Emoji } from '@/src/ui/atoms';
 
 export function LoginBonusModal() {
   const { colors } = useTheme();
@@ -64,7 +65,7 @@ export function LoginBonusModal() {
         >
           <View style={styles.glow} />
           <View style={styles.header}>
-            <Text style={styles.emoji}>🎁</Text>
+            <Emoji size={64}>🎁</Emoji>
             <Text style={styles.title}>Quà tặng hằng ngày!</Text>
             <Text style={styles.subtitle}>
               Chào mừng bạn đã quay trở lại. Hãy nhận phần thưởng để bắt đầu ngày mới!

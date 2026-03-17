@@ -10,6 +10,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Button } from '@/src/ui/atoms/Button';
 import { AppText } from '@/src/ui/atoms/Text';
+import { Emoji } from '@/src/ui/atoms/Emoji';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 
@@ -67,7 +68,7 @@ export function LevelUpModal({ visible, newLevel, unlockReward, weeklyXP, onDism
           {unlockReward && (
             <View style={styles.unlockCard}>
               <AppText variant="body" color={colors.textPrimary}>
-                🔓 {unlockReward}
+                <Emoji size={14}>🔓</Emoji>{' '}{unlockReward}
               </AppText>
             </View>
           )}

@@ -17,8 +17,8 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { getComboMultiplier } from "@/src/business-logic/hooks/useXPEngine";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
+import { NeoBrutalBox, Emoji } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
-import { Shadow } from "react-native-shadow-2";
 
 // ─── Branch helpers ───────────────────────────────────────────────────────────
 
@@ -107,122 +107,108 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
         +{quest.xp_reward} XP ✦
       </Animated.Text>
 
-      <Shadow
-        distance={3}
-        startColor={isCompleted ? `${branchColor}00` : `${branchColor}99`}
-        offset={[3, 3]}
-        style={{ width: "100%" }}
+      <NeoBrutalBox
+        shadowOffsetX={4}
+        shadowOffsetY={4}
+        contentStyle={{ padding: 12 }}
+        onPress={() => router.push(`/quest/${quest.quest_id}`)}
+        style={{
+          opacity: isCompleted ? 0.55 : 1,
+        }}
       >
-        <TouchableOpacity
-          style={[
-            styles.questCard,
-            {
-              borderColor: branchColor,
-              borderWidth: 1.5,
-              opacity: isCompleted ? 0.55 : 1,
-            },
-          ]}
-          onPress={() => router.push(`/quest/${quest.quest_id}`)}
-          activeOpacity={0.85}
-        >
-          <View
-            style={[
-              styles.accentBar,
-              { backgroundColor: branchColor, width: 5 },
-            ]}
-          />
+        <View
+          style={[styles.accentBar, { backgroundColor: branchColor, width: 5 }]}
+        />
 
-          {/* Top row */}
-          <View style={styles.questCardTop}>
-            <View style={styles.questCardTopLeft}>
-              {/* Branch chip — solid fill, neobrutalism */}
-              <View
-                style={[
-                  styles.branchChip,
-                  {
-                    backgroundColor: branchColor,
-                    shadowColor: branchColor,
-                    shadowOffset: { width: 2, height: 2 },
-                    shadowOpacity: 0.7,
-                    shadowRadius: 0,
-                  },
-                ]}
-              >
-                <Text style={[styles.branchChipText, { color: "#0D0D0F" }]}>
-                  {BRANCH_LABELS[quest.branch] ?? quest.branch}
-                </Text>
-              </View>
-              {/* Difficulty badge */}
-              <View
-                style={[
-                  styles.diffBadge,
-                  {
-                    backgroundColor: diff.bg,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 2, height: 2 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 0,
-                  },
-                ]}
-              >
-                <Text style={[styles.diffBadgeText, { color: diff.text }]}>
-                  {diff.label}
-                </Text>
-              </View>
-            </View>
-
-            {isCompleted ? (
-              <Ionicons
-                name="checkmark-circle"
-                size={22}
-                color={colors.finance}
-              />
-            ) : (
-              <TouchableOpacity
-                style={[
-                  styles.checkbox,
-                  {
-                    borderColor: branchColor,
-                    borderWidth: 2,
-                    shadowColor: branchColor,
-                    shadowOffset: { width: 2, height: 2 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 0,
-                  },
-                ]}
-                onPress={triggerXPFlyUp}
-                hitSlop={8}
-              />
-            )}
-          </View>
-
-          {/* Title */}
-          <Text
-            style={[styles.questTitle, isCompleted && styles.questTitleDone]}
-          >
-            {quest.title}
-          </Text>
-
-          {/* Bottom row: XP badge + duration */}
-          <View style={styles.questCardBottom}>
-            {/* XP badge — neobrutalism: solid yellow, black text, hard shadow */}
+        {/* Top row */}
+        <View style={styles.questCardTop}>
+          <View style={styles.questCardTopLeft}>
+            {/* Branch chip — solid fill, neobrutalism */}
             <View
               style={[
-                styles.xpBadge,
+                styles.branchChip,
                 {
-                  shadowColor: "#92400E",
+                  backgroundColor: branchColor,
+                  shadowColor: branchColor,
                   shadowOffset: { width: 2, height: 2 },
-                  shadowOpacity: 0.8,
+                  shadowOpacity: 0.7,
                   shadowRadius: 0,
                 },
               ]}
             >
-              <Text style={styles.xpBadgeText}>+{quest.xp_reward} XP</Text>
+              <Text style={[styles.branchChipText, { color: "#0D0D0F" }]}>
+                {BRANCH_LABELS[quest.branch] ?? quest.branch}
+              </Text>
             </View>
-            <Text style={styles.durationText}>⏱ {quest.duration_min} phút</Text>
+            {/* Difficulty badge */}
+
+            <View
+              style={[
+                styles.diffBadge,
+                {
+                  backgroundColor: diff.bg,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 2, height: 2 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 0,
+                },
+              ]}
+            >
+              <Text style={[styles.diffBadgeText, { color: diff.text }]}>
+                {diff.label}
+              </Text>
+            </View>
           </View>
-        </TouchableOpacity>
-      </Shadow>
+
+          {isCompleted ? (
+            <Ionicons
+              name="checkmark-circle"
+              size={22}
+              color={colors.finance}
+            />
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.checkbox,
+                {
+                  borderColor: branchColor,
+                  borderWidth: 2,
+                  shadowColor: branchColor,
+                  shadowOffset: { width: 2, height: 2 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 0,
+                },
+              ]}
+              onPress={triggerXPFlyUp}
+              hitSlop={8}
+            />
+          )}
+        </View>
+
+        {/* Title */}
+        <Text style={[styles.questTitle, isCompleted && styles.questTitleDone]}>
+          {quest.title}
+        </Text>
+
+        {/* Bottom row: XP badge + duration */}
+        <View style={styles.questCardBottom}>
+          {/* XP badge — neobrutalism: solid yellow, black text, hard shadow */}
+          <View
+            style={[
+              styles.xpBadge,
+              {
+                shadowColor: "#92400E",
+                shadowOffset: { width: 2, height: 2 },
+                shadowOpacity: 0.8,
+                shadowRadius: 0,
+              },
+            ]}
+          >
+            <Text style={styles.xpBadgeText}>+{quest.xp_reward} XP</Text>
+          </View>
+          <Text style={styles.durationText}>⏱ {quest.duration_min} phút</Text>
+        </View>
+      </NeoBrutalBox>
     </View>
   );
 }
@@ -261,7 +247,7 @@ export default function QuestsScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Nhiệm vụ hôm nay</Text>
           <View style={styles.staminaRow}>
-            <Text style={styles.staminaIcon}>⚡</Text>
+            <Emoji size={13}>⚡</Emoji>
             <View style={styles.staminaBarTrack}>
               <View
                 style={[styles.staminaBarFill, { width: `${stamina}%` as any }]}
@@ -305,9 +291,9 @@ export default function QuestsScreen() {
               },
             ]}
           >
-            <Text style={styles.comboFire}>
+            <Emoji size={22}>
               {combo >= 5 ? "🔥🔥🔥" : combo >= 4 ? "🔥🔥" : "🔥"}
-            </Text>
+            </Emoji>
             <View style={styles.comboTextGroup}>
               <Text style={styles.comboLabel}>COMBO ĐANG HOẠT ĐỘNG</Text>
               <Text style={styles.comboValue}>
@@ -343,7 +329,7 @@ export default function QuestsScreen() {
         <View style={styles.questList}>
           {quests.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyEmoji}>🌱</Text>
+              <Emoji size={48}>🌱</Emoji>
               <Text style={styles.emptyText}>
                 Chưa có nhiệm vụ nào. Hãy hoàn thành onboarding để bắt đầu!
               </Text>
@@ -362,15 +348,20 @@ export default function QuestsScreen() {
         {/* ── Active Challenges ──────────────────────────────── */}
         <View style={styles.challengesSection}>
           <View style={styles.challengesHeader}>
-            <Text style={styles.challengesTrophyEmoji}>🏆</Text>
+            <Emoji size={20}>🏆</Emoji>
             <Text style={styles.challengesTitle}>Thử thách đang chạy</Text>
           </View>
 
-          <View
-            style={[
-              styles.challengeCard,
-              { borderColor: `${colors.wellbeing}40` },
-            ]}
+          <NeoBrutalBox
+            style={{
+              ...styles.challengeCard,
+            }}
+            shadowColor={`${colors.wellbeing}40`}
+            contentStyle={{
+              padding: 16,
+            }}
+            shadowOffsetX={6}
+            shadowOffsetY={6}
           >
             <View
               style={[styles.accentBar, { backgroundColor: colors.wellbeing }]}
@@ -410,7 +401,7 @@ export default function QuestsScreen() {
                 />
               </View>
             </View>
-          </View>
+          </NeoBrutalBox>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -685,15 +676,7 @@ const createStyles = (colors: IColors) =>
     },
     challengeCard: {
       backgroundColor: "rgba(255, 255, 255, 0.05)",
-      borderRadius: 20,
-      padding: 20,
-      borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.08)",
       overflow: "hidden",
-      shadowColor: colors.brandPrimary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
     },
     challengeCardMain: {
       marginBottom: 16,

@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/ui/atoms/Text';
+import { Emoji } from '@/src/ui/atoms/Emoji';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 
@@ -47,7 +48,7 @@ export function StreakBadge({ count, protected: isProtected = false, size = 'sm'
 
   return (
     <Animated.View style={[styles.container, isGlowing && styles.glow, animatedStyle]}>
-      <AppText style={[styles.fire, isLarge && styles.fireLg]}>{'🔥'}</AppText>
+      <Emoji size={isLarge ? 28 : 16}>🔥</Emoji>
       <AppText
         variant={isLarge ? 'displayLG' : 'title'}
         color={colors.warning}
@@ -59,7 +60,7 @@ export function StreakBadge({ count, protected: isProtected = false, size = 'sm'
         {'ngày'}
       </AppText>
       {isProtected && (
-        <AppText style={styles.shield}>{'🛡️'}</AppText>
+        <Emoji size={12} style={{ marginLeft: 2 }}>🛡️</Emoji>
       )}
     </Animated.View>
   );

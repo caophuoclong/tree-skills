@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
 import { useQuestStore } from '@/src/business-logic/stores/questStore';
 import { getDemoNodes } from '@/src/business-logic/data/skill-tree-nodes';
+import { Emoji } from '@/src/ui/atoms';
 import { useTheme } from '@/src/ui/tokens';
 
 import type { Branch, SkillNode } from '@/src/business-logic/types';
@@ -146,7 +147,7 @@ function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
             <Ionicons name="checkmark" size={26} color={branchColor} />
           )}
           {isInProgress && (
-            <Text style={styles.nodeIcon}>{ICONS[node.branch]}</Text>
+            <Emoji size={24}>{ICONS[node.branch]}</Emoji>
           )}
           {isLocked && <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.2)" />}
         </View>

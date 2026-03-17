@@ -5,6 +5,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
+import { NeoBrutalCard, Emoji } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -296,13 +297,10 @@ export default function HomeScreen() {
 
           <View style={styles.bentoRow}>
             {/* Left card: 2x2 progress rings */}
-            <View style={[styles.bentoCard, styles.bentoCardLeft]}>
-              <Shadow distance={1} startColor={`#00000099`} offset={[3, 3]}>
+            <View style={[styles.bentoCardLeft]}>
+              <NeoBrutalCard shadowOffsetX={4} shadowOffsetY={4}>
                 <View
-                  style={[
-                    styles.ringsGrid,
-                    { backgroundColor: colors.bgBase, borderRadius: 16 },
-                  ]}
+                  style={[styles.ringsGrid, { backgroundColor: colors.bgBase }]}
                 >
                   <ProgressRing
                     percent={careerPct}
@@ -325,26 +323,17 @@ export default function HomeScreen() {
                     label="Sức khỏe"
                   />
                 </View>
-              </Shadow>
+              </NeoBrutalCard>
             </View>
 
             {/* Right column */}
             <View style={styles.bentoRight}>
               {/* Streak card — Neobrutalism */}
-              <Shadow
-                style={{ width: "100%" }}
-                distance={3}
-                startColor={`#00000099`}
-                offset={[3, 3]}
-              >
+              <NeoBrutalCard shadowOffsetX={4} shadowOffsetY={4}>
                 <View
                   style={[
-                    styles.bentoCard,
                     styles.bentoCardSmall,
-                    {
-                      borderColor: colors.warning,
-                      borderWidth: 2,
-                    },
+                    { backgroundColor: colors.bgBase },
                   ]}
                 >
                   <View
@@ -354,19 +343,19 @@ export default function HomeScreen() {
                     ]}
                   />
                   <View style={styles.streakHeader}>
-                    <Text style={styles.streakFire}>🔥</Text>
+                    <Emoji size={16}>🔥</Emoji>
                   </View>
                   <Text style={styles.streakNumber}>{streak || 12}</Text>
                   <Text style={styles.streakLabel}>DAYS STREAK</Text>
                 </View>
-              </Shadow>
-              <Shadow
-                style={{ width: "100%" }}
-                distance={1}
-                startColor={`#000`}
-                offset={[3, 3]}
-              >
-                <View style={[styles.bentoCard, styles.bentoCardSmall]}>
+              </NeoBrutalCard>
+              <NeoBrutalCard shadowOffsetX={4} shadowOffsetY={4}>
+                <View
+                  style={[
+                    styles.bentoCardSmall,
+                    { backgroundColor: colors.bgBase },
+                  ]}
+                >
                   <View
                     style={[
                       styles.accentBar,
@@ -409,7 +398,7 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                 </View>
-              </Shadow>
+              </NeoBrutalCard>
 
               {/* Mental Energy card */}
             </View>
@@ -419,13 +408,12 @@ export default function HomeScreen() {
           <View style={styles.bentoRow2}>
             {/* Quests card */}
 
-            <View style={[styles.bentoCard, styles.bentoCard2Left]}>
-              <Shadow
-                style={[{ width: "100%" }]}
-                distance={1}
-                startColor={`#00000099`}
-                offset={[3, 3]}
-              >
+            <NeoBrutalCard
+              shadowOffsetX={4}
+              shadowOffsetY={4}
+              style={styles.bentoCard2Left}
+            >
+              <View style={[styles.bentoCard, { height: 140 }]}>
                 <Text style={styles.card2Label}>NHIỆM VỤ</Text>
                 <Text style={styles.card2Number}>{pendingCount || 3}</Text>
                 <Text style={styles.card2Sub}>Đang chờ</Text>
@@ -440,24 +428,20 @@ export default function HomeScreen() {
                     style={[styles.dot, { backgroundColor: colors.wellbeing }]}
                   />
                 </View>
-              </Shadow>
-            </View>
+              </View>
+            </NeoBrutalCard>
 
             {/* Experience card */}
-            <Shadow
-              distance={3}
-              startColor="#00000099"
-              offset={[3, 3]}
-              style={{ flex: 1.6 }}
+            <NeoBrutalCard
+              shadowOffsetX={4}
+              shadowOffsetY={4}
+              style={styles.bentoCard2Right}
             >
               <View
                 style={[
                   styles.bentoCard,
                   styles.bentoCard2Right,
-                  {
-                    borderColor: colors.brandPrimary,
-                    borderWidth: 2,
-                  },
+                  { height: 140 },
                 ]}
               >
                 <View
@@ -490,7 +474,7 @@ export default function HomeScreen() {
                   Còn {targetXP - currentXP} XP nữa để lên cấp
                 </Text>
               </View>
-            </Shadow>
+            </NeoBrutalCard>
           </View>
         </View>
 
@@ -552,6 +536,26 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.bottomSpacer} />
+
+        {/* ── DEV ONLY: NeoBrutalBox Demo link ─────────────── */}
+        {__DEV__ && (
+          <Pressable
+            onPress={() => router.push("/neo-brutal-demo" as any)}
+            style={{
+              margin: 16,
+              padding: 12,
+              borderRadius: 8,
+              borderWidth: 2,
+              borderStyle: "dashed",
+              borderColor: "#7C6AF7",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#7C6AF7", fontWeight: "700", fontSize: 13 }}>
+              <Emoji size={13}>🧪</Emoji> DEV → NeoBrutalBox Demo
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       {/* ── Notification Center Modal (E7) ───────────────── */}
@@ -700,10 +704,7 @@ const createStyles = (colors: IColors) =>
     },
     bentoCard: {
       backgroundColor: colors.bgBase,
-      borderRadius: 16,
       padding: 16,
-      borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.08)",
       // No overflow:"hidden" — it clips Shadow component output
     },
     accentBar: {
@@ -791,7 +792,7 @@ const createStyles = (colors: IColors) =>
     energyLabel: {
       fontSize: 8,
       fontWeight: "800",
-      color: colors.textMuted,
+      color: colors.textSecondary,
       letterSpacing: 0.8,
       textTransform: "uppercase",
       marginBottom: 12,
@@ -822,7 +823,7 @@ const createStyles = (colors: IColors) =>
     energyLabelSmall: {
       fontSize: 8,
       fontWeight: "600",
-      color: colors.textMuted,
+      color: colors.textSecondary,
     },
 
     // Bento row 2
@@ -831,7 +832,7 @@ const createStyles = (colors: IColors) =>
       gap: 12,
     },
     bentoCard2Left: {
-      flex: 1,
+      flex: 1.6,
     },
     bentoCard2Right: {
       flex: 1.6,
@@ -844,7 +845,7 @@ const createStyles = (colors: IColors) =>
       color: colors.textMuted,
       letterSpacing: 1,
       textTransform: "uppercase",
-      marginBottom: 4,
+      marginBottom: 5,
     },
     card2Number: {
       fontSize: 32,

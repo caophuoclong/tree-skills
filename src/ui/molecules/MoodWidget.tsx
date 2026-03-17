@@ -8,6 +8,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { GlassView } from '@/src/ui/atoms/GlassView';
 import { AppText } from '@/src/ui/atoms/Text';
+import { Emoji } from '@/src/ui/atoms/Emoji';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { MoodScore } from '@/src/business-logic/types';
@@ -51,7 +52,7 @@ function MoodEmoji({
       <Animated.View
         style={[styles.emojiWrap, selected && styles.emojiSelected, animStyle]}
       >
-        <AppText style={styles.emojiText}>{mood.emoji}</AppText>
+        <Emoji size={24}>{mood.emoji}</Emoji>
       </Animated.View>
     </TouchableOpacity>
   );

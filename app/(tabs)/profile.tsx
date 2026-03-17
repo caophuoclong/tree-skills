@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
+import { Emoji } from "@/src/ui/atoms";
 import { useTheme } from "@/src/ui/tokens";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -211,7 +212,7 @@ export default function ProfileScreen() {
             <View
               style={[styles.accentBar, { backgroundColor: colors.warning }]}
             />
-            <Text style={styles.streakTitle}>🔥 STREAK: {streak} DAYS</Text>
+            <Text style={styles.streakTitle}><Emoji size={18}>🔥</Emoji> STREAK: {streak} DAYS</Text>
             <Text style={styles.streakBest}>
               Best record: {bestStreak} days
             </Text>

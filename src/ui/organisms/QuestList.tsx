@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { QuestCard } from '@/src/ui/molecules/QuestCard';
 import { StaminaBar } from '@/src/ui/molecules/StaminaBar';
 import { AppText } from '@/src/ui/atoms/Text';
+import { Emoji } from '@/src/ui/atoms/Emoji';
 import { GlassView } from '@/src/ui/atoms/GlassView';
 import { Icon } from '@/src/ui/atoms/Icon';
 import { useTheme } from '@/src/ui/tokens';
@@ -76,7 +77,7 @@ export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPress
         ))
       ) : (
         <View style={styles.emptyState}>
-          <AppText style={styles.emptyIcon}>🌱</AppText>
+          <Emoji size={40}>🌱</Emoji>
           <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
             Không có quest hôm nay — quay lại ngày mai!
           </AppText>
