@@ -89,7 +89,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   leftBorder: {
-    width: 4,
+    width: 6,
     alignSelf: 'stretch',
   },
   content: {

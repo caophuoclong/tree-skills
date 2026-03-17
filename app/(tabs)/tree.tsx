@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
+  Animated,
+  Easing,
   Modal,
   Pressable,
   ScrollView,
@@ -54,6 +56,33 @@ function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
   const isInProgress = node.status === 'in_progress';
   const isLocked = node.status === 'locked';
 
+  // Pulse ring animation for in-progress nodes
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!isInProgress) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 800,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isInProgress, pulseAnim]);
+
+  const pulseScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] });
+  const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] });
+
   const ICONS: Record<Branch, string> = {
     career: '💼',
     finance: '💰',
@@ -62,47 +91,67 @@ function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
   };
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.nodeWrapper}
       onPress={() => onPress(node)}
       activeOpacity={0.8}
     >
-      <View
-        style={[
-          styles.nodeCircle,
-          isCompleted && {
-            backgroundColor: `${branchColor}20`,
-            borderColor: branchColor,
-            borderWidth: 2,
-            shadowColor: branchColor,
-            shadowOpacity: 0.5,
-            shadowRadius: 10,
-          },
-          isInProgress && {
-            borderColor: branchColor,
-            borderWidth: 3,
-            shadowColor: branchColor,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.8,
-            shadowRadius: 15,
-            elevation: 10,
-          },
-          isLocked && {
-            backgroundColor: '#1A1A2E',
-            borderColor: 'rgba(255,255,255,0.05)',
-            borderWidth: 1.5,
-            opacity: 0.4,
-          },
-        ]}
-      >
-        {isCompleted && (
-          <Ionicons name="checkmark" size={24} color={branchColor} />
-        )}
+      <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Pulse ring — only for in_progress */}
         {isInProgress && (
-          <Text style={styles.nodeIcon}>{ICONS[node.branch]}</Text>
+          <Animated.View
+            style={{
+              position: 'absolute',
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              borderWidth: 2,
+              borderColor: branchColor,
+              transform: [{ scale: pulseScale }],
+              opacity: pulseOpacity,
+            }}
+          />
         )}
-        {isLocked && <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.2)" />}
+
+        <View
+          style={[
+            styles.nodeCircle,
+            isCompleted && {
+              backgroundColor: `${branchColor}25`,
+              borderColor: branchColor,
+              borderWidth: 2.5,
+              shadowColor: branchColor,
+              shadowOpacity: 0.6,
+              shadowRadius: 12,
+              elevation: 6,
+            },
+            isInProgress && {
+              borderColor: branchColor,
+              borderWidth: 3,
+              shadowColor: branchColor,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.9,
+              shadowRadius: 16,
+              elevation: 10,
+            },
+            isLocked && {
+              backgroundColor: '#1A1A2E',
+              borderColor: 'rgba(255,255,255,0.05)',
+              borderWidth: 1.5,
+              opacity: 0.4,
+            },
+          ]}
+        >
+          {isCompleted && (
+            <Ionicons name="checkmark" size={26} color={branchColor} />
+          )}
+          {isInProgress && (
+            <Text style={styles.nodeIcon}>{ICONS[node.branch]}</Text>
+          )}
+          {isLocked && <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.2)" />}
+        </View>
       </View>
+
       <Text style={[styles.nodeLabel, isLocked && { color: colors.textMuted }]} numberOfLines={2}>
         {node.title}
       </Text>

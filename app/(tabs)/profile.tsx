@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useMemo } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useMemo } from "react";
 import {
   Alert,
   ScrollView,
@@ -8,33 +8,32 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useUserStore } from '@/src/business-logic/stores/userStore';
-import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
-import { useTheme } from '@/src/ui/tokens';
-import type { Branch } from '@/src/business-logic/types';
-
+import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
+import type { Branch } from "@/src/business-logic/types";
+import { useTheme } from "@/src/ui/tokens";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getInitials(name: string): string {
   return name
-    .split(' ')
-    .map((w) => w[0] ?? '')
+    .split(" ")
+    .map((w) => w[0] ?? "")
     .slice(0, 2)
-    .join('')
+    .join("")
     .toUpperCase();
 }
 
 function getBranchPercent(
-  nodes: ReturnType<typeof useSkillTreeStore.getState>['nodes'],
+  nodes: ReturnType<typeof useSkillTreeStore.getState>["nodes"],
   branch: Branch,
 ): number {
   const branchNodes = nodes.filter((n) => n.branch === branch);
   if (branchNodes.length === 0) return 0;
-  const completed = branchNodes.filter((n) => n.status === 'completed').length;
+  const completed = branchNodes.filter((n) => n.status === "completed").length;
   return Math.round((completed / branchNodes.length) * 100);
 }
 
@@ -75,45 +74,101 @@ export default function ProfileScreen() {
   const logout = useUserStore((s) => s.logout);
   const nodes = useSkillTreeStore((s) => s.nodes);
 
-  const name = user?.name ?? 'Alex Kim';
+  const name = user?.name ?? "Alex Kim";
   const level = user?.level ?? 4;
   const currentXP = user?.current_xp_in_level ?? 1240;
   const streak = user?.streak ?? 12;
   const bestStreak = user?.best_streak ?? 19;
   const initials = getInitials(name);
 
-  const careerPct = getBranchPercent(nodes, 'career') || 80;
-  const financePct = getBranchPercent(nodes, 'finance') || 60;
-  const softskillsPct = getBranchPercent(nodes, 'softskills') || 40;
-  const wellbeingPct = getBranchPercent(nodes, 'wellbeing') || 30;
-  
+  const careerPct = getBranchPercent(nodes, "career") || 80;
+  const financePct = getBranchPercent(nodes, "finance") || 60;
+  const softskillsPct = getBranchPercent(nodes, "softskills") || 40;
+  const wellbeingPct = getBranchPercent(nodes, "wellbeing") || 30;
+
   const milestones = [
-    { id: 1, title: 'Tân binh', description: 'Đạt 3 ngày liên tiếp', icon: 'medal-outline', unlocked: streak >= 3, color: colors.career },
-    { id: 2, title: 'Kiên trì', description: 'Đạt 7 ngày liên tiếp', icon: 'ribbon-outline', unlocked: streak >= 7, color: colors.finance },
-    { id: 3, title: 'Kỷ luật', description: 'Đạt 14 ngày liên tiếp', icon: 'shield-checkmark-outline', unlocked: streak >= 14, color: colors.softskills },
-    { id: 4, title: 'Huyền thoại', description: 'Đạt 30 ngày liên tiếp', icon: 'star-outline', unlocked: streak >= 30, color: colors.wellbeing },
-    { id: 5, title: 'Bậc thầy Sự nghiệp', description: 'Hoàn thành nhánh Sự nghiệp', icon: 'briefcase', unlocked: careerPct >= 100, color: colors.career },
-    { id: 6, title: 'Bậc thầy Tài chính', description: 'Hoàn thành nhánh Tài chính', icon: 'wallet', unlocked: financePct >= 100, color: colors.finance },
-    { id: 7, title: 'Bậc thầy Kỹ năng', description: 'Hoàn thành nhánh Kỹ năng mềm', icon: 'people', unlocked: softskillsPct >= 100, color: colors.softskills },
-    { id: 8, title: 'Bậc thầy Sức khỏe', description: 'Hoàn thành nhánh Sức khỏe', icon: 'pulse', unlocked: wellbeingPct >= 100, color: colors.wellbeing },
+    {
+      id: 1,
+      title: "Tân binh",
+      description: "Đạt 3 ngày liên tiếp",
+      icon: "medal-outline",
+      unlocked: streak >= 3,
+      color: colors.career,
+    },
+    {
+      id: 2,
+      title: "Kiên trì",
+      description: "Đạt 7 ngày liên tiếp",
+      icon: "ribbon-outline",
+      unlocked: streak >= 7,
+      color: colors.finance,
+    },
+    {
+      id: 3,
+      title: "Kỷ luật",
+      description: "Đạt 14 ngày liên tiếp",
+      icon: "shield-checkmark-outline",
+      unlocked: streak >= 14,
+      color: colors.softskills,
+    },
+    {
+      id: 4,
+      title: "Huyền thoại",
+      description: "Đạt 30 ngày liên tiếp",
+      icon: "star-outline",
+      unlocked: streak >= 30,
+      color: colors.wellbeing,
+    },
+    {
+      id: 5,
+      title: "Bậc thầy Sự nghiệp",
+      description: "Hoàn thành nhánh Sự nghiệp",
+      icon: "briefcase",
+      unlocked: careerPct >= 100,
+      color: colors.career,
+    },
+    {
+      id: 6,
+      title: "Bậc thầy Tài chính",
+      description: "Hoàn thành nhánh Tài chính",
+      icon: "wallet",
+      unlocked: financePct >= 100,
+      color: colors.finance,
+    },
+    {
+      id: 7,
+      title: "Bậc thầy Kỹ năng",
+      description: "Hoàn thành nhánh Kỹ năng mềm",
+      icon: "people",
+      unlocked: softskillsPct >= 100,
+      color: colors.softskills,
+    },
+    {
+      id: 8,
+      title: "Bậc thầy Sức khỏe",
+      description: "Hoàn thành nhánh Sức khỏe",
+      icon: "pulse",
+      unlocked: wellbeingPct >= 100,
+      color: colors.wellbeing,
+    },
   ];
 
   const handleLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất không?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất không?", [
+      { text: "Hủy", style: "cancel" },
       {
-        text: 'Đăng xuất',
-        style: 'destructive',
+        text: "Đăng xuất",
+        style: "destructive",
         onPress: () => {
           logout();
-          router.replace('/(auth)/welcome');
+          router.replace("/(auth)/welcome");
         },
       },
     ]);
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -126,67 +181,108 @@ export default function ProfileScreen() {
               <Text style={styles.avatarInitials}>{initials}</Text>
             </View>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>Cấp {level}</Text>
+              <Text style={styles.levelBadgeText}>LVL {level}</Text>
             </View>
           </View>
           <Text style={styles.userName}>{name}</Text>
           <Text style={styles.userSubtitle}>
-            Cấp {level} · {currentXP.toLocaleString()} XP
+            Level {level} · {currentXP.toLocaleString()} XP
           </Text>
         </View>
 
         {/* ── Premium banner ─────────────────────────────── */}
-        <View style={styles.premiumBanner}>
-          <Text style={styles.premiumStar}>✦</Text>
-          <Text style={styles.premiumTitle}>Gói Premium · Đang kích hoạt</Text>
-          <Text style={styles.premiumRenew}>Hết hạn 17 Thg 4</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={colors.textMuted}
-            style={styles.premiumChevron}
-          />
+        <View style={styles.premiumBannerWrapper}>
+          <View style={styles.premiumBanner}>
+            <Text style={styles.premiumStar}>✦</Text>
+            <Text style={styles.premiumTitle}>PREMIUM PLAN · ACTIVE</Text>
+            <Text style={styles.premiumRenew}>Expires 17 Apr</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={colors.textMuted}
+              style={styles.premiumChevron}
+            />
+          </View>
         </View>
 
         {/* ── Streak card ────────────────────────────────── */}
-        <View style={styles.streakCard}>
-          <View style={[styles.accentBar, { backgroundColor: colors.warning }]} />
-          <Text style={styles.streakTitle}>🔥 Chuỗi {streak} ngày</Text>
-          <Text style={styles.streakBest}>Kỷ lục: {bestStreak} ngày</Text>
+        <View style={styles.streakCardWrapper}>
+          <View style={styles.streakCard}>
+            <View
+              style={[styles.accentBar, { backgroundColor: colors.warning }]}
+            />
+            <Text style={styles.streakTitle}>🔥 STREAK: {streak} DAYS</Text>
+            <Text style={styles.streakBest}>
+              Best record: {bestStreak} days
+            </Text>
+          </View>
         </View>
 
         {/* ── Stats row ──────────────────────────────────── */}
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>47</Text>
-            <Text style={styles.statLabel}>Nhiệm vụ xong</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>23</Text>
-            <Text style={styles.statLabel}>Ngày hoạt động</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{bestStreak}</Text>
-            <Text style={styles.statLabel}>Kỷ lục chuỗi</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>3/4</Text>
-            <Text style={styles.statLabel}>Nhánh kỹ năng</Text>
-          </View>
+          {[
+            { value: "47", label: "QUESTS DONE" },
+            { value: "23", label: "ACTIVE DAYS" },
+            { value: bestStreak, label: "BEST STREAK" },
+            { value: "3/4", label: "BRANCHES" },
+          ].map((stat, i) => (
+            <View key={i} style={styles.statCardWrapper}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            </View>
+          ))}
         </View>
 
         {/* ── Milestone Badges ─────────────────────────── */}
         <View style={styles.milestoneSection}>
-          <Text style={styles.sectionTitle}>Huy hiệu cột mốc</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.milestoneList}>
+          <Text style={styles.sectionTitle}>MILESTONE BADGES</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.milestoneList}
+          >
             {milestones.map((m) => (
-              <View key={m.id} style={[styles.milestoneCard, !m.unlocked && styles.milestoneLocked, m.unlocked && { borderColor: `${m.color}60` }]}>
-                {m.unlocked && <View style={[styles.accentBar, { backgroundColor: m.color }]} />}
-                <View style={[styles.milestoneIcon, { backgroundColor: m.unlocked ? `${m.color}20` : colors.bgElevated }]}>
-                  <Ionicons name={m.icon as any} size={24} color={m.unlocked ? m.color : colors.textMuted} />
+              <View key={m.id} style={styles.milestoneCardWrapper}>
+                <View
+                  style={[
+                    styles.milestoneCard,
+                    !m.unlocked && styles.milestoneLocked,
+                    m.unlocked && { borderColor: m.color },
+                  ]}
+                >
+                  {m.unlocked && (
+                    <View
+                      style={[styles.accentBar, { backgroundColor: m.color }]}
+                    />
+                  )}
+                  <View
+                    style={[
+                      styles.milestoneIcon,
+                      {
+                        backgroundColor: m.unlocked
+                          ? `${m.color}20`
+                          : colors.bgElevated,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={m.icon as any}
+                      size={24}
+                      color={m.unlocked ? m.color : colors.textMuted}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.milestoneTitle,
+                      !m.unlocked && { color: colors.textMuted },
+                    ]}
+                  >
+                    {m.title}
+                  </Text>
+                  <Text style={styles.milestoneDesc}>{m.description}</Text>
                 </View>
-                <Text style={[styles.milestoneTitle, !m.unlocked && { color: colors.textMuted }]}>{m.title}</Text>
-                <Text style={styles.milestoneDesc}>{m.description}</Text>
               </View>
             ))}
           </ScrollView>
@@ -194,7 +290,7 @@ export default function ProfileScreen() {
 
         {/* ── Skill Branch Progress ──────────────────────── */}
         <View style={styles.branchSection}>
-          <Text style={styles.sectionTitle}>Tiến độ nhánh kỹ năng</Text>
+          <Text style={styles.sectionTitle}>SKILL BRANCH PROGRESS</Text>
           <View style={styles.branchRows}>
             <BranchProgressRow
               label="Sự nghiệp"
@@ -221,7 +317,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           style={styles.settingsRow}
-          onPress={() => router.push('/settings')}
+          onPress={() => router.push("/settings")}
           activeOpacity={0.8}
         >
           <Ionicons
@@ -230,17 +326,13 @@ export default function ProfileScreen() {
             color={colors.textPrimary}
           />
           <Text style={styles.settingsText}>Cài đặt</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={colors.textMuted}
-          />
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* ── Leaderboard row ────────────────────────────── */}
         <TouchableOpacity
           style={styles.settingsRow}
-          onPress={() => router.push('/leaderboard')}
+          onPress={() => router.push("/leaderboard")}
           activeOpacity={0.8}
         >
           <Ionicons
@@ -249,11 +341,7 @@ export default function ProfileScreen() {
             color={colors.textPrimary}
           />
           <Text style={styles.settingsText}>Bảng xếp hạng</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={colors.textMuted}
-          />
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
         </TouchableOpacity>
 
         {/* ── Logout row ─────────────────────────────────── */}
@@ -262,19 +350,11 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <Ionicons
-            name="log-out-outline"
-            size={18}
-            color={colors.danger}
-          />
+          <Ionicons name="log-out-outline" size={18} color={colors.danger} />
           <Text style={[styles.settingsText, { color: colors.danger }]}>
             Đăng xuất
           </Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={colors.textMuted}
-          />
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.bottomSpacer} />
@@ -285,263 +365,326 @@ export default function ProfileScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const createStyles = (colors: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgBase,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgBase,
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 40,
+    },
 
-  // Avatar section
-  avatarSection: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  avatarCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 3,
-    borderColor: colors.brandPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontSize: 24,
-    fontWeight: '800', // Display bold
-    color: colors.textPrimary,
-  },
-  levelBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: colors.brandPrimary,
-    borderRadius: 9999,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  levelBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  userSubtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
+    // Avatar section
+    avatarSection: {
+      alignItems: "center",
+      paddingVertical: 24,
+      paddingHorizontal: 20,
+    },
+    avatarContainer: {
+      position: "relative",
+      marginBottom: 12,
+    },
+    avatarCircle: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 3,
+      borderColor: colors.brandPrimary,
+      alignItems: "center",
+      justifyContent: "center",
+      // Neobrutalism shadow
+      shadowColor: "#000000",
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+    avatarInitials: {
+      fontSize: 24,
+      fontWeight: "800", // Display bold
+      color: colors.textPrimary,
+      textShadowColor: "rgba(0,0,0,0.4)",
+      textShadowOffset: { width: 1.5, height: 1.5 },
+      textShadowRadius: 0,
+    },
+    levelBadge: {
+      position: "absolute",
+      bottom: -2,
+      right: -2,
+      backgroundColor: colors.bgSurface,
+      borderRadius: 9999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderWidth: 2,
+      borderColor: colors.brandPrimary,
+      // Neobrutalism shadow
+      shadowColor: "#000000",
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
+    },
+    levelBadgeText: {
+      fontSize: 10,
+      fontWeight: "800",
+      color: colors.brandPrimary,
+      letterSpacing: 0.5,
+      textShadowColor: "rgba(0,0,0,0.3)",
+      textShadowOffset: { width: 0.5, height: 0.5 },
+      textShadowRadius: 0,
+    },
+    userName: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    userSubtitle: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
 
-  // Premium banner
-  premiumBanner: {
-    marginHorizontal: 20,
-    backgroundColor: colors.bgSurface,
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  premiumStar: {
-    fontSize: 16,
-    color: colors.brandPrimary,
-    marginRight: 8,
-  },
-  premiumTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  premiumRenew: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginRight: 4,
-  },
-  premiumChevron: {
-    marginLeft: 4,
-  },
+    // Premium banner
+    premiumBannerWrapper: {
+      marginHorizontal: 20,
+      backgroundColor: "#000000",
+      borderRadius: 12,
+    },
+    premiumBanner: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 12,
+      padding: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: colors.brandPrimary,
+      transform: [{ translateX: -4 }, { translateY: -4 }],
+    },
+    premiumStar: {
+      fontSize: 16,
+      color: colors.brandPrimary,
+      marginRight: 8,
+    },
+    premiumTitle: {
+      fontSize: 12,
+      fontWeight: "800",
+      color: colors.textPrimary,
+      flex: 1,
+      letterSpacing: 0.5,
+    },
+    premiumRenew: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: colors.textMuted,
+      marginRight: 4,
+    },
+    premiumChevron: {
+      marginLeft: 4,
+    },
 
-  // Streak card
-  streakCard: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    overflow: 'hidden',
-  },
-  accentBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  streakTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  streakBest: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
+    // Streak card
+    streakCardWrapper: {
+      marginHorizontal: 20,
+      marginTop: 16,
+      backgroundColor: "#000000",
+      borderRadius: 16,
+    },
+    streakCard: {
+      backgroundColor: colors.bgElevated,
+      borderRadius: 16,
+      padding: 20,
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: colors.warning,
+      overflow: "hidden",
+      transform: [{ translateX: -4 }, { translateY: -4 }],
+    },
+    accentBar: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 6,
+    },
+    streakTitle: {
+      fontSize: 18,
+      fontWeight: "800",
+      color: colors.textPrimary,
+      letterSpacing: 0.5,
+    },
+    streakBest: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginTop: 6,
+    },
 
-  // Stats row
-  statsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  statLabel: {
-    fontSize: 10,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
-    lineHeight: 13,
-  },
+    // Stats row
+    statsRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginHorizontal: 20,
+      marginTop: 16,
+    },
+    statCardWrapper: {
+      flex: 1,
+      backgroundColor: "#000000",
+      borderRadius: 12,
+    },
+    statCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 12,
+      padding: 12,
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: colors.glassBorder,
+      transform: [{ translateX: -3 }, { translateY: -3 }],
+    },
+    statValue: {
+      fontSize: 16,
+      fontWeight: "800",
+      color: colors.textPrimary,
+      textShadowColor: "rgba(0,0,0,0.3)",
+      textShadowOffset: { width: 1.5, height: 1.5 },
+      textShadowRadius: 0,
+    },
+    statLabel: {
+      fontSize: 8,
+      fontWeight: "700",
+      color: colors.textMuted,
+      textAlign: "center",
+      marginTop: 6,
+      lineHeight: 10,
+      letterSpacing: 0.2,
+    },
 
-  // Branch section
-  branchSection: {
-    marginHorizontal: 20,
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 12,
-  },
-  branchRows: {
-    gap: 12,
-  },
+    // Branch section
+    branchSection: {
+      marginHorizontal: 20,
+      marginTop: 24,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: "800",
+      color: colors.textPrimary,
+      marginBottom: 16,
+      letterSpacing: 1,
+    },
+    branchRows: {
+      gap: 12,
+    },
 
-  // Milestones
-  milestoneSection: {
-    marginTop: 24,
-  },
-  milestoneList: {
-    paddingLeft: 20,
-    paddingRight: 10,
-    gap: 12,
-    flexDirection: 'row',
-  },
-  milestoneCard: {
-    width: 130,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    overflow: 'hidden',
-  },
-  milestoneLocked: {
-    opacity: 0.6,
-  },
-  milestoneIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  milestoneTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  milestoneDesc: {
-    fontSize: 10,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  branchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  branchLabel: {
-    fontSize: 13,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  branchPercent: {
-    fontSize: 13,
-    color: colors.textMuted,
-    width: 36,
-    textAlign: 'right',
-  },
-  branchBarTrack: {
-    flex: 2,
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  branchBarFill: {
-    height: 6,
-    borderRadius: 3,
-  },
+    // Milestones
+    milestoneSection: {
+      marginTop: 32,
+    },
+    milestoneList: {
+      paddingLeft: 20,
+      paddingRight: 10,
+      gap: 16,
+      flexDirection: "row",
+      paddingBottom: 8,
+    },
+    milestoneCardWrapper: {
+      width: 140,
+      backgroundColor: "#000000",
+      borderRadius: 20,
+    },
+    milestoneCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 20,
+      padding: 16,
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: colors.glassBorder,
+      overflow: "hidden",
+      transform: [{ translateX: -4 }, { translateY: -4 }],
+    },
+    milestoneLocked: {
+      opacity: 0.7,
+      borderColor: colors.glassBorder,
+    },
+    milestoneIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+    },
+    milestoneTitle: {
+      fontSize: 11,
+      fontWeight: "800",
+      color: colors.textPrimary,
+      textAlign: "center",
+      marginBottom: 6,
+      letterSpacing: 0.2,
+    },
+    milestoneDesc: {
+      fontSize: 9,
+      fontWeight: "500",
+      color: colors.textMuted,
+      textAlign: "center",
+      lineHeight: 12,
+    },
+    branchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    branchLabel: {
+      fontSize: 13,
+      color: colors.textPrimary,
+      flex: 1,
+    },
+    branchPercent: {
+      fontSize: 13,
+      color: colors.textMuted,
+      width: 36,
+      textAlign: "right",
+    },
+    branchBarTrack: {
+      flex: 2,
+      height: 6,
+      backgroundColor: "rgba(255,255,255,0.08)",
+      borderRadius: 3,
+      overflow: "hidden",
+    },
+    branchBarFill: {
+      height: 6,
+      borderRadius: 3,
+    },
 
-  // Settings rows
-  settingsRow: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  settingsText: {
-    fontSize: 14,
-    color: colors.textPrimary,
-    flex: 1,
-  },
+    // Settings rows
+    settingsRow: {
+      marginHorizontal: 20,
+      marginTop: 8,
+      backgroundColor: "rgba(255, 255, 255, 0.05)",
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      borderWidth: 1,
+      borderColor: "rgba(255, 255, 255, 0.08)",
+    },
+    settingsText: {
+      fontSize: 14,
+      color: colors.textPrimary,
+      flex: 1,
+    },
 
-  // Bottom
-  bottomSpacer: {
-    height: 100,
-  },
-});
+    // Bottom
+    bottomSpacer: {
+      height: 100,
+    },
+  });

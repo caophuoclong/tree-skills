@@ -30,29 +30,29 @@ export function Badge({ variant, value, branch, style }: BadgeProps) {
     switch (variant) {
       case 'xp':
         return {
-          container: { backgroundColor: colors.brandPrimary },
-          text: { color: '#FFFFFF' },
+          container: { backgroundColor: colors.bgSurface, borderColor: colors.brandPrimary, borderWidth: 2 },
+          text: { color: colors.brandPrimary },
         };
       case 'branch': {
         const color = branch ? BranchColors[branch as string] : colors.brandPrimary;
         return {
-          container: { backgroundColor: `${color}33` }, // 20% opacity
+          container: { backgroundColor: colors.bgSurface, borderColor: color, borderWidth: 2 },
           text: { color },
         };
       }
       case 'duration':
         return {
-          container: { backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.glassBorder },
+          container: { backgroundColor: colors.bgSurface, borderWidth: 2, borderColor: colors.glassBorder },
           text: { color: colors.textSecondary },
         };
       case 'level':
         return {
-          container: { backgroundColor: `${colors.brandPrimary}33` },
+          container: { backgroundColor: colors.bgSurface, borderColor: colors.brandPrimary, borderWidth: 2 },
           text: { color: colors.brandPrimary },
         };
       case 'milestone':
         return {
-          container: { backgroundColor: `${colors.warning}33` },
+          container: { backgroundColor: colors.bgSurface, borderColor: colors.warning, borderWidth: 2 },
           text: { color: colors.warning },
         };
     }
@@ -77,13 +77,18 @@ export function Badge({ variant, value, branch, style }: BadgeProps) {
 
 const createStyles = (colors: any) => StyleSheet.create({
   base: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
     borderRadius: Radius.full,
     alignSelf: 'flex-start',
+    // Neobrutalism shadow
+    shadowColor: '#000000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 2,
   },
   text: {
     ...Typography.micro,
-    fontWeight: '600',
   },
 });

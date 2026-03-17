@@ -12,7 +12,7 @@ interface GlassViewProps {
   radius?: number;
 }
 
-export function GlassView({ children, style, intensity = 20, radius = Radius.lg }: GlassViewProps) {
+export function GlassView({ children, style, intensity = 45, radius = Radius.lg }: GlassViewProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   if (Platform.OS === 'ios') {
@@ -38,7 +38,7 @@ export function GlassView({ children, style, intensity = 20, radius = Radius.lg 
 const createStyles = (colors: any) => StyleSheet.create({
   base: {
     backgroundColor: colors.glassBg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.glassBorder,
     overflow: 'hidden',
   },

@@ -4,18 +4,21 @@ export const Typography = {
     fontSize: 32,
     fontWeight: '700' as const,
     lineHeight: 40,
+    letterSpacing: -0.5,
   },
   displayLG: {
     fontFamily: 'ClashDisplay-SemiBold',
     fontSize: 24,
     fontWeight: '600' as const,
     lineHeight: 32,
+    letterSpacing: -0.3,
   },
   title: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 20,
     fontWeight: '600' as const,
     lineHeight: 28,
+    letterSpacing: 0.1,
   },
   bodyLG: {
     fontFamily: 'Inter-Regular',
@@ -36,10 +39,12 @@ export const Typography = {
     lineHeight: 16,
   },
   micro: {
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Bold',
     fontSize: 10,
-    fontWeight: '500' as const,
+    fontWeight: '700' as const,
     lineHeight: 14,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
   },
   statsMono: {
     fontFamily: 'JetBrainsMono-Regular',
