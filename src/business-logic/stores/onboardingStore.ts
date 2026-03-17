@@ -1,48 +1,58 @@
 import { create } from 'zustand';
-import type { Branch, OnboardingAnswer } from '../types';
+import type { Branch, OnboardingAnswer, SkillNode } from '../types';
 
-interface SkillTreeConfig {
-  career: number;
-  finance: number;
-  softskills: number;
-  wellbeing: number;
+interface TreeConfig {
+  primaryBranch: Branch;
+  branchWeights: Record<Branch, number>;
+  initialNodes: SkillNode[];
 }
 
 interface OnboardingStore {
-  currentQuestion: number;
+  currentQuestionIndex: number;
   answers: OnboardingAnswer[];
-  treeConfig: SkillTreeConfig | null;
+  treeConfig: TreeConfig | null;
+  completed: boolean;
   skipped: boolean;
-  setAnswer: (questionId: number, branch: Branch) => void;
+  setAnswer: (answer: OnboardingAnswer) => void;
   nextQuestion: () => void;
-  prevQuestion: () => void;
-  skipOnboarding: () => void;
-  setTreeConfig: (config: SkillTreeConfig) => void;
+  previousQuestion: () => void;
+  setTreeConfig: (config: TreeConfig) => void;
+  completeOnboarding: () => void;
+  skip: () => void;
   reset: () => void;
 }
 
 export const useOnboardingStore = create<OnboardingStore>((set) => ({
-  currentQuestion: 0,
+  currentQuestionIndex: 0,
   answers: [],
   treeConfig: null,
+  completed: false,
   skipped: false,
 
-  setAnswer: (questionId, branch) =>
+  setAnswer: (answer) =>
     set((state) => {
-      const existing = state.answers.findIndex((a) => a.question_id === questionId);
+      const existing = state.answers.findIndex((a) => a.question_id === answer.question_id);
       const answers = [...state.answers];
       if (existing >= 0) {
-        answers[existing] = { question_id: questionId, selected_branch: branch };
+        answers[existing] = answer;
       } else {
-        answers.push({ question_id: questionId, selected_branch: branch });
+        answers.push(answer);
       }
       return { answers };
     }),
 
-  nextQuestion: () => set((state) => ({ currentQuestion: state.currentQuestion + 1 })),
-  prevQuestion: () =>
-    set((state) => ({ currentQuestion: Math.max(0, state.currentQuestion - 1) })),
-  skipOnboarding: () => set({ skipped: true }),
+  nextQuestion: () =>
+    set((state) => ({ currentQuestionIndex: state.currentQuestionIndex + 1 })),
+
+  previousQuestion: () =>
+    set((state) => ({ currentQuestionIndex: Math.max(0, state.currentQuestionIndex - 1) })),
+
   setTreeConfig: (config) => set({ treeConfig: config }),
-  reset: () => set({ currentQuestion: 0, answers: [], treeConfig: null, skipped: false }),
+
+  completeOnboarding: () => set({ completed: true }),
+
+  skip: () => set({ skipped: true, completed: true }),
+
+  reset: () =>
+    set({ currentQuestionIndex: 0, answers: [], treeConfig: null, completed: false, skipped: false }),
 }));
