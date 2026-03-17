@@ -2,12 +2,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/src/ui/tokens';
 
-export default function HomeScreen() {
+export default function TreeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.text}>Home Dashboard</Text>
-        <Text style={styles.sub}>Coming soon: Bento Grid</Text>
+        <Text style={styles.text}>Skill Tree</Text>
+        <Text style={styles.sub}>Coming soon: Branch View</Text>
       </View>
     </SafeAreaView>
   );
