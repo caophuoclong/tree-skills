@@ -1,7 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useMemo } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Animated,
+  Dimensions,
   Easing,
   Modal,
   Pressable,
@@ -10,68 +12,247 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 
-import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
-import { useQuestStore } from '@/src/business-logic/stores/questStore';
-import { getDemoNodes } from '@/src/business-logic/data/skill-tree-nodes';
-import { Emoji } from '@/src/ui/atoms';
-import { useTheme } from '@/src/ui/tokens';
+import { getDemoNodes } from "@/src/business-logic/data/skill-tree-nodes";
+import { useQuestStore } from "@/src/business-logic/stores/questStore";
+import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
+import type { Branch, SkillNode } from "@/src/business-logic/types";
+import { Emoji } from "@/src/ui/atoms";
+import { useTheme } from "@/src/ui/tokens";
 
-import type { Branch, SkillNode } from '@/src/business-logic/types';
+// ─── Layout constants ──────────────────────────────────────────────────────────
+const { width: SW } = Dimensions.get("window");
+const NODE_SIZE = 68; // node circle diameter
+const ROW_HEIGHT = 96; // center-to-center vertical distance between nodes
+const HEADER_H = 64; // tier banner height
 
-const getBranchColors = (colors: any): Record<string, string> => ({
-  career: colors.career,
-  finance: colors.finance,
-  softskills: colors.softskills,
-  wellbeing: colors.wellbeing,
-});
+// ─── Zigzag X positions (node left edge) ──────────────────────────────────────
+const X = {
+  left: 36,
+  center: (SW - NODE_SIZE) / 2,
+  right: SW - 36 - NODE_SIZE,
+} as const;
+type XKey = keyof typeof X;
 
-const BRANCH_NAMES: Record<Branch, string> = {
-  career: 'Tech & Career',
-  finance: 'Finance & Money',
-  softskills: 'Communication',
-  wellbeing: 'Health & Mind',
-};
+const ZIGZAG: XKey[] = ["center", "right", "center", "left"];
 
-const TIER_LABELS: Record<number, string> = {
-  3: 'CẤP ĐỘ 3 · NÂNG CAO',
-  2: 'CẤP ĐỘ 2 · TRUNG CẤP',
-  1: 'CẤP ĐỘ 1 · NỀN TẢNG',
-};
-
-// ─── Node component ───────────────────────────────────────────────────────────
-
-interface NodeCircleProps {
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface Placed {
   node: SkillNode;
-  branchColor: string;
-  onPress: (node: SkillNode) => void;
+  x: number; // left edge
+  y: number; // top edge
+  cx: number; // circle center x
+  cy: number; // circle center y
 }
 
-function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const isCompleted = node.status === 'completed';
-  const isInProgress = node.status === 'in_progress';
-  const isLocked = node.status === 'locked';
+interface Banner {
+  tier: number;
+  label: string;
+  y: number;
+}
 
-  // Pulse ring animation for in-progress nodes
-  const pulseAnim = useRef(new Animated.Value(0)).current;
+// ─── Build path ───────────────────────────────────────────────────────────────
+const TIER_LABEL: Record<number, string> = {
+  1: "NỀN TẢNG",
+  2: "TRUNG CẤP",
+  3: "NÂNG CAO",
+};
+const TIER_ICON: Record<number, string> = { 1: "🌱", 2: "⚡", 3: "🔥" };
+
+function buildPath(nodes: SkillNode[]) {
+  const sorted = [...nodes].sort((a, b) => a.tier - b.tier);
+  const placed: Placed[] = [];
+  const banners: Banner[] = [];
+  let y = 24,
+    posIdx = 0,
+    lastTier = -1;
+
+  for (const node of sorted) {
+    if (node.tier !== lastTier) {
+      banners.push({ tier: node.tier, label: TIER_LABEL[node.tier] ?? "", y });
+      y += HEADER_H;
+      lastTier = node.tier;
+    }
+    const key = ZIGZAG[posIdx % ZIGZAG.length];
+    const xVal = X[key];
+    placed.push({
+      node,
+      x: xVal,
+      y,
+      cx: xVal + NODE_SIZE / 2,
+      cy: y + NODE_SIZE / 2,
+    });
+    y += ROW_HEIGHT;
+    posIdx++;
+  }
+
+  return { placed, banners, totalHeight: y + 40 };
+}
+
+// ─── SVG connector paths ───────────────────────────────────────────────────────
+/**
+ * Cubic-bezier S-curve between two node centres.
+ * Control points sit at the same horizontal as each node but at the
+ * vertical midpoint → produces a smooth horizontal "swing".
+ */
+function makeCubicPath(from: Placed, to: Placed): string {
+  const midY = (from.cy + to.cy) / 2;
+  return `M ${from.cx} ${from.cy} C ${from.cx} ${midY} ${to.cx} ${midY} ${to.cx} ${to.cy}`;
+}
+
+interface SvgPathsProps {
+  placed: Placed[];
+  branchColor: string;
+  totalHeight: number;
+}
+
+function SvgPaths({ placed, branchColor, totalHeight }: SvgPathsProps) {
+  return (
+    <Svg
+      width={SW}
+      height={totalHeight}
+      style={StyleSheet.absoluteFillObject}
+      pointerEvents="none"
+    >
+      {placed.map((p, i) => {
+        if (i === 0) return null;
+        const prev = placed[i - 1];
+        const d = makeCubicPath(prev, p);
+        const isCompleted =
+          prev.node.status === "completed" && p.node.status === "completed";
+        const isActive =
+          !isCompleted &&
+          (prev.node.status !== "locked" || p.node.status !== "locked");
+
+        return (
+          <React.Fragment key={`seg_${i}`}>
+            {/* ① depth shadow underneath */}
+            <Path
+              d={d}
+              stroke="rgba(0,0,0,0.35)"
+              strokeWidth={isCompleted ? 14 : 11}
+              fill="none"
+              strokeLinecap="round"
+            />
+
+            {/* ② glow halo on completed segments */}
+            {isCompleted && (
+              <Path
+                d={d}
+                stroke={branchColor}
+                strokeWidth={18}
+                fill="none"
+                strokeLinecap="round"
+                opacity={0.12}
+              />
+            )}
+
+            {/* ③ main path line */}
+            <Path
+              d={d}
+              stroke={
+                isCompleted
+                  ? branchColor
+                  : isActive
+                    ? "rgba(255,255,255,0.22)"
+                    : "rgba(255,255,255,0.09)"
+              }
+              strokeWidth={isCompleted ? 9 : 7}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={isCompleted ? undefined : "10 9"}
+              opacity={isCompleted ? 0.75 : 1}
+            />
+
+            {/* ④ bright centre line on completed (gives "raised road" feel) */}
+            {isCompleted && (
+              <Path
+                d={d}
+                stroke="rgba(255,255,255,0.22)"
+                strokeWidth={2.5}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </Svg>
+  );
+}
+
+// ─── Tier banner ───────────────────────────────────────────────────────────────
+function TierBannerView({
+  banner,
+  branchColor,
+  colors,
+}: {
+  banner: Banner;
+  branchColor: string;
+  colors: any;
+}) {
+  return (
+    <View
+      pointerEvents="none"
+      style={[styles.bannerWrap, { top: banner.y, height: HEADER_H }]}
+    >
+      <View
+        style={[
+          styles.bannerPill,
+          {
+            backgroundColor: colors.bgSurface,
+            borderColor: `${branchColor}35`,
+          },
+        ]}
+      >
+        <Emoji size={12}>{TIER_ICON[banner.tier] ?? ""}</Emoji>
+        <Text style={[styles.bannerText, { color: branchColor }]}>
+          {banner.label}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ─── Node circle ───────────────────────────────────────────────────────────────
+const BRANCH_ICON: Record<Branch, string> = {
+  career: "💼",
+  finance: "💰",
+  softskills: "💬",
+  wellbeing: "🧘",
+};
+
+interface NodeProps {
+  placed: Placed;
+  branchColor: string;
+  colors: any;
+  onPress: (n: SkillNode) => void;
+}
+
+function NodeCircle({ placed, branchColor, colors, onPress }: NodeProps) {
+  const { node, x, y } = placed;
+  const isCompleted = node.status === "completed";
+  const isInProgress = node.status === "in_progress";
+  const isLocked = node.status === "locked";
+
+  /* pulse ring animation */
+  const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!isInProgress) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulse, {
           toValue: 1,
-          duration: 1200,
+          duration: 1100,
           easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulse, {
           toValue: 0,
-          duration: 800,
+          duration: 900,
           easing: Easing.in(Easing.ease),
           useNativeDriver: true,
         }),
@@ -79,383 +260,455 @@ function NodeCircle({ node, branchColor, onPress }: NodeCircleProps) {
     );
     loop.start();
     return () => loop.stop();
-  }, [isInProgress, pulseAnim]);
+  }, [isInProgress, pulse]);
 
-  const pulseScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] });
-  const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] });
+  const pScale = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.55],
+  });
+  const pOpacity = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 0],
+  });
 
-  const ICONS: Record<Branch, string> = {
-    career: '💼',
-    finance: '💰',
-    softskills: '💬',
-    wellbeing: '🧘',
-  };
+  // Determine label side based on horizontal position
+  const isAtLeft = x < SW * 0.3;
+  const isAtRight = x > SW * 0.6;
+  const labelStyle = isAtLeft
+    ? { left: NODE_SIZE + 10, right: undefined, textAlign: "left" as const }
+    : isAtRight
+      ? { right: SW - x, left: undefined, textAlign: "right" as const }
+      : {
+          left: -10,
+          right: -10,
+          textAlign: "center" as const,
+          top: NODE_SIZE + 4,
+        };
 
   return (
     <TouchableOpacity
-      style={styles.nodeWrapper}
-      onPress={() => onPress(node)}
-      activeOpacity={0.8}
+      activeOpacity={isLocked ? 1 : 0.75}
+      onPress={() => !isLocked && onPress(node)}
+      style={[styles.nodeWrap, { left: x, top: y }]}
     >
-      <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
-        {/* Pulse ring — only for in_progress */}
-        {isInProgress && (
-          <Animated.View
-            style={{
-              position: 'absolute',
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              borderWidth: 2,
-              borderColor: branchColor,
-              transform: [{ scale: pulseScale }],
-              opacity: pulseOpacity,
-            }}
+      {/* Pulse ring */}
+      {isInProgress && (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            width: NODE_SIZE + 20,
+            height: NODE_SIZE + 20,
+            borderRadius: (NODE_SIZE + 20) / 2,
+            borderWidth: 2.5,
+            borderColor: branchColor,
+            top: -10,
+            left: -10,
+            transform: [{ scale: pScale }],
+            opacity: pOpacity,
+          }}
+        />
+      )}
+
+      {/* Outer accent ring */}
+      {!isLocked && (
+        <View
+          style={{
+            position: "absolute",
+            top: -3,
+            left: -3,
+            width: NODE_SIZE + 6,
+            height: NODE_SIZE + 6,
+            borderRadius: (NODE_SIZE + 6) / 2,
+            borderWidth: isInProgress ? 2.5 : 2,
+            borderColor: isCompleted ? `${branchColor}80` : `${branchColor}45`,
+          }}
+        />
+      )}
+
+      {/* Main circle */}
+      <View
+        style={[
+          styles.nodeCircle,
+          isCompleted && {
+            backgroundColor: branchColor,
+            shadowColor: branchColor,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.55,
+            shadowRadius: 12,
+            elevation: 10,
+          },
+          isInProgress && {
+            backgroundColor: `${branchColor}25`,
+            borderColor: branchColor,
+            borderWidth: 2.5,
+            shadowColor: branchColor,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.9,
+            shadowRadius: 18,
+            elevation: 14,
+          },
+          isLocked && {
+            backgroundColor: colors.bgElevated,
+            borderColor: "rgba(255,255,255,0.07)",
+            borderWidth: 1.5,
+            opacity: 0.38,
+          },
+        ]}
+      >
+        {isCompleted && <Ionicons name="checkmark" size={26} color="#fff" />}
+        {isInProgress && <Emoji size={24}>{BRANCH_ICON[node.branch]}</Emoji>}
+        {isLocked && (
+          <Ionicons
+            name="lock-closed"
+            size={20}
+            color="rgba(255,255,255,0.25)"
           />
         )}
-
-        <View
-          style={[
-            styles.nodeCircle,
-            isCompleted && {
-              backgroundColor: `${branchColor}25`,
-              borderColor: branchColor,
-              borderWidth: 2.5,
-              shadowColor: branchColor,
-              shadowOpacity: 0.6,
-              shadowRadius: 12,
-              elevation: 6,
-            },
-            isInProgress && {
-              borderColor: branchColor,
-              borderWidth: 3,
-              shadowColor: branchColor,
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.9,
-              shadowRadius: 16,
-              elevation: 10,
-            },
-            isLocked && {
-              backgroundColor: '#1A1A2E',
-              borderColor: 'rgba(255,255,255,0.05)',
-              borderWidth: 1.5,
-              opacity: 0.4,
-            },
-          ]}
-        >
-          {isCompleted && (
-            <Ionicons name="checkmark" size={26} color={branchColor} />
-          )}
-          {isInProgress && (
-            <Emoji size={24}>{ICONS[node.branch]}</Emoji>
-          )}
-          {isLocked && <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.2)" />}
-        </View>
       </View>
 
-      <Text style={[styles.nodeLabel, isLocked && { color: colors.textMuted }]} numberOfLines={2}>
-        {node.title}
-      </Text>
+      {/* XP badge on completed */}
+      {isCompleted && (
+        <View
+          style={[
+            styles.xpBadge,
+            { backgroundColor: branchColor, borderColor: colors.bgBase },
+          ]}
+        >
+          <Text style={styles.xpBadgeText}>✓</Text>
+        </View>
+      )}
+
+      {/* Label — side for left/right nodes, below for center */}
+      {!isLocked && (
+        <Text
+          numberOfLines={2}
+          style={[
+            styles.nodeLabel,
+            {
+              color: isInProgress ? colors.textPrimary : colors.textSecondary,
+              fontWeight: isInProgress ? "700" : "500",
+            },
+            isAtLeft || isAtRight
+              ? {
+                  position: "absolute",
+                  top: (NODE_SIZE - 28) / 2,
+                  width: 90,
+                  ...labelStyle,
+                }
+              : {
+                  marginTop: 6,
+                  textAlign: "center",
+                  width: NODE_SIZE + 16,
+                  marginLeft: -8,
+                },
+          ]}
+        >
+          {node.title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
+// ─── Branch tabs ───────────────────────────────────────────────────────────────
+const BRANCHES: { id: Branch; label: string }[] = [
+  { id: "career", label: "Sự nghiệp" },
+  { id: "finance", label: "Tài chính" },
+  { id: "softskills", label: "Kỹ năng mềm" },
+  { id: "wellbeing", label: "Sức khỏe" },
+];
 
+const BRANCH_NAME: Record<Branch, string> = {
+  career: "Tech & Career",
+  finance: "Finance & Money",
+  softskills: "Communication",
+  wellbeing: "Health & Mind",
+};
+
+// ─── Screen ────────────────────────────────────────────────────────────────────
 export default function TreeScreen() {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
-  const BRANCHES: { id: Branch; label: string }[] = useMemo(() => [
-    { id: 'career', label: 'Sự nghiệp' },
-    { id: 'finance', label: 'Tài chính' },
-    { id: 'softskills', label: 'Kỹ năng mềm' },
-    { id: 'wellbeing', label: 'Sức khỏe' },
-  ], []);
-  const { nodes, activeBranch, setNodes, setActiveBranch } = useSkillTreeStore();
+  const { nodes, activeBranch, setNodes, setActiveBranch } =
+    useSkillTreeStore();
   const { dailyQuests } = useQuestStore();
-  const [selectedNode, setSelectedNode] = React.useState<SkillNode | null>(null);
-  const [modalVisible, setModalVisible] = React.useState(false);
-
-  // Get today's first incomplete quest for the banner
-  const todayBannerQuest = dailyQuests.find((q) => !q.completed_at) ?? dailyQuests[0] ?? null;
-
-  const handleNodePress = (node: SkillNode) => {
-    setSelectedNode(node);
-    setModalVisible(true);
-  };
+  const [selected, setSelected] = React.useState<SkillNode | null>(null);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
 
   useEffect(() => {
-    if (nodes.length === 0) {
-      setNodes(getDemoNodes());
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (nodes.length === 0) setNodes(getDemoNodes());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const branchNodes = nodes.filter((n) => n.branch === activeBranch);
-  const completedCount = branchNodes.filter((n) => n.status === 'completed').length;
-  const totalCount = branchNodes.length;
-  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
-  const branchColor = BranchColors[activeBranch];
+  const colorMap = useMemo(
+    () => ({
+      career: colors.career,
+      finance: colors.finance,
+      softskills: colors.softskills,
+      wellbeing: colors.wellbeing,
+    }),
+    [colors],
+  );
 
-  // Group nodes by tier descending (3, 2, 1)
-  const tier3 = branchNodes.filter((n) => n.tier === 3);
-  const tier2 = branchNodes.filter((n) => n.tier === 2);
-  const tier1 = branchNodes.filter((n) => n.tier === 1);
+  const branchColor = colorMap[activeBranch];
+  const branchNodes = useMemo(
+    () => nodes.filter((n) => n.branch === activeBranch),
+    [nodes, activeBranch],
+  );
+  const { placed, banners, totalHeight } = useMemo(
+    () => buildPath(branchNodes),
+    [branchNodes],
+  );
+
+  const done = branchNodes.filter((n) => n.status === "completed").length;
+  const pct =
+    branchNodes.length > 0 ? Math.round((done / branchNodes.length) * 100) : 0;
+  const todayQ =
+    dailyQuests.find((q) => !q.completed_at) ?? dailyQuests[0] ?? null;
+
+  const handlePress = useCallback((n: SkillNode) => {
+    setSelected(n);
+    setSheetOpen(true);
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* ── Header ─────────────────────────────────────────── */}
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.bgBase }]}
+      edges={["top"]}
+    >
+      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Cây kỹ năng</Text>
-          <Text style={styles.headerSub}>Lộ trình phát triển bản thân</Text>
+        <View>
+          <Text style={[styles.hTitle, { color: colors.textPrimary }]}>
+            Cây kỹ năng
+          </Text>
+          <Text style={[styles.hSub, { color: colors.textMuted }]}>
+            Lộ trình phát triển bản thân
+          </Text>
         </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="search-outline" size={22} color={colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={22} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.iconBtn, { backgroundColor: colors.bgElevated }]}
+        >
+          <Ionicons
+            name="notifications-outline"
+            size={20}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Branch tabs ────────────────────────────────────── */}
+      {/* Branch tabs */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.tabsScroll}
-        contentContainerStyle={styles.tabsContent}
+        contentContainerStyle={styles.tabsRow}
       >
-        {BRANCHES.map((branch) => {
-          const isActive = activeBranch === branch.id;
-          const color = BranchColors[branch.id];
+        {BRANCHES.map((b) => {
+          const active = activeBranch === b.id;
+          const col = colorMap[b.id];
           return (
             <TouchableOpacity
-              key={branch.id}
+              key={b.id}
+              activeOpacity={0.8}
+              onPress={() => setActiveBranch(b.id)}
               style={[
                 styles.tab,
-                isActive
-                  ? {
-                      backgroundColor: `${color}20`,
-                      borderColor: `${color}60`,
-                      borderWidth: 1,
-                      shadowColor: color,
-                      shadowOpacity: 0.4,
-                      shadowRadius: 8,
-                      elevation: 4,
-                    }
-                  : { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'transparent' },
+                active
+                  ? { backgroundColor: `${col}1E`, borderColor: `${col}55` }
+                  : { borderColor: "transparent" },
               ]}
-              onPress={() => setActiveBranch(branch.id)}
-              activeOpacity={0.8}
             >
               <Text
                 style={[
                   styles.tabText,
-                  { color: isActive ? color : colors.textMuted },
-                  isActive && styles.tabTextActive,
+                  { color: active ? col : colors.textMuted },
+                  active && { fontWeight: "700" },
                 ]}
               >
-                {branch.label}
+                {b.label}
               </Text>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
 
-      {/* ── Current branch card ────────────────────────────── */}
-      <View style={[styles.branchCard, {
-        borderWidth: 1,
-        borderColor: `${branchColor}30`,
-        shadowColor: branchColor,
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 3,
-      }]}>
-        <Text style={styles.branchCardLabel}>NHÁNH HIỆN TẠI</Text>
-        <Text style={styles.branchCardName}>{BRANCH_NAMES[activeBranch]}</Text>
-        <Text style={styles.branchCardTier}>Cấp độ: Trung cấp</Text>
-        <View style={styles.branchProgressRow}>
-          <Text style={styles.branchProgressText}>
-            {completedCount}/{totalCount} nút đã hoàn tất
+      {/* Progress strip */}
+      <View style={[styles.strip, { backgroundColor: colors.bgSurface }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.stripName, { color: colors.textPrimary }]}>
+            {BRANCH_NAME[activeBranch]}
           </Text>
-          <View style={styles.branchProgressTrack}>
-            <View
-              style={[
-                styles.branchProgressFill,
-                {
-                  width: `${progressPercent}%` as any,
-                  backgroundColor: branchColor,
-                },
-              ]}
-            />
-          </View>
+          <Text style={[styles.stripCount, { color: colors.textMuted }]}>
+            {done}/{branchNodes.length} hoàn tất
+          </Text>
         </View>
+        <View style={[styles.track, { backgroundColor: colors.bgElevated }]}>
+          <View
+            style={[
+              styles.fill,
+              { width: `${pct}%` as any, backgroundColor: branchColor },
+            ]}
+          />
+        </View>
+        <Text style={[styles.pct, { color: branchColor }]}>{pct}%</Text>
       </View>
 
-      {/* ── Node tree ──────────────────────────────────────── */}
+      {/* ── Winding path canvas ── */}
       <ScrollView
-        style={styles.treeScroll}
-        contentContainerStyle={styles.treeContent}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tier 1 — Foundation (top, already unlocked/done) */}
-        {tier1.length > 0 && (
-          <View style={styles.tierSection}>
-            <Text style={[styles.tierLabel, { color: branchColor, opacity: 0.8 }]}>{TIER_LABELS[1]}</Text>
-            <View style={[styles.connectorLine, {
-              backgroundColor: `${branchColor}60`,
-              shadowColor: branchColor,
-              shadowOpacity: 0.5,
-              shadowRadius: 4,
-            }]} />
-            <View style={styles.nodesRow}>
-              {tier1.map((node) => (
-                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
-              ))}
-            </View>
-          </View>
-        )}
+        <View style={{ width: SW, height: totalHeight }}>
+          {/* SVG bezier paths — below nodes */}
+          <SvgPaths
+            placed={placed}
+            branchColor={branchColor}
+            totalHeight={totalHeight}
+          />
 
-        {/* Connector tier1 → tier2 */}
-        {tier1.length > 0 && tier2.length > 0 && (
-          <View style={[styles.tierConnector, {
-            backgroundColor: `${branchColor}40`,
-            shadowColor: branchColor,
-            shadowOpacity: 0.4,
-            shadowRadius: 6,
-          }]} />
-        )}
+          {/* Tier banners */}
+          {banners.map((b) => (
+            <TierBannerView
+              key={`b${b.tier}`}
+              banner={b}
+              branchColor={branchColor}
+              colors={colors}
+            />
+          ))}
 
-        {/* Tier 2 — Intermediate */}
-        {tier2.length > 0 && (
-          <View style={styles.tierSection}>
-            <Text style={[styles.tierLabel, { color: branchColor, opacity: 0.7 }]}>{TIER_LABELS[2]}</Text>
-            <View style={[styles.connectorLine, {
-              backgroundColor: `${branchColor}50`,
-              shadowColor: branchColor,
-              shadowOpacity: 0.4,
-              shadowRadius: 4,
-            }]} />
-            <View style={styles.nodesRow}>
-              {tier2.map((node) => (
-                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Connector tier2 → tier3 */}
-        {tier2.length > 0 && tier3.length > 0 && (
-          <View style={[styles.tierConnector, {
-            backgroundColor: `${branchColor}30`,
-            shadowColor: branchColor,
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-          }]} />
-        )}
-
-        {/* Tier 3 — Advanced (bottom, locked until lower tiers done) */}
-        {tier3.length > 0 && (
-          <View style={styles.tierSection}>
-            <Text style={[styles.tierLabel, { color: branchColor, opacity: 0.6 }]}>{TIER_LABELS[3]}</Text>
-            <View style={[styles.connectorLine, {
-              backgroundColor: `${branchColor}35`,
-              shadowColor: branchColor,
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-            }]} />
-            <View style={styles.nodesRow}>
-              {tier3.map((node) => (
-                <NodeCircle key={node.node_id} node={node} branchColor={branchColor} onPress={handleNodePress} />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Today's Quest Banner */}
-        <View style={[styles.questBanner, {
-          backgroundColor: `${branchColor}E6`,
-          shadowColor: branchColor,
-          shadowOpacity: 0.4,
-          shadowRadius: 12,
-          elevation: 6,
-        }]}>
-          <Text style={styles.questBannerText}>
-            ✦ Nhiệm vụ hôm nay:{' '}
-            {todayBannerQuest?.title ?? 'Không có nhiệm vụ mới'}
-          </Text>
+          {/* Nodes on top */}
+          {placed.map((p) => (
+            <NodeCircle
+              key={p.node.node_id}
+              placed={p}
+              branchColor={branchColor}
+              colors={colors}
+              onPress={handlePress}
+            />
+          ))}
         </View>
 
-        <View style={{ height: 100 }} />
+        {/* Today quest banner */}
+        {todayQ && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[
+              styles.questBanner,
+              { backgroundColor: `${branchColor}E8` },
+            ]}
+            onPress={() => router.push("/(tabs)/quests")}
+          >
+            <Emoji size={13}>✦</Emoji>
+            <Text style={styles.questText} numberOfLines={1}>
+              {"  "}Hôm nay: {todayQ.title}
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color="#fff" />
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
-      {/* ── Node Detail Bottom Sheet ─────────────────────── */}
+      {/* Bottom sheet */}
       <Modal
-        visible={modalVisible}
+        visible={sheetOpen}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => setSheetOpen(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
-          onPress={() => setModalVisible(false)}
-        >
-          <View style={styles.sheetContent}>
-            <View style={styles.sheetHeader}>
-              <View style={[styles.sheetIcon, { backgroundColor: `${branchColor}20` }]}>
-                <Ionicons 
-                  name={selectedNode?.branch === 'career' ? 'briefcase' : 
-                        selectedNode?.branch === 'finance' ? 'cash' : 
-                        selectedNode?.branch === 'softskills' ? 'chatbubbles' : 'leaf'} 
-                  size={24} 
-                  color={branchColor} 
-                />
+        <Pressable style={styles.overlay} onPress={() => setSheetOpen(false)}>
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colors.bgSurface,
+                borderColor: colors.glassBorder,
+              },
+            ]}
+          >
+            <View style={styles.handle} />
+
+            <View style={styles.sheetHdr}>
+              <View
+                style={[
+                  styles.sheetIcon,
+                  { backgroundColor: `${branchColor}22` },
+                ]}
+              >
+                <Emoji size={22}>
+                  {selected ? BRANCH_ICON[selected.branch] : "📚"}
+                </Emoji>
               </View>
-              <View style={styles.sheetHeaderText}>
-                <Text style={styles.sheetTitle}>{selectedNode?.title}</Text>
-                <Text style={[styles.sheetBranch, { color: branchColor }]}>
-                  {activeBranch.toUpperCase()} · CẤP {selectedNode?.tier}
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[styles.sheetTitle, { color: colors.textPrimary }]}
+                >
+                  {selected?.title}
+                </Text>
+                <Text style={[styles.sheetSub, { color: branchColor }]}>
+                  {activeBranch.toUpperCase()} · CẤP {selected?.tier}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close-circle" size={28} color={colors.textMuted} />
+              <TouchableOpacity onPress={() => setSheetOpen(false)}>
+                <Ionicons
+                  name="close-circle"
+                  size={28}
+                  color={colors.textMuted}
+                />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.sheetDescription}>
-              {selectedNode?.description ?? 'Nâng cao kỹ năng của bạn với các nhiệm vụ thực tế và nhận phần thưởng XP tương xứng.'}
+            <Text style={[styles.sheetDesc, { color: colors.textSecondary }]}>
+              {selected?.description}
             </Text>
 
             <View style={styles.sheetStats}>
-              <View style={styles.sheetStatItem}>
-                <Text style={styles.sheetStatLabel}>XP YÊU CẦU</Text>
-                <Text style={styles.sheetStatValue}>{selectedNode?.xp_required ?? 100} XP</Text>
+              <View>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                  YÊU CẦU XP
+                </Text>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                  {selected?.xp_required} XP
+                </Text>
               </View>
-              <View style={styles.sheetStatItem}>
-                <Text style={styles.sheetStatLabel}>TIẾN ĐỘ</Text>
-                <Text style={styles.sheetStatValue}>
-                  {selectedNode?.quests_completed}/{selectedNode?.quests_total} Nhiệm vụ
+              <View>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                  TIẾN ĐỘ
+                </Text>
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                  {selected?.quests_completed}/{selected?.quests_total} NV
                 </Text>
               </View>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
+              disabled={selected?.status === "locked"}
               style={[
-                styles.sheetButton, 
-                { backgroundColor: selectedNode?.status === 'locked' ? colors.bgElevated : branchColor }
+                styles.sheetBtn,
+                {
+                  backgroundColor:
+                    selected?.status === "locked"
+                      ? colors.bgElevated
+                      : branchColor,
+                },
               ]}
-              disabled={selectedNode?.status === 'locked'}
               onPress={() => {
-                setModalVisible(false);
-                // In a real app, we might check if this node has specific quests
-                router.push('/(tabs)/quests');
+                setSheetOpen(false);
+                router.push("/(tabs)/quests");
               }}
             >
-              <Text style={styles.sheetButtonText}>
-                {selectedNode?.status === 'locked' ? 'Chưa đủ điều kiện unlock' : 'Bắt đầu ngay'}
+              <Text
+                style={[
+                  styles.sheetBtnText,
+                  {
+                    color:
+                      selected?.status === "locked" ? colors.textMuted : "#fff",
+                  },
+                ]}
+              >
+                {selected?.status === "locked"
+                  ? "Chưa đủ điều kiện mở khoá"
+                  : "Bắt đầu ngay →"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -465,285 +718,177 @@ export default function TreeScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── Styles ────────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  container: { flex: 1 },
 
-const createStyles = (colors: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgBase,
-  },
-
-  // Header
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 4,
+    paddingTop: 12,
+    paddingBottom: 2,
   },
-  headerLeft: {
-    gap: 2,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.textPrimary,
-  },
-  headerSub: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: 4,
-  },
+  hTitle: { fontSize: 24, fontWeight: "800" },
+  hSub: { fontSize: 12, marginTop: 2 },
   iconBtn: {
     width: 36,
     height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  // Branch tabs
-  tabsScroll: {
-    marginTop: 16,
-    height: 40,
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  tabsContent: {
+  tabsScroll: { marginTop: 14, flexGrow: 0, flexShrink: 0, maxHeight: 38 },
+  tabsRow: {
     paddingHorizontal: 20,
     gap: 8,
-    flexDirection: 'row',
+    flexDirection: "row",
+    alignItems: "center",
   },
   tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: 9999,
+    borderWidth: 1,
   },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    fontWeight: '700',
-  },
+  tabText: { fontSize: 13 },
 
-  // Branch card
-  branchCard: {
+  strip: {
     marginHorizontal: 20,
-    marginTop: 16,
-    backgroundColor: colors.bgSurface,
+    marginTop: 10,
     borderRadius: 12,
-    padding: 16,
-  },
-  branchCardLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.textMuted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  branchCardName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginTop: 4,
-  },
-  branchCardTier: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  branchProgressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
-    marginTop: 8,
   },
-  branchProgressText: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    flexShrink: 0,
-  },
-  branchProgressTrack: {
-    flex: 1,
-    height: 4,
-    backgroundColor: colors.bgElevated,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  branchProgressFill: {
-    height: 4,
-    borderRadius: 2,
-  },
-
-  // Tree scroll
-  treeScroll: {
-    flex: 1,
-    marginTop: 24,
-  },
-  treeContent: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-
-  // Tier section
-  tierSection: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  tierLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.textMuted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  connectorLine: {
-    width: 2,
-    height: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginBottom: 12,
-  },
-  nodesRow: {
-    flexDirection: 'row',
-    gap: 16,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-
-  // Tier connector
-  tierConnector: {
-    width: 3,
-    height: 40,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginVertical: 8,
-  },
+  stripName: { fontSize: 13, fontWeight: "700" },
+  stripCount: { fontSize: 11, marginTop: 1 },
+  track: { width: 80, height: 5, borderRadius: 3, overflow: "hidden" },
+  fill: { height: 5, borderRadius: 3 },
+  pct: { fontSize: 13, fontWeight: "700", minWidth: 34, textAlign: "right" },
 
   // Node
-  nodeWrapper: {
-    alignItems: 'center',
-    width: 80,
-  },
+  nodeWrap: { position: "absolute", width: NODE_SIZE, alignItems: "center" },
   nodeCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.bgSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: NODE_SIZE,
+    height: NODE_SIZE,
+    borderRadius: NODE_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  nodeIcon: {
-    fontSize: 24,
-  },
-  lockIcon: {
-    fontSize: 20,
-  },
-  nodeLabel: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 14,
-  },
+  nodeLabel: { fontSize: 10, lineHeight: 13 },
 
-  // Today's Quest Banner
-  questBanner: {
-    marginTop: 24,
-    marginHorizontal: 0,
-    width: '100%',
-    backgroundColor: `${colors.brandPrimary}E6`,
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
+  // XP badge (top-right of completed node)
+  xpBadge: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
   },
-  questBannerText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
+  xpBadgeText: { fontSize: 8, color: "#fff", fontWeight: "800" },
 
-  // Modal / Bottom Sheet
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+  // Tier banner
+  bannerWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  sheetContent: {
-    backgroundColor: colors.bgSurface,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    padding: 24,
-    minHeight: 350,
+  bannerPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
   },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+  bannerText: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+
+  // Today quest
+  questBanner: {
+    marginHorizontal: 20,
+    marginTop: 4,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  questText: { flex: 1, fontSize: 13, fontWeight: "600", color: "#fff" },
+
+  // Modal
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.52)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingTop: 12,
+    borderWidth: 1,
+    minHeight: 350,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    alignSelf: "center",
     marginBottom: 20,
   },
+  sheetHdr: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 14,
+  },
   sheetIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  sheetHeaderText: {
-    flex: 1,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  sheetBranch: {
-    fontSize: 12,
-    fontWeight: '700',
+  sheetTitle: { fontSize: 18, fontWeight: "700" },
+  sheetSub: {
+    fontSize: 11,
+    fontWeight: "700",
     marginTop: 2,
+    letterSpacing: 0.5,
   },
-  sheetDescription: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: colors.textSecondary,
-    marginBottom: 24,
+  sheetDesc: { fontSize: 14, lineHeight: 22, marginBottom: 20 },
+  sheetStats: { flexDirection: "row", gap: 28, marginBottom: 24 },
+  statLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
   },
-  sheetStats: {
-    flexDirection: 'row',
-    gap: 32,
-    marginBottom: 32,
+  statValue: { fontSize: 16, fontWeight: "700", marginTop: 3 },
+  sheetBtn: {
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  sheetStatItem: {
-    gap: 4,
-  },
-  sheetStatLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.textMuted,
-    letterSpacing: 1,
-  },
-  sheetStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  sheetButton: {
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 'auto',
-  },
-  sheetButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
+  sheetBtnText: { fontSize: 15, fontWeight: "700" },
 });
