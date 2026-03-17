@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Expo Dev Server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "start"],
+      "port": 8081
+    },
+    {
+      "name": "Expo Web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "web"],
+      "port": 8081
+    },
+    {
+      "name": "Expo iOS",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--go", "--ios"],
+      "port": 8081
+    },
+    {
+      "name": "Expo Android",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "android"],
+      "port": 8081
+    }
+  ]
+}

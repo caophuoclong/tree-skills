@@ -1,38 +1,71 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback } from 'react';
 import {
-  View,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  withSequence,
-  runOnJS,
-} from 'react-native-reanimated';
-import { useLocalSearchParams, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
-import { AppText } from '@/src/ui/atoms/Text';
-import { Badge } from '@/src/ui/atoms/Badge';
-import { Colors, BranchColors, BranchColor } from '@/src/ui/tokens/colors';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
-import type { Quest } from '@/src/business-logic/types/index';
+import { Colors } from '@/src/ui/tokens/colors';
+import type { Quest } from '@/src/business-logic/types';
 
-// --- Timer helpers ---
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
+const BRANCH_COLORS: Record<string, string> = {
+  career: Colors.career,
+  finance: Colors.finance,
+  softskills: Colors.softskills,
+  wellbeing: Colors.wellbeing,
+};
 
-// --- Instructions helpers ---
+const BRANCH_LABELS: Record<string, string> = {
+  career: 'CAREER',
+  finance: 'FINANCE',
+  softskills: 'SOFT SKILLS',
+  wellbeing: 'WELLBEING',
+};
+
+const BRANCH_CATEGORY_LABELS: Record<string, string> = {
+  career: 'Career Quest',
+  finance: 'Finance Quest',
+  softskills: 'Soft Skills Quest',
+  wellbeing: 'Wellbeing Quest',
+};
+
+const WHY_TEXT: Record<string, string> = {
+  career:
+    'Building professional connections is one of the highest ROI activities for career growth. Most opportunities come through people you know, not job boards.',
+  finance:
+    'Financial habits compound over time. Small consistent actions today create the freedom to make bigger choices tomorrow.',
+  softskills:
+    'Communication skills are the multiplier for all other skills. Improving how you connect with others unlocks exponential growth.',
+  wellbeing:
+    'Your mental and physical state directly affects every other area of your life. Investing in wellbeing is investing in your overall performance.',
+};
+
+const RESOURCES: Record<string, { label: string; url: string }[]> = {
+  career: [
+    { label: 'LinkedIn Networking Guide', url: 'linkedin.com/learning' },
+    { label: 'Cold Email Templates', url: 'resources.io/templates' },
+  ],
+  finance: [
+    { label: 'Budgeting 101', url: 'investopedia.com/budgeting' },
+    { label: 'Emergency Fund Calculator', url: 'nerdwallet.com/calculator' },
+  ],
+  softskills: [
+    { label: 'Active Listening Techniques', url: 'mindtools.com/listening' },
+    { label: 'Public Speaking Guide', url: 'toastmasters.org' },
+  ],
+  wellbeing: [
+    { label: 'Mindfulness Starter Guide', url: 'headspace.com/mindfulness' },
+    { label: 'Stress Management Toolkit', url: 'mentalhealth.org/tools' },
+  ],
+};
 
 function parseSteps(description: string): string[] {
   const sentences = description
@@ -42,14 +75,7 @@ function parseSteps(description: string): string[] {
   return sentences.length > 0 ? sentences : [description];
 }
 
-// --- Branch label map ---
-
-const BRANCH_LABELS: Record<string, string> = {
-  career: 'Sự nghiệp',
-  finance: 'Tài chính',
-  softskills: 'Kỹ năng mềm',
-  wellbeing: 'Sức khoẻ',
-};
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function QuestDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -59,91 +85,21 @@ export default function QuestDetailScreen() {
 
   const isCompleted = quest ? quest.completed_at !== null : false;
   const branchColor =
-    quest && (quest.branch as BranchColor) in BranchColors
-      ? BranchColors[quest.branch as BranchColor]
-      : Colors.brandPrimary;
-
-  // Timer state
-  const totalSeconds = quest ? quest.duration_min * 60 : 0;
-  const [timerState, setTimerState] = useState<'idle' | 'running' | 'done'>('idle');
-  const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Success animation
-  const successScale = useSharedValue(0);
-  const successOpacity = useSharedValue(0);
-
-  const completeAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: successScale.value }],
-    opacity: successOpacity.value,
-  }));
-
-  // Button animation
-  const btnScale = useSharedValue(1);
-  const btnAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: btnScale.value }],
-  }));
-
-  useEffect(() => {
-    if (quest) {
-      setSecondsLeft(quest.duration_min * 60);
-    }
-  }, [quest?.duration_min]);
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
-
-  const startTimer = useCallback(() => {
-    if (timerState !== 'idle') return;
-    setTimerState('running');
-    intervalRef.current = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          setTimerState('done');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [timerState]);
+    quest ? (BRANCH_COLORS[quest.branch] ?? Colors.brandPrimary) : Colors.brandPrimary;
 
   const handleComplete = useCallback(() => {
     if (!quest || isCompleted) return;
-    if (intervalRef.current) clearInterval(intervalRef.current);
-
     completeQuest(quest.quest_id);
-
-    // Trigger success animation
-    successOpacity.value = withTiming(1, { duration: 200 });
-    successScale.value = withSequence(
-      withSpring(1.2, { stiffness: 300, damping: 20 }),
-      withSpring(1, { stiffness: 200, damping: 15 }),
-    );
-
-    btnScale.value = withSequence(
-      withTiming(0.95, { duration: 100 }),
-      withTiming(1, { duration: 100 }),
-    );
-
-    // Close after animation
-    setTimeout(() => {
-      router.back();
-    }, 1200);
-  }, [quest, isCompleted, completeQuest, successOpacity, successScale, btnScale]);
+    setTimeout(() => router.back(), 600);
+  }, [quest, isCompleted, completeQuest]);
 
   if (!quest) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.notFound}>
-          <AppText variant="body" color={Colors.textSecondary}>
-            Không tìm thấy nhiệm vụ.
-          </AppText>
-          <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
-            <Ionicons name="close" size={24} color={Colors.textPrimary} />
+          <Text style={styles.notFoundText}>Quest not found.</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -151,319 +107,354 @@ export default function QuestDetailScreen() {
   }
 
   const steps = parseSteps(quest.description);
-  const isRunning = timerState === 'running';
-  const isDone = timerState === 'done';
+  const resources = RESOURCES[quest.branch] ?? [];
+  const whyText = WHY_TEXT[quest.branch] ?? quest.description;
 
   return (
-    <View style={styles.container}>
-      {/* Drag handle */}
-      <View style={styles.dragHandle} />
-
-      {/* Close button */}
-      <TouchableOpacity style={styles.closeButton} onPress={() => router.back()} hitSlop={12}>
-        <Ionicons name="close" size={22} color={Colors.textSecondary} />
-      </TouchableOpacity>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      {/* ── Header ─────────────────────────────────────────── */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+          hitSlop={8}
+        >
+          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.headerBranchLabel, { color: branchColor }]}>
+          {BRANCH_CATEGORY_LABELS[quest.branch] ?? 'Quest'}
+        </Text>
+      </View>
 
       <ScrollView
-        style={styles.scrollView}
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Branch accent bar */}
-        <View style={[styles.branchAccentBar, { backgroundColor: branchColor }]} />
-
-        {/* Quest title */}
-        <AppText variant="displayLG" color={Colors.textPrimary} style={styles.questTitle}>
-          {quest.title}
-        </AppText>
-
-        {/* Description */}
-        <AppText variant="body" color={Colors.textSecondary} style={styles.description}>
-          {quest.description}
-        </AppText>
-
-        {/* Metadata row */}
-        <View style={styles.metaRow}>
-          <Badge
-            variant="branch"
-            value={BRANCH_LABELS[quest.branch] ?? quest.branch}
-            branch={quest.branch as BranchColor}
-          />
-          <Badge variant="duration" value={quest.duration_min} />
-          <Badge variant="xp" value={quest.xp_reward} />
-        </View>
-
-        {/* Separator */}
-        <View style={styles.separator} />
-
-        {/* Instructions section */}
-        <View style={styles.instructionsSection}>
-          <AppText variant="caption" color={Colors.textMuted} style={styles.sectionLabel}>
-            HƯỚNG DẪN THỰC HIỆN
-          </AppText>
-
-          {steps.map((step, index) => (
-            <View key={index} style={styles.stepRow}>
-              <View style={[styles.stepNumber, { backgroundColor: `${branchColor}33` }]}>
-                <AppText
-                  variant="micro"
-                  color={branchColor}
-                  style={styles.stepNumberText}
-                >
-                  {index + 1}
-                </AppText>
-              </View>
-              <AppText variant="body" color={Colors.textSecondary} style={styles.stepText}>
-                {step}
-              </AppText>
-            </View>
-          ))}
-        </View>
-
-        {/* Separator */}
-        <View style={styles.separator} />
-
-        {/* Timer section */}
-        <View style={styles.timerSection}>
-          <AppText variant="caption" color={Colors.textMuted} style={styles.sectionLabel}>
-            THỜI GIAN
-          </AppText>
-
-          <View style={styles.timerDisplay}>
-            <AppText
-              variant="displayXL"
-              color={isRunning ? branchColor : isDone ? Colors.success : Colors.textPrimary}
-              style={styles.timerText}
+        {/* ── Title card ─────────────────────────────────────── */}
+        <View style={styles.titleCard}>
+          <Text style={styles.questTitle}>{quest.title}</Text>
+          <View style={styles.tagsRow}>
+            <View
+              style={[
+                styles.tagChip,
+                { backgroundColor: `${branchColor}26` },
+              ]}
             >
-              {formatTime(secondsLeft)}
-            </AppText>
-            {isRunning && (
-              <View style={styles.runningIndicator}>
-                <View style={[styles.runningDot, { backgroundColor: Colors.success }]} />
-                <AppText variant="micro" color={Colors.success}>
-                  Đang chạy
-                </AppText>
-              </View>
-            )}
-            {isDone && (
-              <AppText variant="caption" color={Colors.success} style={styles.timerDoneLabel}>
-                Hoàn thành thời gian!
-              </AppText>
-            )}
+              <Text style={[styles.tagText, { color: branchColor }]}>
+                {BRANCH_LABELS[quest.branch] ?? quest.branch}
+              </Text>
+            </View>
+            <View style={styles.tagChipNeutral}>
+              <Text style={styles.tagTextNeutral}>{quest.duration_min} MIN</Text>
+            </View>
+            <View style={styles.tagChipXP}>
+              <Ionicons name="flash" size={10} color={Colors.softskills} />
+              <Text style={styles.tagTextXP}>+{quest.xp_reward} XP</Text>
+            </View>
           </View>
         </View>
 
-        {/* Spacer for button */}
-        <View style={styles.buttonSpacer} />
+        {/* ── Why This Matters ──────────────────────────────── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>WHY THIS MATTERS</Text>
+          <Text style={styles.sectionBody}>{whyText}</Text>
+        </View>
+
+        {/* ── How to Complete ───────────────────────────────── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>HOW TO COMPLETE</Text>
+          <View style={styles.stepsContainer}>
+            {steps.map((step, index) => (
+              <View key={index} style={styles.stepRow}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>{index + 1}</Text>
+                </View>
+                <Text style={styles.stepText}>{step}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* ── Resources ────────────────────────────────────── */}
+        {resources.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>RESOURCES</Text>
+            {resources.map((resource, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.resourceRow,
+                  index < resources.length - 1 && styles.resourceRowBorder,
+                ]}
+              >
+                <Ionicons
+                  name="link-outline"
+                  size={16}
+                  color={Colors.brandPrimary}
+                />
+                <Text style={styles.resourceText}>{resource.label}</Text>
+                <Ionicons
+                  name="open-outline"
+                  size={14}
+                  color={Colors.textMuted}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={styles.footerSpacer} />
       </ScrollView>
 
-      {/* Success overlay */}
-      <Animated.View style={[styles.successOverlay, completeAnimStyle]} pointerEvents="none">
-        <Ionicons name="checkmark-circle" size={80} color={Colors.success} />
-        <AppText variant="title" color={Colors.success} style={styles.successText}>
-          Tuyệt vời!
-        </AppText>
-      </Animated.View>
-
-      {/* Bottom action button */}
-      <View style={styles.bottomArea}>
+      {/* ── Footer ───────────────────────────────────────── */}
+      <View style={styles.footer}>
+        <Text style={styles.footerNote}>
+          ⚡ No Stamina cost · Pure XP gain
+        </Text>
         {isCompleted ? (
-          <View style={[styles.actionButton, styles.completedButton]}>
-            <Ionicons name="checkmark" size={20} color={Colors.success} />
-            <AppText variant="body" color={Colors.success} style={styles.btnLabel}>
-              Đã hoàn thành ✓
-            </AppText>
+          <View style={styles.completedBtn}>
+            <Ionicons name="checkmark-circle" size={20} color={Colors.finance} />
+            <Text style={styles.completedBtnText}>Completed</Text>
           </View>
-        ) : timerState === 'idle' ? (
-          <Animated.View style={btnAnimStyle}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: branchColor }]}
-              onPress={startTimer}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="play" size={20} color="#FFFFFF" />
-              <AppText variant="body" color="#FFFFFF" style={styles.btnLabel}>
-                Bắt đầu nhiệm vụ
-              </AppText>
-            </TouchableOpacity>
-          </Animated.View>
         ) : (
-          <Animated.View style={btnAnimStyle}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: Colors.success }]}
-              onPress={handleComplete}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-              <AppText variant="body" color="#FFFFFF" style={styles.btnLabel}>
-                Hoàn thành nhiệm vụ
-              </AppText>
-            </TouchableOpacity>
-          </Animated.View>
+          <TouchableOpacity
+            style={styles.completeBtn}
+            onPress={handleComplete}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.completeBtnText}>Mark as Complete</Text>
+          </TouchableOpacity>
         )}
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+          <Text style={styles.skipText}>Skip for today</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.bgBase,
   },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.glassBorder,
-    alignSelf: 'center',
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: Spacing.md,
-    right: Spacing.screenPadding,
-    width: 36,
-    height: 36,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.bgElevated,
+
+  // Not found
+  notFound: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    gap: 16,
   },
-  scrollView: {
+  notFoundText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
+  backBtn: {
+    padding: 8,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  backButton: {
+    marginRight: 4,
+  },
+  headerBranchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Scroll
+  scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.screenPadding,
-    paddingBottom: Spacing['2xl'],
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  branchAccentBar: {
-    height: 3,
-    borderRadius: Radius.full,
-    marginBottom: Spacing.lg,
-    marginTop: Spacing.sm,
-    opacity: 0.7,
+
+  // Title card
+  titleCard: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 0,
   },
   questTitle: {
-    marginBottom: Spacing.sm,
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
-  description: {
-    marginBottom: Spacing.md,
-    lineHeight: 22,
-  },
-  metaRow: {
+  tagsRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    gap: 8,
+    marginTop: 12,
     flexWrap: 'wrap',
-    marginBottom: Spacing.md,
   },
-  separator: {
-    height: 1,
-    backgroundColor: Colors.glassBorder,
-    marginVertical: Spacing.md,
+  tagChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9999,
   },
-  instructionsSection: {
-    gap: Spacing.sm,
+  tagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  tagChipNeutral: {
+    backgroundColor: Colors.bgElevated,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9999,
+  },
+  tagTextNeutral: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  tagChipXP: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9999,
+  },
+  tagTextXP: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.softskills,
+  },
+
+  // Sections
+  section: {
+    marginTop: 20,
   },
   sectionLabel: {
-    letterSpacing: 1,
-    marginBottom: Spacing.sm,
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  sectionBody: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+  },
+
+  // Steps
+  stepsContainer: {
+    gap: 12,
   },
   stepRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
     alignItems: 'flex-start',
+    gap: 12,
   },
   stepNumber: {
     width: 24,
     height: 24,
-    borderRadius: Radius.full,
+    borderRadius: 12,
+    backgroundColor: Colors.bgElevated,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   stepNumberText: {
+    fontSize: 12,
     fontWeight: '700',
+    color: Colors.brandPrimary,
   },
   stepText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
     flex: 1,
+    lineHeight: 20,
     paddingTop: 2,
   },
-  timerSection: {
-    gap: Spacing.sm,
-  },
-  timerDisplay: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    gap: Spacing.xs,
-  },
-  timerText: {
-    fontVariant: ['tabular-nums'],
-    letterSpacing: 2,
-  },
-  runningIndicator: {
+
+  // Resources
+  resourceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 10,
+    paddingVertical: 12,
   },
-  runningDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  resourceRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
   },
-  timerDoneLabel: {
-    marginTop: Spacing.xs,
+  resourceText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    flex: 1,
   },
-  buttonSpacer: {
-    height: Spacing.xl,
+
+  // Footer spacer
+  footerSpacer: {
+    height: 20,
   },
-  successOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: `${Colors.bgSurface}CC`,
-    gap: Spacing.md,
-  },
-  successText: {
-    marginTop: Spacing.sm,
-  },
-  bottomArea: {
-    paddingHorizontal: Spacing.screenPadding,
-    paddingBottom: Spacing.xl,
-    paddingTop: Spacing.sm,
+
+  // Footer
+  footer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: Colors.glassBorder,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.bgBase,
   },
-  actionButton: {
+  footerNote: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  completeBtn: {
+    backgroundColor: Colors.brandPrimary,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completeBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  completedBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.lg,
-  },
-  completedButton: {
-    backgroundColor: `${Colors.success}1A`,
+    height: 52,
+    gap: 8,
+    backgroundColor: `${Colors.finance}1A`,
+    borderRadius: 26,
     borderWidth: 1,
-    borderColor: `${Colors.success}33`,
+    borderColor: `${Colors.finance}33`,
   },
-  btnLabel: {
+  completedBtnText: {
+    fontSize: 16,
     fontWeight: '600',
+    color: Colors.finance,
   },
-  notFound: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.md,
-  },
-  closeBtn: {
-    padding: Spacing.sm,
+  skipText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 12,
   },
 });

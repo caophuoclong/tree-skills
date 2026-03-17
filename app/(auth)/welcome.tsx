@@ -1,226 +1,143 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withDelay,
-} from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { AppText } from '@/src/ui/atoms/Text';
-import { Button } from '@/src/ui/atoms/Button';
-import { GlassView } from '@/src/ui/atoms/GlassView';
+import React from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Colors } from '@/src/ui/tokens/colors';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 
-const FEATURE_CARDS = [
-  {
-    icon: '💼',
-    title: 'Sự nghiệp',
-    description: 'Phát triển kỹ năng chuyên môn và thăng tiến trong công việc',
-    color: Colors.career,
-  },
-  {
-    icon: '💰',
-    title: 'Tài chính',
-    description: 'Quản lý chi tiêu thông minh và xây dựng tự do tài chính',
-    color: Colors.finance,
-  },
-  {
-    icon: '🤝',
-    title: 'Kỹ năng mềm',
-    description: 'Giao tiếp hiệu quả và xây dựng mối quan hệ bền chặt',
-    color: Colors.softskills,
-  },
-];
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-  color,
-  delay,
-}: {
-  icon: string;
-  title: string;
-  description: string;
-  color: string;
-  delay: number;
-}) {
-  const translateY = useSharedValue(60);
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    translateY.value = withDelay(
-      delay,
-      withSpring(0, { stiffness: 120, damping: 18 }),
-    );
-    opacity.value = withDelay(delay, withSpring(1, { stiffness: 120, damping: 18 }));
-  }, []);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View style={animStyle}>
-      <GlassView style={StyleSheet.flatten([styles.featureCard, { borderLeftColor: color, borderLeftWidth: 3 }])}>
-        <View style={styles.featureCardInner}>
-          <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
-            <AppText style={styles.featureIcon}>{icon}</AppText>
-          </View>
-          <View style={styles.featureText}>
-            <AppText variant="title" color={Colors.textPrimary} style={styles.featureTitle}>
-              {title}
-            </AppText>
-            <AppText variant="body" color={Colors.textSecondary}>
-              {description}
-            </AppText>
-          </View>
-        </View>
-      </GlassView>
-    </Animated.View>
-  );
-}
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function WelcomeScreen() {
-  const headerOpacity = useSharedValue(0);
-  const headerTranslateY = useSharedValue(30);
-
-  useEffect(() => {
-    headerOpacity.value = withSpring(1, { stiffness: 100, damping: 18 });
-    headerTranslateY.value = withSpring(0, { stiffness: 100, damping: 18 });
-  }, []);
-
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
-
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View style={[styles.header, headerStyle]}>
-          <AppText style={styles.heroEmoji}>🌳</AppText>
-          <AppText variant="displayXL" style={styles.title}>
-            Xây dựng phiên bản{'\n'}tốt nhất của bạn
-          </AppText>
-          <AppText variant="bodyLG" color={Colors.textSecondary} style={styles.subtitle}>
-            Gamify cuộc sống của bạn. Hoàn thành quests, leo level, và trở thành người bạn muốn.
-          </AppText>
-        </Animated.View>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      {/* ── Center content ─────────────────────────────── */}
+      <View style={styles.centerContent}>
+        {/* Radial glow */}
+        <View style={styles.glowOrb} />
 
-        <View style={styles.cards}>
-          {FEATURE_CARDS.map((card, i) => (
-            <FeatureCard
-              key={card.title}
-              icon={card.icon}
-              title={card.title}
-              description={card.description}
-              color={card.color}
-              delay={200 + i * 100}
-            />
-          ))}
+        {/* App icon */}
+        <View style={styles.appIcon}>
+          <Text style={styles.appIconEmoji}>🌿</Text>
         </View>
 
-        <View style={styles.actions}>
-          <Button
-            variant="primary"
-            fullWidth
-            onPress={() => router.push('/(auth)/register')}
-            style={styles.primaryBtn}
-          >
-            Bắt đầu ngay
-          </Button>
-          <Button
-            variant="ghost"
-            fullWidth
-            onPress={() => router.push('/(auth)/login')}
-          >
-            Đã có tài khoản
-          </Button>
-        </View>
-      </ScrollView>
+        {/* Title + subtitle */}
+        <Text style={styles.title}>Life Skill Tree</Text>
+        <Text style={styles.subtitle}>Grow your skills. Level up your life.</Text>
+      </View>
+
+      {/* ── Buttons ────────────────────────────────────── */}
+      <View style={styles.buttonsSection}>
+        <TouchableOpacity
+          style={styles.primaryBtn}
+          onPress={() => router.push('/(auth)/register')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.primaryBtnText}>Get Started</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push('/(auth)/login')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.secondaryBtnText}>I already have an account</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.socialProof}>
+          Join 10,000+ Gen Z building real skills
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  safe: {
+  container: {
     flex: 1,
     backgroundColor: Colors.bgBase,
   },
-  scroll: {
+
+  // Center content
+  centerContent: {
     flex: 1,
-  },
-  content: {
-    paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing['2xl'],
-  },
-  header: {
-    marginBottom: Spacing.xl,
-    alignItems: 'center',
-  },
-  heroEmoji: {
-    fontSize: 56,
-    marginBottom: Spacing.md,
-  },
-  title: {
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
-  subtitle: {
-    textAlign: 'center',
-    lineHeight: 26,
-    opacity: 0.85,
-  },
-  cards: {
-    gap: Spacing.cardGap,
-    marginBottom: Spacing.xl,
-  },
-  featureCard: {
-    padding: Spacing.md,
-    borderRadius: Radius.lg,
-  },
-  featureCardInner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
+    paddingHorizontal: 24,
   },
-  featureIcon: {
-    fontSize: 22,
+  glowOrb: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(124,106,247,0.12)',
   },
-  featureText: {
-    flex: 1,
-    gap: 4,
+  appIcon: {
+    width: 64,
+    height: 64,
+    backgroundColor: Colors.bgElevated,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
   },
-  featureTitle: {
-    marginBottom: 2,
+  appIconEmoji: {
+    fontSize: 32,
   },
-  actions: {
-    gap: Spacing.sm,
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+
+  // Buttons section
+  buttonsSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 8,
   },
   primaryBtn: {
+    backgroundColor: Colors.brandPrimary,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: Colors.brandPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,
+    marginBottom: 16,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  secondaryBtnText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  socialProof: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 32,
+    marginBottom: 24,
   },
 });

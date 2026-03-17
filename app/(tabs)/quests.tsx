@@ -1,291 +1,404 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React, { useCallback } from 'react';
 import {
-  View,
   ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
 import { useStaminaSystem } from '@/src/business-logic/hooks/useStaminaSystem';
-import type { LevelUpReward } from '@/src/business-logic/hooks/useXPEngine';
-import { useUserStore } from '@/src/business-logic/stores/userStore';
-import { QuestCard } from '@/src/ui/molecules/QuestCard';
-import { LevelUpModal } from '@/src/ui/organisms/LevelUpModal';
-import { AppText } from '@/src/ui/atoms/Text';
 import { Colors } from '@/src/ui/tokens/colors';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
-import type { Branch } from '@/src/business-logic/types/index';
+import type { Quest } from '@/src/business-logic/types';
 
-type FilterKey = 'all' | Branch;
+// ─── Branch helpers ───────────────────────────────────────────────────────────
 
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'career', label: 'Sự nghiệp' },
-  { key: 'finance', label: 'Tài chính' },
-  { key: 'softskills', label: 'Kỹ năng mềm' },
-  { key: 'wellbeing', label: 'Sức khoẻ' },
-];
+const BRANCH_COLORS: Record<string, string> = {
+  career: Colors.career,
+  finance: Colors.finance,
+  softskills: Colors.softskills,
+  wellbeing: Colors.wellbeing,
+};
 
-function getTodayLabel(): string {
-  const now = new Date();
-  return now.toLocaleDateString('vi-VN', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric',
-  });
+const BRANCH_LABELS: Record<string, string> = {
+  career: 'CAREER',
+  finance: 'FINANCE',
+  softskills: 'SOFT SKILLS',
+  wellbeing: 'WELLBEING',
+};
+
+// ─── Quest Card ───────────────────────────────────────────────────────────────
+
+interface QuestItemProps {
+  quest: Quest;
+  onComplete: (id: string) => void;
 }
 
+function QuestItem({ quest, onComplete }: QuestItemProps) {
+  const branchColor = BRANCH_COLORS[quest.branch] ?? Colors.brandPrimary;
+  const isCompleted = quest.completed_at !== null;
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.questCard,
+        { borderLeftColor: branchColor, opacity: isCompleted ? 0.6 : 1 },
+      ]}
+      onPress={() => router.push(`/quest/${quest.quest_id}`)}
+      activeOpacity={0.85}
+    >
+      {/* Top row */}
+      <View style={styles.questCardTop}>
+        <View style={styles.questCardTopLeft}>
+          <View
+            style={[
+              styles.branchChip,
+              { backgroundColor: `${branchColor}26` },
+            ]}
+          >
+            <Text style={[styles.branchChipText, { color: branchColor }]}>
+              {BRANCH_LABELS[quest.branch] ?? quest.branch}
+            </Text>
+          </View>
+          <Text style={styles.durationText}>· {quest.duration_min} MIN</Text>
+        </View>
+        {isCompleted ? (
+          <Ionicons
+            name="checkmark-circle"
+            size={20}
+            color={Colors.brandPrimary}
+          />
+        ) : (
+          <TouchableOpacity
+            style={styles.checkbox}
+            onPress={() => onComplete(quest.quest_id)}
+            hitSlop={8}
+          />
+        )}
+      </View>
+
+      {/* Title */}
+      <Text
+        style={[
+          styles.questTitle,
+          isCompleted && styles.questTitleDone,
+        ]}
+      >
+        {quest.title}
+      </Text>
+
+      {/* XP Badge */}
+      <View style={styles.xpBadge}>
+        <Text style={styles.xpBadgeText}>+{quest.xp_reward} XP</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
 export default function QuestsScreen() {
-  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
-  const [levelUpReward, setLevelUpReward] = useState<LevelUpReward | null>(null);
-
-  const { quests, completedCount, totalCount, isLoading, completeQuest } = useQuestManager();
+  const { quests, completedCount, totalCount, completeQuest } = useQuestManager();
   const { stamina } = useStaminaSystem();
-  const { user } = useUserStore();
-  const prevLevelRef = useRef<number>(user?.level ?? 1);
 
-  const handleCompleteQuest = useCallback(
+  const handleComplete = useCallback(
     (questId: string) => {
-      const prevLevel = prevLevelRef.current;
       completeQuest(questId);
-
-      // Check for level up after completing quest
-      // We read the user from store after completing
-      const currentLevel = user?.level ?? 1;
-      if (currentLevel > prevLevel) {
-        const rewards: Record<number, string> = {
-          2: 'Mở khóa nhiệm vụ khó hơn',
-          3: 'Mở khóa nhánh kỹ năng mới',
-          4: 'Mở khóa thống kê chi tiết',
-          5: 'Mở khóa bảng xếp hạng',
-          6: 'Mở khóa nhiệm vụ cộng đồng',
-          7: 'Mở khóa mentor badges',
-          8: 'Mở khóa danh hiệu đặc biệt',
-          9: 'Mở khóa chế độ thử thách',
-          10: 'Danh hiệu Grandmaster',
-        };
-        setLevelUpReward({
-          level: currentLevel,
-          message: `Lên level ${currentLevel}!`,
-          unlocks: rewards[currentLevel] ?? 'Tiếp tục phát triển',
-        });
-        prevLevelRef.current = currentLevel;
-      }
     },
-    [completeQuest, user?.level],
+    [completeQuest],
   );
 
-  const handlePressQuest = useCallback((questId: string) => {
-    router.push(`/quest/${questId}`);
-  }, []);
-
-  const filteredQuests =
-    activeFilter === 'all' ? quests : quests.filter((q) => q.branch === activeFilter);
-
-  const showStaminaWarning = stamina < 30 && stamina > 0;
+  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Sticky header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <AppText variant="title" color={Colors.textPrimary}>
-              Nhiệm vụ Hôm Nay
-            </AppText>
-            <AppText variant="caption" color={Colors.textMuted} style={styles.dateText}>
-              {getTodayLabel()}
-            </AppText>
-          </View>
-          <View style={styles.progressPill}>
-            <AppText variant="caption" color={Colors.brandPrimary}>
-              {completedCount}/{totalCount} hoàn thành
-            </AppText>
-          </View>
-        </View>
-
-        {/* Filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-          style={styles.filterScroll}
-        >
-          {FILTERS.map((filter) => {
-            const isActive = activeFilter === filter.key;
-            return (
-              <TouchableOpacity
-                key={filter.key}
-                style={[styles.filterChip, isActive && styles.filterChipActive]}
-                onPress={() => setActiveFilter(filter.key)}
-                activeOpacity={0.8}
-              >
-                <AppText
-                  variant="caption"
-                  color={isActive ? '#FFFFFF' : Colors.textSecondary}
-                  style={styles.filterLabel}
-                >
-                  {filter.label}
-                </AppText>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Scrollable content */}
       <ScrollView
-        style={styles.scrollView}
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Stamina warning banner */}
-        {showStaminaWarning && (
-          <View style={styles.staminaWarning}>
-            <Ionicons name="warning-outline" size={18} color={Colors.warning} />
-            <AppText variant="caption" color={Colors.warning} style={styles.warningText}>
-              Năng lượng thấp! Chỉ có thể làm nhiệm vụ Sức khoẻ để phục hồi.
-            </AppText>
+        {/* ── Header ─────────────────────────────────────────── */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Today's Quests</Text>
+          <View style={styles.staminaRow}>
+            <View style={styles.staminaDot} />
+            <Text style={styles.staminaText}>{stamina}% stamina</Text>
           </View>
-        )}
+        </View>
 
-        {/* Loading state */}
-        {isLoading && (
-          <View style={styles.centered}>
-            <ActivityIndicator color={Colors.brandPrimary} size="large" />
-          </View>
-        )}
-
-        {/* Empty state */}
-        {!isLoading && filteredQuests.length === 0 && (
-          <View style={styles.emptyState}>
-            <AppText style={styles.emptyIcon}>🌱</AppText>
-            <AppText variant="body" color={Colors.textSecondary} style={styles.emptyText}>
-              {quests.length === 0
-                ? 'Không có nhiệm vụ. Hoàn thành onboarding để nhận nhiệm vụ!'
-                : 'Không có nhiệm vụ cho bộ lọc này.'}
-            </AppText>
-          </View>
-        )}
-
-        {/* Quest list */}
-        {!isLoading &&
-          filteredQuests.map((quest) => (
-            <QuestCard
-              key={quest.quest_id}
-              quest={quest}
-              onComplete={handleCompleteQuest}
-              onPress={handlePressQuest}
+        {/* ── Progress row ───────────────────────────────────── */}
+        <View style={styles.progressRow}>
+          <Text style={styles.progressLabel}>Daily Completion</Text>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${progressPercent}%` as any },
+              ]}
             />
-          ))}
-      </ScrollView>
+          </View>
+          <View style={styles.completePill}>
+            <Text style={styles.completePillText}>
+              {completedCount}/{totalCount} COMPLETE
+            </Text>
+          </View>
+        </View>
 
-      {/* Level Up Modal */}
-      <LevelUpModal
-        visible={levelUpReward !== null}
-        newLevel={levelUpReward?.level ?? 1}
-        unlockReward={levelUpReward?.unlocks}
-        onDismiss={() => setLevelUpReward(null)}
-      />
+        {/* ── Quest Cards ────────────────────────────────────── */}
+        <View style={styles.questList}>
+          {quests.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>🌱</Text>
+              <Text style={styles.emptyText}>
+                No quests yet. Complete onboarding to get started!
+              </Text>
+            </View>
+          ) : (
+            quests.map((quest) => (
+              <QuestItem
+                key={quest.quest_id}
+                quest={quest}
+                onComplete={handleComplete}
+              />
+            ))
+          )}
+        </View>
+
+        {/* ── Active Challenges ──────────────────────────────── */}
+        <View style={styles.challengesSection}>
+          <View style={styles.challengesHeader}>
+            <Text style={styles.challengesTrophyEmoji}>🏆</Text>
+            <Text style={styles.challengesTitle}>Active Challenges</Text>
+          </View>
+
+          <View style={styles.challengeCard}>
+            <Text style={styles.challengeEventLabel}>LIMITED EVENT</Text>
+            <Text style={styles.challengeTitle}>7 Days Hard Discipline</Text>
+            <Text style={styles.challengeSubtitle}>
+              Join 2.4k others in this sprint
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bgBase,
   },
-  header: {
-    backgroundColor: Colors.bgBase,
-    paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
-  dateText: {
-    marginTop: Spacing.xs,
-  },
-  progressPill: {
-    backgroundColor: `${Colors.brandPrimary}1A`,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: `${Colors.brandPrimary}33`,
-    marginTop: 4,
-  },
-  filterScroll: {
-    marginHorizontal: -Spacing.screenPadding,
-  },
-  filterRow: {
-    paddingHorizontal: Spacing.screenPadding,
-    gap: Spacing.sm,
-    flexDirection: 'row',
-  },
-  filterChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.bgElevated,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-  },
-  filterChipActive: {
-    backgroundColor: Colors.brandPrimary,
-    borderColor: Colors.brandPrimary,
-  },
-  filterLabel: {
-    fontWeight: '500',
-  },
-  scrollView: {
+  scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.screenPadding,
-    paddingBottom: Spacing['2xl'],
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
-  staminaWarning: {
+
+  // Header
+  header: {
+    marginBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  staminaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: `${Colors.warning}1A`,
-    borderWidth: 1,
-    borderColor: `${Colors.warning}33`,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    gap: 6,
+    marginTop: 4,
   },
-  warningText: {
+  staminaDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.finance,
+  },
+  staminaText: {
+    fontSize: 12,
+    color: Colors.finance,
+    fontWeight: '500',
+  },
+
+  // Progress row
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 20,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    flexShrink: 0,
+  },
+  progressBarTrack: {
     flex: 1,
+    height: 4,
+    backgroundColor: Colors.bgElevated,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  centered: {
-    paddingVertical: Spacing['2xl'],
+  progressBarFill: {
+    height: 4,
+    backgroundColor: Colors.brandPrimary,
+    borderRadius: 2,
+  },
+  completePill: {
+    backgroundColor: 'rgba(124,106,247,0.15)',
+    borderWidth: 1,
+    borderColor: Colors.brandPrimary,
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  completePillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.brandPrimary,
+  },
+
+  // Quest List
+  questList: {
+    gap: 12,
+  },
+  questCard: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 16,
+    padding: 16,
+    borderLeftWidth: 3,
+  },
+  questCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  questCardTopLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
+  branchChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9999,
+  },
+  branchChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  durationText: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginLeft: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  questTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginTop: 8,
+  },
+  questTitleDone: {
+    textDecorationLine: 'line-through',
+    color: Colors.textSecondary,
+  },
+  xpBadge: {
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  xpBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.softskills,
+  },
+
+  // Empty state
   emptyState: {
     alignItems: 'center',
-    paddingVertical: Spacing['2xl'],
-    gap: Spacing.sm,
+    paddingVertical: 40,
+    gap: 8,
   },
-  emptyIcon: {
+  emptyEmoji: {
     fontSize: 48,
   },
   emptyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
     textAlign: 'center',
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: 20,
+  },
+
+  // Active Challenges
+  challengesSection: {
+    marginTop: 28,
+  },
+  challengesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  challengesTrophyEmoji: {
+    fontSize: 20,
+  },
+  challengesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  challengeCard: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 16,
+    height: 120,
+    overflow: 'hidden',
+    padding: 16,
+    justifyContent: 'center',
+  },
+  challengeEventLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  challengeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  challengeSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+
+  // Bottom
+  bottomSpacer: {
+    height: 100,
   },
 });

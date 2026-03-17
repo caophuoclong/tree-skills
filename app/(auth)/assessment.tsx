@@ -1,19 +1,20 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { AppText } from '@/src/ui/atoms/Text';
-import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
-import { GlassView } from '@/src/ui/atoms/GlassView';
+import React, { useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useOnboarding } from '@/src/business-logic/hooks/useOnboarding';
 import { Colors } from '@/src/ui/tokens/colors';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { Branch } from '@/src/business-logic/types';
+
+// ─── Branch config ───────────────────────────────────────────────────────────
 
 const BRANCH_COLORS: Record<Branch, string> = {
   career: Colors.career,
@@ -23,216 +24,286 @@ const BRANCH_COLORS: Record<Branch, string> = {
 };
 
 const BRANCH_ICONS: Record<Branch, string> = {
-  career: '💼',
+  career: '🚀',
   finance: '💰',
-  softskills: '🤝',
-  wellbeing: '🌿',
+  softskills: '💬',
+  wellbeing: '🧘',
 };
 
-function OptionCard({
-  label,
-  branch,
-  onPress,
-}: {
-  label: string;
+const BRANCH_TITLES: Record<Branch, string> = {
+  career: 'Build my career skills',
+  finance: 'Get my finances in order',
+  softskills: 'Improve how I communicate',
+  wellbeing: 'Feel more mentally balanced',
+};
+
+const BRANCH_SUBTITLES: Record<Branch, string> = {
+  career: 'Professional growth & expertise',
+  finance: 'Budgeting & wealth building',
+  softskills: 'Social skills & networking',
+  wellbeing: 'Mindfulness & stress management',
+};
+
+// ─── Option Card ─────────────────────────────────────────────────────────────
+
+interface OptionCardProps {
   branch: Branch;
+  selected: boolean;
   onPress: () => void;
-}) {
-  const scale = useSharedValue(1);
+}
+
+function OptionCard({ branch, selected, onPress }: OptionCardProps) {
   const color = BRANCH_COLORS[branch];
-  const icon = BRANCH_ICONS[branch];
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePress = () => {
-    scale.value = withSpring(0.96, { stiffness: 300, damping: 20 }, () => {
-      scale.value = withSpring(1, { stiffness: 300, damping: 20 });
-    });
-    Haptics.selectionAsync();
-    onPress();
-  };
-
   return (
-    <TouchableOpacity onPress={handlePress} activeOpacity={0.85}>
-      <Animated.View style={animStyle}>
-        <GlassView
-          style={StyleSheet.flatten([
-            styles.optionCard,
-            {
-              borderLeftColor: color,
-              borderLeftWidth: 3,
-            },
-          ])}
-        >
-          <View style={styles.optionInner}>
-            <View style={[styles.optionIconWrapper, { backgroundColor: `${color}20` }]}>
-              <AppText style={styles.optionIcon}>{icon}</AppText>
-            </View>
-            <AppText variant="bodyLG" color={Colors.textPrimary} style={styles.optionLabel}>
-              {label}
-            </AppText>
-          </View>
-        </GlassView>
-      </Animated.View>
+    <TouchableOpacity
+      style={[
+        styles.optionCard,
+        selected && {
+          borderWidth: 2,
+          borderColor: color,
+        },
+      ]}
+      onPress={() => {
+        Haptics.selectionAsync();
+        onPress();
+      }}
+      activeOpacity={0.85}
+    >
+      <View
+        style={[
+          styles.optionIconCircle,
+          { backgroundColor: `${color}26` },
+        ]}
+      >
+        <Text style={styles.optionIcon}>{BRANCH_ICONS[branch]}</Text>
+      </View>
+      <View style={styles.optionTextCol}>
+        <Text style={styles.optionTitle}>{BRANCH_TITLES[branch]}</Text>
+        <Text style={styles.optionSubtitle}>{BRANCH_SUBTITLES[branch]}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
     </TouchableOpacity>
   );
 }
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function AssessmentScreen() {
   const {
     currentQuestion,
     currentIndex,
     totalQuestions,
-    progress,
     canGoBack,
     selectAnswer,
     goBack,
-    skip,
   } = useOnboarding();
+
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+
+  const progressPercent = ((currentIndex + 1) / totalQuestions) * 100;
 
   if (!currentQuestion) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.centerContainer}>
-          <AppText variant="bodyLG" color={Colors.textSecondary}>
-            Đang xử lý...
-          </AppText>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.loadingState}>
+          <Text style={styles.loadingText}>Processing...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  const branches: Branch[] = ['career', 'finance', 'softskills', 'wellbeing'];
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        {/* Top nav */}
-        <View style={styles.topNav}>
-          {canGoBack ? (
-            <TouchableOpacity
-              onPress={goBack}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-              <AppText variant="bodyLG" color={Colors.textSecondary}>
-                ← Quay lại
-              </AppText>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.navPlaceholder} />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* ── Header row ────────────────────────────────────── */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={canGoBack ? goBack : undefined}
+          activeOpacity={canGoBack ? 0.7 : 1}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={20}
+            color={canGoBack ? Colors.textSecondary : 'transparent'}
+          />
+          {canGoBack && (
+            <Text style={styles.backText}>Back</Text>
           )}
+        </TouchableOpacity>
+        <Text style={styles.stepLabel}>
+          STEP {currentIndex + 1} OF {totalQuestions}
+        </Text>
+      </View>
 
-          <AppText variant="caption" color={Colors.textMuted}>
-            Câu {currentIndex + 1}/{totalQuestions}
-          </AppText>
+      {/* ── Progress bar ──────────────────────────────────── */}
+      <View style={styles.progressTrack}>
+        <View
+          style={[styles.progressFill, { width: `${progressPercent}%` as any }]}
+        />
+      </View>
 
-          <TouchableOpacity
-            onPress={skip}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <AppText variant="body" color={Colors.textMuted}>
-              Bỏ qua
-            </AppText>
-          </TouchableOpacity>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Title ────────────────────────────────────────── */}
+        <View style={styles.titleRow}>
+          <Text style={styles.titleText}>
+            What's your biggest goal{' '}
+            <Text style={styles.titleAccent}>right now?</Text>
+          </Text>
+        </View>
+        <Text style={styles.titleSub}>
+          Select one to customize your skill tree path.
+        </Text>
+
+        {/* ── Options ──────────────────────────────────────── */}
+        <View style={styles.optionsContainer}>
+          {branches.map((branch) => (
+            <OptionCard
+              key={branch}
+              branch={branch}
+              selected={selectedBranch === branch}
+              onPress={() => {
+                setSelectedBranch(branch);
+                selectAnswer(branch);
+              }}
+            />
+          ))}
         </View>
 
-        {/* Progress bar */}
-        <ProgressBar
-          value={progress}
-          color={Colors.brandPrimary}
-          variant="thin"
-          style={styles.progressBar}
-        />
-
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Question */}
-          <AppText variant="displayLG" color={Colors.textPrimary} style={styles.question}>
-            {currentQuestion.question}
-          </AppText>
-
-          {/* Options */}
-          <View style={styles.options}>
-            {currentQuestion.options.map((opt) => (
-              <OptionCard
-                key={opt.id}
-                label={opt.text}
-                branch={opt.branch}
-                onPress={() => selectAnswer(opt.branch)}
-              />
-            ))}
-          </View>
-        </ScrollView>
-      </View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  safe: {
+  container: {
     flex: 1,
     backgroundColor: Colors.bgBase,
   },
-  container: {
-    flex: 1,
-    paddingHorizontal: Spacing.screenPadding,
-    paddingTop: Spacing.md,
-  },
-  centerContainer: {
+
+  // Loading
+  loadingState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topNav: {
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
+
+  // Header row
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  navPlaceholder: {
-    minWidth: 80,
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    minWidth: 60,
   },
-  progressBar: {
-    marginBottom: Spacing.xl,
+  backText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
+  stepLabel: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontWeight: '500',
+  },
+
+  // Progress
+  progressTrack: {
+    height: 3,
+    backgroundColor: Colors.bgElevated,
+    marginHorizontal: 20,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 0,
+  },
+  progressFill: {
+    height: 3,
+    backgroundColor: Colors.brandPrimary,
+    borderRadius: 2,
+  },
+
+  // Scroll
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Spacing['2xl'],
+    paddingHorizontal: 20,
+    paddingTop: 28,
   },
-  question: {
-    marginBottom: Spacing.xl,
-    lineHeight: 36,
+
+  // Title
+  titleRow: {
+    marginBottom: 8,
   },
-  options: {
-    gap: Spacing.cardGap,
+  titleText: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    lineHeight: 34,
+  },
+  titleAccent: {
+    color: Colors.brandPrimary,
+  },
+  titleSub: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 24,
+  },
+
+  // Options
+  optionsContainer: {
+    gap: 12,
   },
   optionCard: {
-    padding: Spacing.md,
-    borderRadius: Radius.lg,
-  },
-  optionInner: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  optionIconWrapper: {
+  optionIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: Radius.md,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   optionIcon: {
-    fontSize: 20,
+    fontSize: 22,
   },
-  optionLabel: {
+  optionTextCol: {
     flex: 1,
-    lineHeight: 22,
+    marginLeft: 14,
+    gap: 2,
+  },
+  optionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  optionSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });

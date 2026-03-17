@@ -1,142 +1,123 @@
-import React, { useState, useMemo } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
   ScrollView,
   StyleSheet,
-  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
-import { AppText } from '@/src/ui/atoms/Text';
-import { Avatar } from '@/src/ui/atoms/Avatar';
-import { GlassView } from '@/src/ui/atoms/GlassView';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
 import { Colors } from '@/src/ui/tokens/colors';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 
-type TimeFilter = 'week' | 'month' | 'alltime';
+// ─── Types & Data ─────────────────────────────────────────────────────────────
+
+type TimeTab = 'weekly' | 'alltime';
 
 interface LeaderboardEntry {
   id: string;
   name: string;
-  level: number;
-  total_xp: number;
-  avatar_url: string | null;
+  streak: number;
+  xp: number;
+  initials: string;
+  avatarBg: string;
 }
 
-const BASE_MOCK_DATA: LeaderboardEntry[] = [
-  { id: '1', name: 'Nguyễn Minh Tuấn', level: 10, total_xp: 4850, avatar_url: null },
-  { id: '2', name: 'Trần Thị Hương', level: 9, total_xp: 4200, avatar_url: null },
-  { id: '3', name: 'Lê Văn Đức', level: 9, total_xp: 3950, avatar_url: null },
-  { id: '4', name: 'Phạm Thị Lan', level: 8, total_xp: 3400, avatar_url: null },
-  { id: '5', name: 'Hoàng Văn Nam', level: 7, total_xp: 2800, avatar_url: null },
-  { id: '6', name: 'Vũ Thị Mai', level: 6, total_xp: 2200, avatar_url: null },
-  { id: '7', name: 'Đặng Văn Hùng', level: 5, total_xp: 1750, avatar_url: null },
-  { id: '8', name: 'Bùi Thị Nga', level: 4, total_xp: 1200, avatar_url: null },
-  { id: '9', name: 'Đỗ Văn Thắng', level: 3, total_xp: 750, avatar_url: null },
-  { id: '10', name: 'Ngô Thị Thu', level: 2, total_xp: 300, avatar_url: null },
+const MOCK_WEEKLY: LeaderboardEntry[] = [
+  { id: '1', name: 'Sarah Chen', streak: 21, xp: 2840, initials: 'SC', avatarBg: Colors.career },
+  { id: '2', name: 'James Park', streak: 18, xp: 2520, initials: 'JP', avatarBg: Colors.finance },
+  { id: '3', name: 'Aisha Patel', streak: 15, xp: 2100, initials: 'AP', avatarBg: Colors.softskills },
+  { id: '4', name: 'Marcus Lee', streak: 12, xp: 1900, initials: 'ML', avatarBg: Colors.wellbeing },
+  { id: '5', name: 'Zoe Williams', streak: 10, xp: 1650, initials: 'ZW', avatarBg: Colors.brandPrimary },
+  { id: '6', name: 'Noah Kim', streak: 9, xp: 1400, initials: 'NK', avatarBg: Colors.career },
+  { id: '7', name: 'Luna Tran', streak: 7, xp: 1100, initials: 'LT', avatarBg: Colors.finance },
+  { id: '8', name: 'Ethan Nguyen', streak: 5, xp: 850, initials: 'EN', avatarBg: Colors.softskills },
 ];
 
-// Scale down XP for time-filtered views
-const WEEK_MULTIPLIER = 0.15;
-const MONTH_MULTIPLIER = 0.45;
+const MOCK_ALLTIME: LeaderboardEntry[] = [
+  { id: '1', name: 'Sarah Chen', streak: 89, xp: 12840, initials: 'SC', avatarBg: Colors.career },
+  { id: '2', name: 'James Park', streak: 76, xp: 11200, initials: 'JP', avatarBg: Colors.finance },
+  { id: '3', name: 'Aisha Patel', streak: 65, xp: 9800, initials: 'AP', avatarBg: Colors.softskills },
+  { id: '4', name: 'Marcus Lee', streak: 54, xp: 8400, initials: 'ML', avatarBg: Colors.wellbeing },
+  { id: '5', name: 'Zoe Williams', streak: 48, xp: 7200, initials: 'ZW', avatarBg: Colors.brandPrimary },
+  { id: '6', name: 'Noah Kim', streak: 42, xp: 6100, initials: 'NK', avatarBg: Colors.career },
+  { id: '7', name: 'Luna Tran', streak: 35, xp: 5000, initials: 'LT', avatarBg: Colors.finance },
+  { id: '8', name: 'Ethan Nguyen', streak: 28, xp: 3900, initials: 'EN', avatarBg: Colors.softskills },
+];
 
-function getMockDataForFilter(filter: TimeFilter): LeaderboardEntry[] {
-  if (filter === 'alltime') return BASE_MOCK_DATA;
-  const multiplier = filter === 'week' ? WEEK_MULTIPLIER : MONTH_MULTIPLIER;
-  return BASE_MOCK_DATA.map((entry) => ({
-    ...entry,
-    total_xp: Math.round(entry.total_xp * multiplier),
-  }));
-}
-
-function getRankMedal(rank: number): string | null {
+function getMedalEmoji(rank: number): string | null {
   if (rank === 1) return '🥇';
   if (rank === 2) return '🥈';
   if (rank === 3) return '🥉';
   return null;
 }
 
-const PODIUM_COLORS: Record<number, string> = {
-  1: '#FFD700',
-  2: '#C0C0C0',
-  3: '#CD7F32',
-};
-
-const FILTER_LABELS: Record<TimeFilter, string> = {
-  week: 'Tuần này',
-  month: 'Tháng này',
-  alltime: 'Mọi thời đại',
-};
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function LeaderboardScreen() {
   const user = useUserStore((s) => s.user);
-  const [activeFilter, setActiveFilter] = useState<TimeFilter>('week');
+  const [activeTab, setActiveTab] = useState<TimeTab>('weekly');
 
-  const mockData = useMemo(() => getMockDataForFilter(activeFilter), [activeFilter]);
+  const data = activeTab === 'weekly' ? MOCK_WEEKLY : MOCK_ALLTIME;
 
-  // Determine current user rank by comparing total_xp to mock entries
-  const userXP = user?.total_xp ?? 0;
-  const userEntry: LeaderboardEntry | null = user
-    ? {
-        id: 'current-user',
-        name: user.name,
-        level: user.level,
-        total_xp: userXP,
-        avatar_url: user.avatar_url,
-      }
-    : null;
-
-  // Merge user into ranked list if not null
-  const rankedList = useMemo(() => {
-    if (!userEntry) return mockData;
-    // Filter out any mock entry that might match user's XP to avoid duplicates, then insert user
-    const filtered = mockData.filter((e) => e.total_xp !== userEntry.total_xp || e.id === 'current-user');
-    const combined = [...filtered, userEntry].sort((a, b) => b.total_xp - a.total_xp);
-    return combined;
-  }, [mockData, userEntry]);
-
-  const userRank = userEntry
-    ? rankedList.findIndex((e) => e.id === 'current-user') + 1
-    : null;
-
-  const topThree = rankedList.slice(0, 3);
+  const userName = user?.name ?? 'Minh Khoa';
+  const userXP = user?.total_xp ?? 1240;
+  const userStreak = user?.streak ?? 12;
+  const userInitials = userName
+    .split(' ')
+    .map((w) => w[0] ?? '')
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+        <TouchableOpacity
+          style={styles.backBtn}
           onPress={() => router.back()}
+          hitSlop={8}
         >
           <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </Pressable>
-        <AppText variant="title" color={Colors.textPrimary} style={styles.headerTitle}>
-          Bảng Xếp Hạng
-        </AppText>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Leaderboard of Persistence</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Time Filter Tabs */}
-      <View style={styles.filterRow}>
-        {(Object.keys(FILTER_LABELS) as TimeFilter[]).map((filter) => (
-          <Pressable
-            key={filter}
-            style={[styles.filterTab, activeFilter === filter && styles.filterTabActive]}
-            onPress={() => setActiveFilter(filter)}
+      {/* ── Tabs ───────────────────────────────────────────── */}
+      <View style={styles.tabsRow}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'weekly' && styles.tabActive]}
+          onPress={() => setActiveTab('weekly')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'weekly' && styles.tabTextActive,
+            ]}
           >
-            <AppText
-              variant="caption"
-              color={activeFilter === filter ? Colors.brandPrimary : Colors.textMuted}
-              style={[styles.filterTabText, activeFilter === filter && styles.filterTabTextActive]}
-            >
-              {FILTER_LABELS[filter]}
-            </AppText>
-          </Pressable>
-        ))}
+            Weekly
+          </Text>
+          {activeTab === 'weekly' && <View style={styles.tabUnderline} />}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'alltime' && styles.tabActive]}
+          onPress={() => setActiveTab('alltime')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'alltime' && styles.tabTextActive,
+            ]}
+          >
+            All Time
+          </Text>
+          {activeTab === 'alltime' && <View style={styles.tabUnderline} />}
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -144,160 +125,71 @@ export default function LeaderboardScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Podium — Top 3 */}
-        {topThree.length >= 3 && (
-          <View style={styles.podiumSection}>
-            {/* Reorder: 2nd, 1st, 3rd for visual podium layout */}
-            {[topThree[1], topThree[0], topThree[2]].map((entry, visualIndex) => {
-              const actualRank = visualIndex === 0 ? 2 : visualIndex === 1 ? 1 : 3;
-              const isCenter = visualIndex === 1;
-              const medalColor = PODIUM_COLORS[actualRank];
-              const medal = getRankMedal(actualRank);
-
-              return (
-                <View
-                  key={entry.id}
-                  style={[styles.podiumSlot, isCenter && styles.podiumSlotCenter]}
-                >
-                  <AppText style={styles.podiumMedal}>{medal}</AppText>
-                  <Avatar
-                    uri={entry.avatar_url}
-                    name={entry.name}
-                    size={isCenter ? 'lg' : 'md'}
-                  />
-                  <AppText
-                    variant="micro"
-                    color={Colors.textPrimary}
-                    style={styles.podiumName}
-                    numberOfLines={2}
-                  >
-                    {entry.name.split(' ').slice(-1)[0]}
-                  </AppText>
-                  <AppText variant="micro" color={medalColor} style={styles.podiumXP}>
-                    {entry.total_xp.toLocaleString()} XP
-                  </AppText>
-                  <View
-                    style={[
-                      styles.podiumBar,
-                      {
-                        height: isCenter ? 72 : actualRank === 2 ? 52 : 40,
-                        backgroundColor: `${medalColor}40`,
-                        borderTopColor: medalColor,
-                      },
-                    ]}
-                  />
-                </View>
-              );
-            })}
+        {/* ── Current user card ──────────────────────────── */}
+        <View style={styles.userCard}>
+          <View style={styles.userCardRow}>
+            <View style={[styles.userAvatar, { backgroundColor: Colors.brandPrimary }]}>
+              <Text style={styles.userAvatarText}>{userInitials}</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userInfoName}>{userName}</Text>
+              <Text style={styles.userInfoStreak}>{userStreak}-day streak 🔥</Text>
+            </View>
+            <Text style={styles.userXP}>{userXP.toLocaleString()} XP</Text>
           </View>
-        )}
+          <View style={styles.userProgressTrack}>
+            <View style={styles.userProgressFill} />
+          </View>
+        </View>
 
-        {/* Current User Rank Card */}
-        {userEntry && userRank !== null && (
-          <GlassView style={styles.userRankCard}>
-            <View style={styles.userRankLeft}>
-              <AppText variant="caption" color={Colors.brandPrimary} style={styles.userRankNum}>
-                #{userRank}
-              </AppText>
-              <Avatar uri={userEntry.avatar_url} name={userEntry.name} size="sm" />
-              <View style={styles.userRankInfo}>
-                <AppText variant="body" color={Colors.textPrimary} style={styles.userRankName}>
-                  {userEntry.name}
-                </AppText>
-                <AppText variant="micro" color={Colors.textMuted}>
-                  Level {userEntry.level}
-                </AppText>
-              </View>
-            </View>
-            <View style={styles.userRankRight}>
-              <AppText variant="body" color={Colors.brandPrimary} style={styles.userRankXP}>
-                {userEntry.total_xp.toLocaleString()}
-              </AppText>
-              <AppText variant="micro" color={Colors.textMuted}>
-                XP
-              </AppText>
-            </View>
-          </GlassView>
-        )}
+        {/* ── Top Performers label ───────────────────────── */}
+        <Text style={styles.topLabel}>TOP PERFORMERS</Text>
 
-        {/* Full Leaderboard List */}
-        <GlassView style={styles.listCard}>
-          {rankedList.map((entry, index) => {
+        {/* ── Ranked list ────────────────────────────────── */}
+        <View style={styles.listContainer}>
+          {data.map((entry, index) => {
             const rank = index + 1;
-            const isCurrentUser = entry.id === 'current-user';
-            const medal = getRankMedal(rank);
-
+            const medal = getMedalEmoji(rank);
             return (
-              <View key={entry.id}>
-                <View
-                  style={[
-                    styles.listRow,
-                    isCurrentUser && styles.listRowHighlight,
-                  ]}
-                >
-                  <View style={styles.rankWrap}>
-                    {medal ? (
-                      <AppText style={styles.medalText}>{medal}</AppText>
-                    ) : (
-                      <AppText
-                        variant="caption"
-                        color={Colors.textMuted}
-                        style={styles.rankNum}
-                      >
-                        {rank}
-                      </AppText>
-                    )}
-                  </View>
-
-                  <Avatar uri={entry.avatar_url} name={entry.name} size="sm" />
-
-                  <View style={styles.listEntryInfo}>
-                    <AppText
-                      variant="body"
-                      color={isCurrentUser ? Colors.brandPrimary : Colors.textPrimary}
-                      style={[styles.listEntryName, isCurrentUser && styles.listEntryNameHighlight]}
-                      numberOfLines={1}
-                    >
-                      {entry.name}{isCurrentUser ? ' (Bạn)' : ''}
-                    </AppText>
-                    <AppText variant="micro" color={Colors.textMuted}>
-                      Level {entry.level}
-                    </AppText>
-                  </View>
-
-                  <View style={styles.listEntryXPWrap}>
-                    <AppText
-                      variant="caption"
-                      color={isCurrentUser ? Colors.brandPrimary : Colors.textSecondary}
-                      style={styles.listEntryXP}
-                    >
-                      {entry.total_xp.toLocaleString()}
-                    </AppText>
-                    <AppText variant="micro" color={Colors.textMuted}>
-                      XP
-                    </AppText>
-                  </View>
+              <View
+                key={entry.id}
+                style={[
+                  styles.listRow,
+                  index < data.length - 1 && styles.listRowBorder,
+                ]}
+              >
+                <View style={styles.rankCol}>
+                  {medal ? (
+                    <Text style={styles.medalEmoji}>{medal}</Text>
+                  ) : (
+                    <Text style={styles.rankNum}>{rank}</Text>
+                  )}
                 </View>
-
-                {index < rankedList.length - 1 && (
-                  <View style={styles.rowDivider} />
-                )}
+                <View style={[styles.listAvatar, { backgroundColor: entry.avatarBg }]}>
+                  <Text style={styles.listAvatarText}>{entry.initials}</Text>
+                </View>
+                <View style={styles.listInfo}>
+                  <Text style={styles.listName}>{entry.name}</Text>
+                  <Text style={styles.listStreak}>{entry.streak}-day streak</Text>
+                </View>
+                <Text style={styles.listXP}>{entry.xp.toLocaleString()} XP</Text>
               </View>
             );
           })}
-        </GlassView>
-
-        {/* Info Note */}
-        <View style={styles.infoNote}>
-          <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
-          <AppText variant="micro" color={Colors.textMuted}>
-            Bảng xếp hạng được cập nhật hàng tuần
-          </AppText>
         </View>
+
+        {/* ── Quote ─────────────────────────────────────── */}
+        <Text style={styles.quote}>
+          "You're ranked by consistency, not results."
+        </Text>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -309,187 +201,199 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backBtnPressed: {
-    opacity: 0.6,
-    backgroundColor: Colors.glassBg,
-  },
   headerTitle: {
     flex: 1,
-    textAlign: 'center',
+    fontSize: 20,
     fontWeight: '700',
+    color: Colors.textPrimary,
+    marginLeft: 8,
   },
   headerSpacer: {
-    width: 40,
+    width: 36,
   },
 
-  // Filter Tabs
-  filterRow: {
+  // Tabs
+  tabsRow: {
     flexDirection: 'row',
-    marginHorizontal: Spacing.md,
-    backgroundColor: Colors.bgSurface,
-    borderRadius: Radius.md,
-    padding: 4,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
   },
-  filterTab: {
-    flex: 1,
-    paddingVertical: Spacing.xs,
-    alignItems: 'center',
-    borderRadius: Radius.sm,
+  tab: {
+    paddingVertical: 8,
+    marginRight: 24,
+    position: 'relative',
   },
-  filterTabActive: {
-    backgroundColor: `${Colors.brandPrimary}22`,
+  tabActive: {},
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textMuted,
   },
-  filterTabText: {
-    fontWeight: '500',
+  tabTextActive: {
+    color: Colors.textPrimary,
   },
-  filterTabTextActive: {
-    fontWeight: '700',
+  tabUnderline: {
+    position: 'absolute',
+    bottom: -1,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: Colors.brandPrimary,
+    borderRadius: 1,
   },
 
   // Scroll
   scroll: { flex: 1 },
   scrollContent: {
-    padding: Spacing.md,
-    paddingBottom: Spacing.xl,
-    gap: Spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
 
-  // Podium
-  podiumSection: {
+  // User card
+  userCard: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: `${Colors.brandPrimary}33`,
+  },
+  userCardRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    gap: 12,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    marginVertical: Spacing.sm,
   },
-  podiumSlot: {
-    alignItems: 'center',
-    gap: 6,
-    width: 90,
-  },
-  podiumSlotCenter: {
-    marginBottom: 0,
-  },
-  podiumMedal: {
-    fontSize: 24,
-    textAlign: 'center',
-  },
-  podiumName: {
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 11,
-  },
-  podiumXP: {
-    textAlign: 'center',
+  userAvatarText: {
+    fontSize: 14,
     fontWeight: '700',
-    fontSize: 10,
+    color: '#FFFFFF',
   },
-  podiumBar: {
-    width: '100%',
-    borderTopWidth: 2,
-    borderRadius: 4,
+  userInfo: {
+    flex: 1,
+  },
+  userInfoName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  userInfoStreak: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  userXP: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.brandPrimary,
+  },
+  userProgressTrack: {
+    height: 3,
+    backgroundColor: Colors.bgElevated,
+    borderRadius: 2,
+    marginTop: 12,
+    overflow: 'hidden',
+  },
+  userProgressFill: {
+    height: 3,
+    width: '52%',
+    backgroundColor: Colors.brandPrimary,
+    borderRadius: 2,
   },
 
-  // Current User Rank Card
-  userRankCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.md,
-    borderColor: `${Colors.brandPrimary}50`,
-    borderWidth: 1.5,
-  },
-  userRankLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    flex: 1,
-  },
-  userRankNum: {
-    fontWeight: '800',
-    fontSize: 16,
-    width: 28,
-    textAlign: 'center',
-  },
-  userRankInfo: {
-    gap: 2,
-    flex: 1,
-  },
-  userRankName: {
-    fontWeight: '700',
-  },
-  userRankRight: {
-    alignItems: 'flex-end',
-  },
-  userRankXP: {
-    fontWeight: '800',
+  // Top label
+  topLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
 
   // List
-  listCard: {
-    padding: 0,
+  listContainer: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
   },
-  listRowHighlight: {
-    backgroundColor: `${Colors.brandPrimary}12`,
+  listRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
-  rankWrap: {
+  rankCol: {
     width: 28,
     alignItems: 'center',
   },
-  medalText: {
-    fontSize: 20,
-    textAlign: 'center',
+  medalEmoji: {
+    fontSize: 18,
   },
   rankNum: {
+    fontSize: 14,
     fontWeight: '700',
-    textAlign: 'center',
+    color: Colors.textMuted,
   },
-  listEntryInfo: {
+  listAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listAvatarText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  listInfo: {
     flex: 1,
     gap: 2,
   },
-  listEntryName: {
-    fontWeight: '500',
+  listName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
   },
-  listEntryNameHighlight: {
+  listStreak: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  listXP: {
+    fontSize: 14,
     fontWeight: '700',
-  },
-  listEntryXPWrap: {
-    alignItems: 'flex-end',
-  },
-  listEntryXP: {
-    fontWeight: '700',
-  },
-  rowDivider: {
-    height: 1,
-    backgroundColor: Colors.glassBorder,
-    marginHorizontal: Spacing.md,
+    color: Colors.textPrimary,
   },
 
-  // Info Note
-  infoNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
+  // Quote
+  quote: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 24,
+    paddingHorizontal: 20,
   },
 });
