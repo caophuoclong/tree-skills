@@ -107,3 +107,25 @@ export interface SkillNodeMeta {
   goalId?: string;         // id of the CustomGoalTree that created this node
   goalTitle?: string;      // short display name of the goal
 }
+
+// ─── Streak Shield ────────────────────────────────────────────────────────────
+export interface StreakShield {
+  /** ISO date the shield was activated (YYYY-MM-DD) */
+  activatedDate: string | null;
+  /** How many shields remaining (max 2) */
+  shieldsRemaining: number;
+}
+
+// ─── Long-term Roadmap ─────────────────────────────────────────────────────────
+
+export type TimeHorizon = 'short' | 'mid' | 'long';
+
+export interface RoadmapMilestone {
+  id: string;
+  title: string;
+  branch: Branch;
+  horizon: TimeHorizon;
+  targetDate: string; // YYYY-MM-DD
+  isCompleted: boolean;
+  createdAt: string;
+}

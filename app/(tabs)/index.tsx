@@ -15,7 +15,10 @@ import {
 } from "@/src/ui/atoms";
 import { ProgressRing } from "@/src/ui/molecules/ProgressRing";
 import { XPShimmerBar } from "@/src/ui/molecules/XPShimmerBar";
+import { StreakShieldBadge } from "@/src/ui/molecules/StreakShieldBadge";
+import { StreakShieldModal } from "@/src/ui/molecules/StreakShieldModal";
 import { HomeHeader } from "@/src/ui/organisms/HomeHeader";
+import type { MoodScore } from "@/src/business-logic/types";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -69,6 +72,10 @@ export default function HomeScreen() {
   const { nodes, setNodes } = useSkillTreeStore();
   const branchProgress = useBranchProgress();
   const unreadCount = useNotificationStore(s => s.notifications.filter(n => !n.read).length);
+
+  // Streak Shield state
+  const { streakShield, activateStreakShield, isStreakProtectedToday } = useUserStore();
+  const [showShieldModal, setShowShieldModal] = useState(false);
 
   // Streak toast state
   const [showStreakToast, setShowStreakToast] = useState(false);
@@ -126,9 +133,20 @@ export default function HomeScreen() {
   const wellbeingPct =
     branchProgress.find((b) => b.branch === "wellbeing")?.percent ?? 0;
 
+  const handleShieldActivate = (mood: MoodScore) => {
+    activateStreakShield();
+    // Shield activation is now recorded in the store
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StreakToast streak={toastStreak} visible={showStreakToast} onHide={() => setShowStreakToast(false)} />
+      <StreakShieldModal
+        visible={showShieldModal}
+        streak={streak ?? 0}
+        onActivate={handleShieldActivate}
+        onClose={() => setShowShieldModal(false)}
+      />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -197,6 +215,11 @@ export default function HomeScreen() {
                   />
                   <View style={styles.streakHeader}>
                     <Emoji size={16}>🔥</Emoji>
+                    <StreakShieldBadge
+                      shieldsRemaining={streakShield.shieldsRemaining}
+                      isProtectedToday={isStreakProtectedToday()}
+                      onActivate={() => setShowShieldModal(true)}
+                    />
                   </View>
                   <Text style={styles.streakNumber}>{streak || 12}</Text>
                   <Text style={styles.streakLabel}>DAYS STREAK</Text>
@@ -590,6 +613,9 @@ const createStyles = (colors: IColors) =>
     // Streak card
     streakHeader: {
       marginBottom: 4,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     streakFire: {
       fontSize: 16,
