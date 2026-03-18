@@ -4,6 +4,7 @@ import { useQuestManager } from "@/src/business-logic/hooks/useQuestManager";
 import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
+import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
 import type { Branch } from "@/src/business-logic/types";
 import {
   Emoji,
@@ -65,6 +66,7 @@ export default function HomeScreen() {
   const { stamina } = useStaminaSystem();
   const { nodes, setNodes } = useSkillTreeStore();
   const branchProgress = useBranchProgress();
+  const unreadCount = useNotificationStore(s => s.notifications.filter(n => !n.read).length);
 
   // Seed demo progress data so rings display realistic values immediately
   useEffect(() => {
@@ -103,6 +105,7 @@ export default function HomeScreen() {
         <HomeHeader
           name={name}
           level={level}
+          unreadCount={unreadCount}
           onNotifications={() => router.push("/notifications")}
           onSettings={() => router.push("/settings")}
         />
