@@ -12,11 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Button } from '@/src/ui/atoms/Button';
-import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { useSignUp } from '@/src/business-logic/auth';
 import { useTheme } from '@/src/ui/tokens';
 
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
-import type { UserProgress } from '@/src/business-logic/types';
 
 export default function RegisterScreen() {
   const { colors } = useTheme();
@@ -25,28 +24,15 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const setUser = useUserStore((s) => s.setUser);
+  const { signUp, isLoading, error: signUpError, needsEmailConfirmation } = useSignUp();
 
   const handleRegister = async () => {
     if (!name || !email || !password) return;
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-
-    const mockUser: UserProgress = {
-      user_id: 'u1',
-      name: name.trim() || 'Người Dùng',
-      avatar_url: null,
-      level: 1,
-      total_xp: 0,
-      current_xp_in_level: 0,
-      xp_to_next_level: 100,
-      streak: 0,
-      best_streak: 0,
-      stamina: 100,
-      last_active_date: null,
-      last_login_at: new Date().toISOString(),
-      onboarding_done: false,
-    };
+    const success = await signUp(email, password, name);
+    if (success) {
+      router.replace('/(tabs)');
+    }
+  };
 
     setUser(mockUser);
     setLoading(false);

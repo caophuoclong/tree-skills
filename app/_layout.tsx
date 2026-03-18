@@ -17,7 +17,7 @@ import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
 
 import { queryClient } from "@/src/business-logic/api/query-client";
-import { useUser } from "@/src/business-logic/hooks/useUser";
+import { useAuth } from "@/src/business-logic/auth";
 import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
@@ -57,8 +57,8 @@ function App() {
   const { user } = useUserStore();
   const { addNotification } = useNotificationStore();
 
-  // Fetch current user from API → sync into userStore
-  useUser();
+  // Supabase auth — listens to session + syncs profile → userStore
+  useAuth();
 
   const [fontsLoaded] = useFonts({
     "SpaceGrotesk-Light": SpaceGrotesk_300Light,
