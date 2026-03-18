@@ -87,11 +87,8 @@ export default function RoadmapScreen() {
             </Text>
           </View>
           <ProgressBar
-            percent={progressPercent}
-            accentColor={colors.brandPrimary}
-            backgroundColor={colors.bgElevated}
-            height={6}
-            borderRadius={Radius.full}
+            value={progressPercent}
+            color={colors.brandPrimary}
           />
         </View>
 

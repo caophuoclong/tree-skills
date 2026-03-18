@@ -5,12 +5,11 @@ import { Radius, Spacing } from '@/src/ui/tokens/spacing';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useMemo, useRef } from 'react';
 import {
-  Animated,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
+import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,

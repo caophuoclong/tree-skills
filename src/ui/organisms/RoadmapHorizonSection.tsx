@@ -102,7 +102,12 @@ export function RoadmapHorizonSection({
                 shadowOffsetY={milestone.isCompleted ? 2 : 4}
                 borderWidth={2}
                 borderRadius={Radius.md}
-                style={[styles.milestoneCard, { opacity: milestone.isCompleted ? 0.7 : 1 }]}
+                style={
+                  [
+                    styles.milestoneCard,
+                    { opacity: milestone.isCompleted ? 0.7 : 1 },
+                  ] as any
+                }
                 contentStyle={styles.milestoneContent}
               >
                 {/* Left accent bar (branch color) */}
