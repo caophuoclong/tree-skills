@@ -3,8 +3,7 @@
 -- Run: supabase db push  OR  paste into Supabase SQL editor
 -- ============================================================
 
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
+-- gen_random_uuid() is built-in from PostgreSQL 13+ (no extension needed on Supabase)
 
 -- ─── ENUMS ────────────────────────────────────────────────────────────────────
 create type branch_type    as enum ('career', 'finance', 'softskills', 'wellbeing');
@@ -50,7 +49,7 @@ create table skill_nodes (
 
 -- ─── user_skill_nodes ─────────────────────────────────────────────────────────
 create table user_skill_nodes (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   user_id         uuid not null references auth.users(id) on delete cascade,
   node_id         text not null references skill_nodes(node_id) on delete cascade,
   status          node_status not null default 'locked',
@@ -76,7 +75,7 @@ create table quests (
 
 -- ─── user_quests ──────────────────────────────────────────────────────────────
 create table user_quests (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
   quest_id     text not null references quests(quest_id),
   completed_at timestamptz not null default now(),
@@ -98,7 +97,7 @@ create table challenges (
 
 -- ─── user_challenges ──────────────────────────────────────────────────────────
 create table user_challenges (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
   challenge_id text not null references challenges(id),
   progress     int not null default 0,
@@ -110,7 +109,7 @@ create table user_challenges (
 
 -- ─── roadmap_milestones ───────────────────────────────────────────────────────
 create table roadmap_milestones (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
   title        text not null,
   branch       branch_type not null,
@@ -123,7 +122,7 @@ create table roadmap_milestones (
 
 -- ─── custom_goal_trees ────────────────────────────────────────────────────────
 create table custom_goal_trees (
-  id         uuid primary key default uuid_generate_v4(),
+  id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users(id) on delete cascade,
   goal       text not null,
   clusters   jsonb not null default '[]',
@@ -133,7 +132,7 @@ create table custom_goal_trees (
 
 -- ─── notifications ────────────────────────────────────────────────────────────
 create table notifications (
-  id         uuid primary key default uuid_generate_v4(),
+  id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users(id) on delete cascade,
   type       notif_type not null,
   title      text not null,

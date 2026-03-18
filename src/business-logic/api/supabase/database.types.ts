@@ -1,208 +1,552 @@
-/**
- * Supabase database type definitions.
- * Auto-generate in production with: `supabase gen types typescript --project-id YOUR_ID > database.types.ts`
- * 
- * Table naming convention: snake_case, plural
- * All tables have `user_id` (uuid, FK → auth.users) except seed tables (skill_nodes, quests, challenges)
- */
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
   public: {
     Tables: {
-
-      // ─── profiles ─────────────────────────────────────────────────────────
-      // 1-to-1 with auth.users. Created via trigger on signup.
-      profiles: {
-        Row: {
-          id: string;              // uuid, FK → auth.users.id
-          name: string;
-          avatar_url: string | null;
-          level: number;
-          total_xp: number;
-          current_xp_in_level: number;
-          xp_to_next_level: number;
-          streak: number;
-          best_streak: number;
-          stamina: number;         // 0–100
-          primary_branch: string | null;
-          onboarding_done: boolean;
-          last_active_date: string | null;  // YYYY-MM-DD
-          shields_remaining: number;
-          shield_activated_date: string | null; // YYYY-MM-DD
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
-      };
-
-      // ─── skill_nodes ──────────────────────────────────────────────────────
-      // Master catalog — seeded, public read, admin write
-      skill_nodes: {
-        Row: {
-          node_id: string;         // e.g. 'career_t1_1'
-          branch: string;          // career | finance | softskills | wellbeing
-          tier: number;            // 1 | 2 | 3
-          title: string;
-          description: string;
-          xp_required: number;
-          quests_total: number;
-          sort_order: number;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['skill_nodes']['Row'], 'created_at'>;
-        Update: Partial<Database['public']['Tables']['skill_nodes']['Insert']>;
-      };
-
-      // ─── user_skill_nodes ─────────────────────────────────────────────────
-      // Per-user progress on each node
-      user_skill_nodes: {
-        Row: {
-          id: string;              // uuid
-          user_id: string;         // FK → auth.users
-          node_id: string;         // FK → skill_nodes
-          status: string;          // locked | in_progress | completed
-          quests_completed: number;
-          unlocked_at: string | null;
-          completed_at: string | null;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['user_skill_nodes']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['user_skill_nodes']['Insert']>;
-      };
-
-      // ─── quests ───────────────────────────────────────────────────────────
-      // Master catalog — seeded, public read
-      quests: {
-        Row: {
-          quest_id: string;        // e.g. 'career_easy_001'
-          title: string;
-          description: string;
-          branch: string;
-          difficulty: string;      // easy | medium | hard
-          duration_min: number;    // 5 | 15 | 30
-          xp_reward: number;       // 10 | 25 | 50
-          node_id: string | null;  // optional FK → skill_nodes
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['quests']['Row'], 'created_at'>;
-        Update: Partial<Database['public']['Tables']['quests']['Insert']>;
-      };
-
-      // ─── user_quests ──────────────────────────────────────────────────────
-      // Tracks which quests user completed + daily pool
-      user_quests: {
-        Row: {
-          id: string;              // uuid
-          user_id: string;
-          quest_id: string;        // FK → quests
-          completed_at: string;    // ISO timestamp
-          xp_earned: number;       // actual XP (after stamina multiplier)
-          date: string;            // YYYY-MM-DD (for daily grouping)
-        };
-        Insert: Omit<Database['public']['Tables']['user_quests']['Row'], 'id'>;
-        Update: Partial<Database['public']['Tables']['user_quests']['Insert']>;
-      };
-
-      // ─── challenges ───────────────────────────────────────────────────────
-      // Master catalog — seeded
       challenges: {
         Row: {
-          id: string;
-          title: string;
-          description: string;
-          branch: string;
-          target_count: number;
-          duration_days: number;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['challenges']['Row'], 'created_at'>;
-        Update: Partial<Database['public']['Tables']['challenges']['Insert']>;
-      };
-
-      // ─── user_challenges ─────────────────────────────────────────────────
-      user_challenges: {
-        Row: {
-          id: string;              // uuid
-          user_id: string;
-          challenge_id: string;    // FK → challenges
-          progress: number;        // quests completed toward target
-          joined_at: string;
-          ends_at: string;         // joined_at + duration_days
-          completed_at: string | null;
-        };
-        Insert: Omit<Database['public']['Tables']['user_challenges']['Row'], 'id'>;
-        Update: Partial<Database['public']['Tables']['user_challenges']['Insert']>;
-      };
-
-      // ─── roadmap_milestones ───────────────────────────────────────────────
-      roadmap_milestones: {
-        Row: {
-          id: string;              // uuid
-          user_id: string;
-          title: string;
-          branch: string;
-          horizon: string;         // short | mid | long
-          target_date: string;     // YYYY-MM-DD
-          is_completed: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['roadmap_milestones']['Row'], 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['roadmap_milestones']['Insert']>;
-      };
-
-      // ─── custom_goal_trees ────────────────────────────────────────────────
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          description: string
+          duration_days: number
+          id: string
+          target_count: number
+          title: string
+        }
+        Insert: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          duration_days: number
+          id: string
+          target_count: number
+          title: string
+        }
+        Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          duration_days?: number
+          id?: string
+          target_count?: number
+          title?: string
+        }
+        Relationships: []
+      }
       custom_goal_trees: {
         Row: {
-          id: string;              // uuid
-          user_id: string;
-          goal: string;
-          clusters: Json;          // CustomCluster[] stored as JSONB
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['custom_goal_trees']['Row'], 'created_at' | 'updated_at'>;
-        Update: Partial<Database['public']['Tables']['custom_goal_trees']['Insert']>;
-      };
-
-      // ─── notifications ────────────────────────────────────────────────────
+          clusters: Json
+          created_at: string
+          goal: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clusters?: Json
+          created_at?: string
+          goal: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clusters?: Json
+          created_at?: string
+          goal?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
-          id: string;              // uuid
-          user_id: string;
-          type: string;            // streak_reminder | quest_suggestion | level_up | challenge_complete
-          title: string;
-          body: string;
-          is_read: boolean;
-          created_at: string;
-        };
-        Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
-      };
-    };
-
-    Views: {};
-    Functions: {};
+          body: string
+          created_at: string
+          id: string
+          is_read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notif_type"]
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title: string
+          type: Database["public"]["Enums"]["notif_type"]
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notif_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          best_streak: number
+          created_at: string
+          current_xp_in_level: number
+          id: string
+          last_active_date: string | null
+          level: number
+          name: string
+          onboarding_done: boolean
+          primary_branch: Database["public"]["Enums"]["branch_type"] | null
+          shield_activated_date: string | null
+          shields_remaining: number
+          stamina: number
+          streak: number
+          total_xp: number
+          updated_at: string
+          xp_to_next_level: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          best_streak?: number
+          created_at?: string
+          current_xp_in_level?: number
+          id: string
+          last_active_date?: string | null
+          level?: number
+          name?: string
+          onboarding_done?: boolean
+          primary_branch?: Database["public"]["Enums"]["branch_type"] | null
+          shield_activated_date?: string | null
+          shields_remaining?: number
+          stamina?: number
+          streak?: number
+          total_xp?: number
+          updated_at?: string
+          xp_to_next_level?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          best_streak?: number
+          created_at?: string
+          current_xp_in_level?: number
+          id?: string
+          last_active_date?: string | null
+          level?: number
+          name?: string
+          onboarding_done?: boolean
+          primary_branch?: Database["public"]["Enums"]["branch_type"] | null
+          shield_activated_date?: string | null
+          shields_remaining?: number
+          stamina?: number
+          streak?: number
+          total_xp?: number
+          updated_at?: string
+          xp_to_next_level?: number
+        }
+        Relationships: []
+      }
+      quests: {
+        Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          description: string
+          difficulty: Database["public"]["Enums"]["difficulty_type"]
+          duration_min: number
+          node_id: string | null
+          quest_id: string
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          difficulty: Database["public"]["Enums"]["difficulty_type"]
+          duration_min: number
+          node_id?: string | null
+          quest_id: string
+          title: string
+          xp_reward: number
+        }
+        Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          difficulty?: Database["public"]["Enums"]["difficulty_type"]
+          duration_min?: number
+          node_id?: string | null
+          quest_id?: string
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quests_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "skill_nodes"
+            referencedColumns: ["node_id"]
+          },
+        ]
+      }
+      roadmap_milestones: {
+        Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          horizon: Database["public"]["Enums"]["time_horizon"]
+          id: string
+          is_completed: boolean
+          target_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          horizon: Database["public"]["Enums"]["time_horizon"]
+          id?: string
+          is_completed?: boolean
+          target_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          horizon?: Database["public"]["Enums"]["time_horizon"]
+          id?: string
+          is_completed?: boolean
+          target_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      skill_nodes: {
+        Row: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          description: string
+          node_id: string
+          quests_total: number
+          sort_order: number
+          tier: number
+          title: string
+          xp_required: number
+        }
+        Insert: {
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          node_id: string
+          quests_total?: number
+          sort_order?: number
+          tier: number
+          title: string
+          xp_required?: number
+        }
+        Update: {
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          node_id?: string
+          quests_total?: number
+          sort_order?: number
+          tier?: number
+          title?: string
+          xp_required?: number
+        }
+        Relationships: []
+      }
+      user_challenges: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          ends_at: string
+          id: string
+          joined_at: string
+          progress: number
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          ends_at: string
+          id?: string
+          joined_at?: string
+          progress?: number
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          ends_at?: string
+          id?: string
+          joined_at?: string
+          progress?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_quests: {
+        Row: {
+          completed_at: string
+          date: string
+          id: string
+          quest_id: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          completed_at?: string
+          date?: string
+          id?: string
+          quest_id: string
+          user_id: string
+          xp_earned: number
+        }
+        Update: {
+          completed_at?: string
+          date?: string
+          id?: string
+          quest_id?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quests_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "quests"
+            referencedColumns: ["quest_id"]
+          },
+        ]
+      }
+      user_skill_nodes: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          node_id: string
+          quests_completed: number
+          status: Database["public"]["Enums"]["node_status"]
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          node_id: string
+          quests_completed?: number
+          status?: Database["public"]["Enums"]["node_status"]
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          node_id?: string
+          quests_completed?: number
+          status?: Database["public"]["Enums"]["node_status"]
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_skill_nodes_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "skill_nodes"
+            referencedColumns: ["node_id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
     Enums: {
-      branch_type: 'career' | 'finance' | 'softskills' | 'wellbeing';
-      node_status: 'locked' | 'in_progress' | 'completed';
-      difficulty_type: 'easy' | 'medium' | 'hard';
-      time_horizon: 'short' | 'mid' | 'long';
-    };
-  };
+      branch_type: "career" | "finance" | "softskills" | "wellbeing"
+      difficulty_type: "easy" | "medium" | "hard"
+      node_status: "locked" | "in_progress" | "completed"
+      notif_type:
+        | "streak_reminder"
+        | "quest_suggestion"
+        | "level_up"
+        | "challenge_complete"
+        | "wellbeing_warning"
+      time_horizon: "short" | "mid" | "long"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-// ─── Convenience row types ────────────────────────────────────────────────────
-export type ProfileRow        = Database['public']['Tables']['profiles']['Row'];
-export type SkillNodeRow      = Database['public']['Tables']['skill_nodes']['Row'];
-export type UserSkillNodeRow  = Database['public']['Tables']['user_skill_nodes']['Row'];
-export type QuestRow          = Database['public']['Tables']['quests']['Row'];
-export type UserQuestRow      = Database['public']['Tables']['user_quests']['Row'];
-export type ChallengeRow      = Database['public']['Tables']['challenges']['Row'];
-export type UserChallengeRow  = Database['public']['Tables']['user_challenges']['Row'];
-export type RoadmapMilestoneRow = Database['public']['Tables']['roadmap_milestones']['Row'];
-export type CustomGoalTreeRow = Database['public']['Tables']['custom_goal_trees']['Row'];
-export type NotificationRow   = Database['public']['Tables']['notifications']['Row'];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      branch_type: ["career", "finance", "softskills", "wellbeing"],
+      difficulty_type: ["easy", "medium", "hard"],
+      node_status: ["locked", "in_progress", "completed"],
+      notif_type: [
+        "streak_reminder",
+        "quest_suggestion",
+        "level_up",
+        "challenge_complete",
+        "wellbeing_warning",
+      ],
+      time_horizon: ["short", "mid", "long"],
+    },
+  },
+} as const
