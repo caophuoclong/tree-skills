@@ -16,8 +16,10 @@ import { useQuestManager } from "@/src/business-logic/hooks/useQuestManager";
 import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { getComboMultiplier } from "@/src/business-logic/hooks/useXPEngine";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
+import { useChallengeStore } from "@/src/business-logic/stores/challengeStore";
 import type { Quest } from "@/src/business-logic/types";
 import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
+import { ChallengeCard } from "@/src/ui/molecules";
 import { IColors, useTheme } from "@/src/ui/tokens";
 
 // ─── Branch helpers ───────────────────────────────────────────────────────────
@@ -206,6 +208,7 @@ export default function QuestsScreen() {
     useQuestManager();
   const { stamina } = useStaminaSystem();
   const { dailyStats } = useUserStore();
+  const { challenges } = useChallengeStore();
   const combo = dailyStats.session_combo;
   const multiplier = getComboMultiplier(combo);
   const comboActive = combo >= 3;
@@ -333,63 +336,30 @@ export default function QuestsScreen() {
           )}
         </View>
 
-        {/* ── Active Challenges ──────────────────────────────── */}
-        <View style={styles.challengesSection}>
-          <View style={styles.challengesHeader}>
-            <Emoji size={20}>🏆</Emoji>
-            <Text style={styles.challengesTitle}>Thử thách đang chạy</Text>
-          </View>
-
-          <NeoBrutalBox
-            style={{
-              ...styles.challengeCard,
-            }}
-            // shadowColor={`${colors.wellbeing}40`}
-            contentStyle={{
-              padding: 16,
-            }}
-            shadowOffsetX={6}
-            shadowOffsetY={6}
+        {/* ── Weekly Challenges ──────────────────────────────── */}
+        <View style={{ marginBottom: 20 }}>
+          <Text
+            style={[
+              {
+                fontSize: 16,
+                marginBottom: 10,
+                marginHorizontal: 20,
+                fontFamily: "SpaceGrotesk-Bold",
+                color: colors.textPrimary,
+              },
+            ]}
           >
-            <View
-              style={[styles.accentBar, { backgroundColor: colors.wellbeing }]}
-            />
-            <View style={styles.challengeCardMain}>
-              <View style={styles.challengeTag}>
-                <Text style={styles.challengeTagText}>SỰ KIỆN CÓ HẠN</Text>
-              </View>
-              <Text style={styles.challengeTitle}>7 Ngày Kỷ luật Thép</Text>
-              <View style={styles.challengeStats}>
-                <Ionicons
-                  name="people-outline"
-                  size={14}
-                  color={colors.textMuted}
-                />
-                <Text style={styles.challengeSubtitle}>
-                  2.4k người đang tham gia
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.challengeProgressWrapper}>
-              <View style={styles.challengeProgressHeader}>
-                <Text style={styles.challengeProgressLabel}>Ngày 3/7</Text>
-                <View style={styles.challengeRewards}>
-                  <Ionicons
-                    name="gift-outline"
-                    size={14}
-                    color={colors.softskills}
-                  />
-                  <Text style={styles.challengeRewardText}>+500 XP</Text>
-                </View>
-              </View>
-              <View style={styles.challengeProgressBarTrack}>
-                <View
-                  style={[styles.challengeProgressBarFill, { width: "42%" }]}
-                />
-              </View>
-            </View>
-          </NeoBrutalBox>
+            🏆 Weekly Challenges
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+          >
+            {challenges.map((ch) => (
+              <ChallengeCard key={ch.id} challenge={ch} />
+            ))}
+          </ScrollView>
         </View>
 
         <View style={styles.bottomSpacer} />
