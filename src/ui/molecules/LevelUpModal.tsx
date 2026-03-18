@@ -8,9 +8,11 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useUserStore } from '../../business-logic/stores/userStore';
 import { useTheme } from '../tokens';
+import { ConfettiOverlay } from '../atoms/ConfettiOverlay';
 
 
 const { width } = Dimensions.get('window');
@@ -24,6 +26,7 @@ export function LevelUpModal() {
 
   useEffect(() => {
     if (levelUpReward) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
@@ -65,6 +68,7 @@ export function LevelUpModal() {
   return (
     <Modal transparent visible={!!levelUpReward} animationType="none">
       <View style={styles.overlay}>
+        <ConfettiOverlay visible={!!levelUpReward} />
         <Animated.View
           style={[
             styles.container,
@@ -85,11 +89,11 @@ export function LevelUpModal() {
 
           <Text style={styles.congratsText}>CHÚC MỪNG!</Text>
           <Text style={styles.levelText}>BẠN ĐÃ ĐẠT CẤP {levelUpReward.level}</Text>
-          
+
           <View style={styles.divider} />
-          
+
           <Text style={styles.messageText}>{levelUpReward.message}</Text>
-          
+
           <View style={styles.unlockCard}>
             <Ionicons name="lock-open" size={20} color={colors.finance} />
             <Text style={styles.unlockText}>{levelUpReward.unlocks}</Text>
