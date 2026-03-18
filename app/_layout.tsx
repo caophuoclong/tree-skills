@@ -16,6 +16,11 @@ import { StatusBar } from "expo-status-bar";
 import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
 
+// Enable network mocks in development
+if (__DEV__) {
+  require("@/src/business-logic/api/mock").setupNetworkMocks();
+}
+
 import { queryClient } from "@/src/business-logic/api/query-client";
 import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";

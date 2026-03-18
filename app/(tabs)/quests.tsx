@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useEffect } from 'react';
 import { useQuestsScreen } from '@/src/hooks/useQuestsScreen';
 import { useChallengeStore } from '@/src/business-logic/stores/challengeStore';
+import { useChallenges } from '@/src/business-logic/hooks/useChallenges';
 import { Emoji, NeoBrutalAccent } from '@/src/ui/atoms';
 import { ChallengeCard, ComboBar, QuestItem } from '@/src/ui/molecules';
 import { WellbeingWarningBanner } from '@/src/ui/organisms/WellbeingWarningBanner';
@@ -32,7 +34,17 @@ export default function QuestsScreen() {
     handleComplete,
     setWellbeingDismissedDate,
   } = useQuestsScreen();
-  const { challenges } = useChallengeStore();
+  const { challenges: storeoChallenges, setChallenges } = useChallengeStore();
+  const { challenges: fetchedChallenges } = useChallenges();
+
+  // Sync fetched challenges into store
+  useEffect(() => {
+    if (fetchedChallenges.length > 0) {
+      setChallenges(fetchedChallenges);
+    }
+  }, [fetchedChallenges, setChallenges]);
+
+  const challenges = storeoChallenges;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

@@ -16,6 +16,7 @@ import {
 import { useCustomSkillTreeStore } from "@/src/business-logic/stores/customSkillTreeStore";
 import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
+import { useSkillTree } from "@/src/business-logic/hooks/useSkillTree";
 import type { Branch, SkillNode } from "@/src/business-logic/types";
 import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
 import { GoalFilterSection } from "@/src/ui/organisms/GoalFilterSection";
@@ -49,6 +50,7 @@ export default function TreeScreen() {
   const { nodes, activeBranch, setNodes, setActiveBranch } =
     useSkillTreeStore();
   const { dailyQuests } = useQuestStore();
+  const { nodes: fetchedNodes } = useSkillTree(); // Fetch via service
   const [showOnlyCustom, setShowOnlyCustom] = React.useState(false);
   const [goalSheetId, setGoalSheetId] = React.useState<string | null>(null);
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(
@@ -61,10 +63,15 @@ export default function TreeScreen() {
   } = useCustomSkillTreeStore();
 
   useEffect(() => {
-    if (nodes.length === 0) setNodes(getDemoNodes());
+    // Load fetched nodes from API if available, otherwise use demo data
+    if (fetchedNodes.length > 0) {
+      setNodes(fetchedNodes);
+    } else if (nodes.length === 0) {
+      setNodes(getDemoNodes());
+    }
     initWithDemoData(getDemoCustomData());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchedNodes]);
 
   const colorMap = useMemo(
     () => ({

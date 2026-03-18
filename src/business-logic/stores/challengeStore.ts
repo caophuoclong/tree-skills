@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { CHALLENGE_LIBRARY } from '../data/challenge-library';
+import type { Challenge } from '../data/challenge-library';
 import type { Branch } from '../types';
 
 interface ChallengeStore {
-  challenges: typeof CHALLENGE_LIBRARY;
+  challenges: Challenge[];
   activeChallenges: string[]; // joined challenge IDs
   progress: Record<string, number>; // challengeId -> count
+  setChallenges: (challenges: Challenge[]) => void;
   joinChallenge: (id: string) => void;
   leaveChallenge: (id: string) => void;
   recordQuestForChallenges: (branch: Branch) => void;
@@ -18,6 +20,8 @@ export const useChallengeStore = create<ChallengeStore>((set, get) => ({
   challenges: CHALLENGE_LIBRARY,
   activeChallenges: [],
   progress: {},
+
+  setChallenges: (challenges) => set({ challenges }),
 
   joinChallenge: (id) =>
     set((s) => ({

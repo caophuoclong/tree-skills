@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useQuestStore } from '../stores/questStore';
 import { useUserStore } from '../stores/userStore';
-import { getDailyQuestPool } from '../data/quest-library';
+import { questService } from '../api/services/questService';
 import { useXPEngine } from './useXPEngine';
 import { useStaminaSystem } from './useStaminaSystem';
 import { useGrowthStreak } from './useGrowthStreak';
@@ -34,19 +35,26 @@ export function useQuestManager(): QuestManagerResult {
   const { xpMultiplier, canComplete, onQuestComplete } = useStaminaSystem();
   const { recordActivity } = useGrowthStreak();
 
+  // Determine primary branch and stamina
+  const primaryBranch = user
+    ? ((user as unknown as { primaryBranch?: Branch }).primaryBranch ?? 'career')
+    : 'career';
+  const stamina = user?.stamina ?? 100;
+
+  // Fetch quests from API via service
+  const { data: fetchedQuests, isLoading } = useQuery({
+    queryKey: ['quests', 'daily', primaryBranch, stamina],
+    queryFn: () => questService.getDaily(primaryBranch, stamina),
+    staleTime: 1000 * 60 * 5, // 5 min cache
+  });
+
   // Load or refresh quests at start of each day
   useEffect(() => {
     const today = getTodayString();
-    if (lastResetDate !== today || dailyQuests.length === 0) {
-      // Use user's branch if available, fall back to 'career' for demo/guests
-      const primaryBranch = user
-        ? ((user as unknown as { primaryBranch?: Branch }).primaryBranch ?? 'career')
-        : 'career';
-      const stamina = user?.stamina ?? 100;
-      const pool = getDailyQuestPool(primaryBranch, stamina);
-      setDailyQuests(pool);
+    if (fetchedQuests && lastResetDate !== today) {
+      setDailyQuests(fetchedQuests);
     }
-  }, [user, dailyQuests.length, lastResetDate, setDailyQuests]);
+  }, [fetchedQuests, lastResetDate, setDailyQuests]);
 
   const completeQuest = useCallback(
     (questId: string) => {
@@ -74,7 +82,7 @@ export function useQuestManager(): QuestManagerResult {
     quests: dailyQuests,
     completedCount,
     totalCount: dailyQuests.length,
-    isLoading: dailyQuests.length === 0 && !lastResetDate,
+    isLoading,
     completeQuest,
     resetQuests,
     canCompleteQuest: canComplete,
