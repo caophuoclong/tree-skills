@@ -1,18 +1,18 @@
+import { useHomeScreen } from "@/src/business-logic/hooks/useHomeScreen";
 import { StreakToast } from "@/src/ui/atoms";
 import { StreakShieldModal } from "@/src/ui/molecules/StreakShieldModal";
 import { HomeHeader } from "@/src/ui/organisms/HomeHeader";
-import { SkillsSection } from "@/src/ui/organisms/SkillsSection";
 import { QuestPreviewSection } from "@/src/ui/organisms/QuestPreviewSection";
-import { useHomeScreen } from "@/src/business-logic/hooks/useHomeScreen";
-import { useTheme } from "@/src/ui/tokens";
-import { router } from "expo-router";
-import { useMemo, Pressable } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SkillsSection } from "@/src/ui/organisms/SkillsSection";
 import {
   createHomeScreenStyles,
   getBranchColors,
 } from "@/src/ui/styles/homeScreenStyles";
+import { useTheme } from "@/src/ui/tokens";
+import { router } from "expo-router";
+import { useMemo } from "react";
+import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -34,7 +34,6 @@ export default function HomeScreen() {
     showStreakToast,
     setShowStreakToast,
     toastStreak,
-    branchProgress,
     careerPct,
     financePct,
     softskillsPct,
@@ -98,32 +97,6 @@ export default function HomeScreen() {
         />
 
         <View style={styles.bottomSpacer} />
-
-        {__DEV__ && (
-          <Pressable
-            onPress={() => router.push("/neo-brutal-demo" as any)}
-            style={{
-              margin: 16,
-              padding: 12,
-              borderRadius: 8,
-              borderWidth: 2,
-              borderStyle: "dashed",
-              borderColor: "#7C6AF7",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: "#7C6AF7",
-                fontFamily: "SpaceGrotesk-Bold",
-                fontWeight: "700",
-                fontSize: 13,
-              }}
-            >
-              🧪 DEV → NeoBrutalBox Demo
-            </Text>
-          </Pressable>
-        )}
       </ScrollView>
     </SafeAreaView>
   );

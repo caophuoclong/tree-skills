@@ -3,9 +3,9 @@ import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { useUserStore } from '../stores/userStore';
+import { useSkillTreeStore } from '../stores/skillTreeStore';
 import { assessmentService } from '../api/services/assessmentService';
 import { calculateBranchWeights, getPrimaryBranch } from '../data/assessment-questions';
-import { getInitialNodes } from '../data/skill-tree-nodes';
 import type { Branch, OnboardingAnswer } from '../types';
 
 export interface OnboardingResult {
@@ -35,6 +35,7 @@ export function useOnboarding(): OnboardingResult {
   } = useOnboardingStore();
 
   const { user, setUser } = useUserStore();
+  const { nodes: skillNodes, setNodes } = useSkillTreeStore();
 
   // Fetch assessment questions from API
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
@@ -72,7 +73,10 @@ export function useOnboarding(): OnboardingResult {
     const weights = calculateBranchWeights(answers);
     const primary = getPrimaryBranch(weights);
 
-    const initialNodes = getInitialNodes(primary);
+    // Use already-fetched nodes from store (populated via useSkillTree → skillTreeService)
+    const initialNodes = skillNodes.length > 0
+      ? skillNodes.filter((n) => n.branch === primary || n.branch === 'career')
+      : [];
     setTreeConfig({
       primaryBranch: primary,
       branchWeights: weights as Record<Branch, number>,

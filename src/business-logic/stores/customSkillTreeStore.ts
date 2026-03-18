@@ -9,6 +9,7 @@ import type {
   QuestDuration,
 } from '../types';
 import { makeQuest } from '../data/skill-tree-defaults';
+import { getDemoCustomData } from '../data/skill-tree-nodes';
 
 // ─── Store Types ────────────────────────────────────────────────────────────────
 export type NodeGoalEntry = { goalId: string; goalTitle: string };
@@ -23,7 +24,7 @@ interface CustomSkillTreeStore {
   setDraft: (tree: CustomGoalTree) => void;
   discardDraft: () => void;
   confirmDraft: (onConfirmed: (nodeIds: string[], goal: CustomGoalTree) => void) => void;
-  initWithDemoData: (data: { trees: CustomGoalTree[]; nodeGoalMap: Record<string, NodeGoalEntry> }) => void;
+  initWithDemoData: () => void;
 
   // Cluster mutations
   addCluster: (cluster: CustomCluster) => void;
@@ -53,12 +54,14 @@ export const useCustomSkillTreeStore = create<CustomSkillTreeStore>((set) => ({
   setGenerating: (v) => set({ isGenerating: v }),
   setDraft: (tree) => set({ currentDraft: tree, isGenerating: false }),
   discardDraft: () => set({ currentDraft: null }),
-  initWithDemoData: (data) =>
+  initWithDemoData: () => {
+    const data = getDemoCustomData();
     set((state) =>
       state.trees.length === 0
         ? { trees: data.trees, nodeGoalMap: data.nodeGoalMap }
         : state
-    ),
+    );
+  },
 
   confirmDraft: (onConfirmed) =>
     set((state) => {

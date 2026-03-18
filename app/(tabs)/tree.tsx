@@ -9,10 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  getDemoCustomData,
-  getDemoNodes,
-} from "@/src/business-logic/data/skill-tree-nodes";
 import { useCustomSkillTreeStore } from "@/src/business-logic/stores/customSkillTreeStore";
 import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
@@ -62,16 +58,12 @@ export default function TreeScreen() {
     initWithDemoData,
   } = useCustomSkillTreeStore();
 
+  // useSkillTree already syncs fetchedNodes → skillTreeStore via setNodes()
+  // initWithDemoData seeds the custom tree store on first mount
   useEffect(() => {
-    // Load fetched nodes from API if available, otherwise use demo data
-    if (fetchedNodes.length > 0) {
-      setNodes(fetchedNodes);
-    } else if (nodes.length === 0) {
-      setNodes(getDemoNodes());
-    }
-    initWithDemoData(getDemoCustomData());
+    initWithDemoData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedNodes]);
+  }, []);
 
   const colorMap = useMemo(
     () => ({
