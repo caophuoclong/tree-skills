@@ -1,4 +1,5 @@
 export { BentoCard } from './BentoCard';
+export { ChallengeCard } from './ChallengeCard';
 export { QuestCard } from './QuestCard';
 export { SkillNode } from './SkillNode';
 export { StaminaBar } from './StaminaBar';
