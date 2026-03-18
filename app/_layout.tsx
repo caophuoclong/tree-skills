@@ -36,9 +36,9 @@ import { useEffect } from "react";
 // NOTE: On iOS, custom fonts IGNORE fontWeight — you must set fontFamily to
 // the correct weight variant explicitly. This default sets the Regular base;
 // individual components override it by setting fontFamily themselves.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (Text as any).defaultProps = (Text as any).defaultProps ?? {};
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (Text as any).defaultProps.style = { fontFamily: "SpaceGrotesk-Regular" };
 
 export const unstable_settings = {
@@ -133,7 +133,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="node-detail"
           options={{
-            presentation: "modal",
+            presentation: "transparentModal",
             animation: "slide_from_bottom",
           }}
         />

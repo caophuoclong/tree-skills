@@ -9,290 +9,366 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useCustomSkillTreeStore } from "@/src/business-logic/stores/customSkillTreeStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
-import type { Branch, CustomGoalTree } from "@/src/business-logic/types";
 import { useTheme } from "@/src/ui/tokens";
 
-const { height: SH } = Dimensions.get("window");
+const BRANCH_COLORS: Record<string, string> = {
+  career: "#4DA8FF",
+  finance: "#34D399",
+  softskills: "#FBBF24",
+  wellbeing: "#F472B6",
+};
 
-type Cluster = CustomGoalTree["clusters"][number];
+const STATUS_LABELS: Record<string, string> = {
+  locked: "🔒 Locked",
+  in_progress: "⚡ In Progress",
+  completed: "✅ Completed",
+};
 
-const BRANCH_COLOR: Record<Branch, string> = {
-  career: "#7C6AF7",
-  finance: "#22C55E",
-  softskills: "#F59E0B",
-  wellbeing: "#EC4899",
-};
-const BRANCH_LABEL: Record<Branch, string> = {
-  career: "Sự nghiệp",
-  finance: "Tài chính",
-  softskills: "Kỹ năng mềm",
-  wellbeing: "Sức khỏe",
-};
-const BRANCH_EMOJI: Record<Branch, string> = {
-  career: "💼",
-  finance: "💰",
-  softskills: "💬",
-  wellbeing: "🧘",
-};
+const TIER_LABELS = ["", "Beginner", "Intermediate", "Advanced"];
+
+const { height: SCREEN_H } = Dimensions.get("window");
+const SHEET_HEIGHT = (SCREEN_H * 2) / 3;
 
 export default function NodeDetailScreen() {
-  const { goalId } = useLocalSearchParams<{ goalId: string }>();
   const { colors } = useTheme();
-  const { trees } = useCustomSkillTreeStore();
-  const setActiveBranch = useSkillTreeStore((s) => s.setActiveBranch);
+  const insets = useSafeAreaInsets();
+  const { node_id } = useLocalSearchParams<{ node_id: string }>();
+  const nodes = useSkillTreeStore((s) => s.nodes);
 
-  const goalTree = trees.find((t) => t.id === goalId);
+  const node = nodes.find((n) => n.node_id === node_id) ?? null;
 
-  // Group clusters by branch
-  const branchGroups: Partial<Record<Branch, Cluster[]>> = {};
-  if (goalTree) {
-    for (const c of goalTree.clusters) {
-      if (!branchGroups[c.branch]) branchGroups[c.branch] = [];
-      branchGroups[c.branch]!.push(c);
-    }
-  }
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
+  if (!node) {
+    return (
       <Pressable style={styles.overlay} onPress={() => router.back()}>
-        <Pressable
+        <View
           style={[
             styles.sheet,
             {
-              backgroundColor: colors.bgSurface,
-              borderColor: colors.glassBorder,
-              maxHeight: SH * 0.33,
+              height: SHEET_HEIGHT,
+              backgroundColor: colors.bgElevated,
+              paddingBottom: insets.bottom,
             },
           ]}
-          onPress={(e) => e.stopPropagation()}
         >
-          {/* Drag handle */}
-          <View style={styles.handle} />
+          <View
+            style={[styles.handle, { backgroundColor: colors.textMuted }]}
+          />
+          <View style={styles.notFound}>
+            <Text style={[styles.notFoundText, { color: colors.textMuted }]}>
+              Node not found
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
 
-          {!goalTree ? (
-            <View style={styles.emptyState}>
-              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                Goal not found.
+  const branchColor = BRANCH_COLORS[node.branch] ?? colors.brandPrimary;
+  const tierLabel = TIER_LABELS[node.tier] ?? `Tier ${node.tier}`;
+  const progressPct = Math.min(
+    (node.quests_completed / Math.max(node.quests_total, 1)) * 100,
+    100,
+  );
+
+  return (
+    <Pressable style={styles.overlay} onPress={() => router.back()}>
+      <Pressable
+        style={[
+          styles.sheet,
+          {
+            height: SHEET_HEIGHT,
+            backgroundColor: colors.bgElevated,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+        onPress={(e) => e.stopPropagation()}
+      >
+        {/* Accent bar */}
+        <View style={[styles.accentBar, { backgroundColor: branchColor }]} />
+
+        {/* Handle */}
+        <View style={[styles.handle, { backgroundColor: colors.textMuted }]} />
+
+        {/* Close button */}
+        <TouchableOpacity
+          style={styles.closeRow}
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="close" size={22} color={colors.textSecondary} />
+        </TouchableOpacity>
+
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Tier + status badges */}
+          <View style={styles.badgeRow}>
+            <View style={[styles.tierBadge, { backgroundColor: branchColor }]}>
+              <Text style={styles.tierText}>{tierLabel}</Text>
+            </View>
+            <View style={[styles.statusBadge, { borderColor: branchColor }]}>
+              <Text style={[styles.statusText, { color: branchColor }]}>
+                {STATUS_LABELS[node.status]}
               </Text>
             </View>
-          ) : (
-            <>
-              <View style={styles.sheetHeader}>
-                <Text
-                  style={[styles.goalTitle, { color: colors.textPrimary }]}
-                  numberOfLines={1}
-                >
-                  🎯 {goalTree.goal}
-                </Text>
-                <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-                  <Ionicons
-                    name="close-circle"
-                    size={22}
-                    color={colors.textMuted}
-                  />
-                </TouchableOpacity>
-              </View>
-              <Text style={[styles.goalSub, { color: colors.textMuted }]}>
-                Lộ trình trải đều trên {Object.keys(branchGroups).length} danh
-                mục
+          </View>
+
+          {/* Title */}
+          <Text style={[styles.nodeTitle, { color: colors.textPrimary }]}>
+            {node.title}
+          </Text>
+
+          {/* Description */}
+          <Text style={[styles.nodeDesc, { color: colors.textSecondary }]}>
+            {node.description}
+          </Text>
+
+          {/* Locked banner */}
+          {node.status === "locked" && (
+            <View
+              style={[
+                styles.lockedBanner,
+                {
+                  backgroundColor: `${colors.warning}22`,
+                  borderColor: colors.warning,
+                },
+              ]}
+            >
+              <Text style={[styles.lockedText, { color: colors.warning }]}>
+                🔒 Complete previous tier to unlock
               </Text>
-
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={styles.list}
-                contentContainerStyle={styles.listContent}
-              >
-                {(
-                  Object.entries(branchGroups) as [
-                    Branch,
-                    typeof goalTree.clusters,
-                  ][]
-                ).map(([branch, clusters]) => {
-                  const col = BRANCH_COLOR[branch];
-                  const totalSkills = clusters.reduce(
-                    (s, c) => s + c.skills.length,
-                    0,
-                  );
-                  return (
-                    <View
-                      key={branch}
-                      style={[
-                        styles.branchSection,
-                        { borderColor: `${col}30` },
-                      ]}
-                    >
-                      {/* Branch header */}
-                      <View
-                        style={[
-                          styles.branchHeader,
-                          { backgroundColor: `${col}15` },
-                        ]}
-                      >
-                        <Text style={styles.branchEmoji}>
-                          {BRANCH_EMOJI[branch]}
-                        </Text>
-                        <Text style={[styles.branchLabel, { color: col }]}>
-                          {BRANCH_LABEL[branch]}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.branchCount,
-                            { color: colors.textMuted },
-                          ]}
-                        >
-                          {clusters.length} nhóm · {totalSkills} kỹ năng
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setActiveBranch(branch);
-                            router.back();
-                          }}
-                          style={[
-                            styles.branchBtn,
-                            { borderColor: `${col}60` },
-                          ]}
-                        >
-                          <Text style={[styles.branchBtnText, { color: col }]}>
-                            Xem →
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Clusters */}
-                      {clusters.map((cluster) => (
-                        <View key={cluster.id} style={styles.clusterRow}>
-                          <Text style={styles.clusterEmoji}>
-                            {cluster.emoji}
-                          </Text>
-                          <View style={{ flex: 1 }}>
-                            <Text
-                              style={[
-                                styles.clusterTitle,
-                                { color: colors.textPrimary },
-                              ]}
-                            >
-                              {cluster.title}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.clusterSub,
-                                { color: colors.textMuted },
-                              ]}
-                            >
-                              {cluster.skills.map((s) => s.title).join(" · ")}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  );
-                })}
-                <View style={{ height: 8 }} />
-              </ScrollView>
-            </>
+              <Text style={[styles.lockedSub, { color: colors.textSecondary }]}>
+                Requires {node.xp_required} XP
+              </Text>
+            </View>
           )}
-        </Pressable>
+
+          {/* Progress */}
+          {node.status !== "locked" && (
+            <View style={styles.progressSection}>
+              <Text
+                style={[styles.sectionLabel, { color: colors.textPrimary }]}
+              >
+                Progress
+              </Text>
+              <View style={styles.progressRow}>
+                <View
+                  style={[
+                    styles.progressBarBg,
+                    {
+                      backgroundColor: colors.bgSurface,
+                      borderColor: colors.textPrimary,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: `${progressPct}%` as any,
+                        backgroundColor: branchColor,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text
+                  style={[styles.progressLabel, { color: colors.textMuted }]}
+                >
+                  {node.quests_completed}/{node.quests_total}
+                </Text>
+              </View>
+
+              {node.status === "completed" && (
+                <View
+                  style={[
+                    styles.completedStamp,
+                    { borderColor: colors.success },
+                  ]}
+                >
+                  <Text
+                    style={[styles.completedText, { color: colors.success }]}
+                  >
+                    ✅ Node Complete! +{node.xp_required} XP earned
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* XP info */}
+          <View style={[styles.statRow, { borderColor: colors.glassBorder }]}>
+            <View style={styles.stat}>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                XP REQUIRED
+              </Text>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                {node.xp_required}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.statDivider,
+                { backgroundColor: colors.glassBorder },
+              ]}
+            />
+            <View style={styles.stat}>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                BRANCH
+              </Text>
+              <Text style={[styles.statValue, { color: branchColor }]}>
+                {node.branch.charAt(0).toUpperCase() + node.branch.slice(1)}
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom close button */}
+        <View style={[styles.footer, { borderTopColor: colors.glassBorder }]}>
+          <TouchableOpacity
+            style={[
+              styles.closeBtn,
+              {
+                borderColor: colors.textPrimary,
+                backgroundColor: colors.bgSurface,
+              },
+            ]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.closeBtnText, { color: colors.textPrimary }]}>
+              Close
+            </Text>
+          </TouchableOpacity>
+        </View>
       </Pressable>
-    </SafeAreaView>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.52)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   sheet: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderWidth: 1,
-    borderBottomWidth: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: "hidden",
   },
+  accentBar: { height: 4, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
   handle: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.14)",
     alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 14,
-  },
-  sheetHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    marginTop: 12,
     marginBottom: 4,
   },
-  goalTitle: {
-    fontSize: 16,
-    fontFamily: "SpaceGrotesk-Bold",
-    fontWeight: "800",
-    flex: 1,
-    marginRight: 8,
+  closeRow: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
-  goalSub: {
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 16 },
+  badgeRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+  tierBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
+  tierText: {
     fontSize: 11,
-    marginBottom: 12,
+    color: "#fff",
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
   },
-  list: { flex: 1 },
-  listContent: { gap: 8 },
-  branchSection: {
+  statusBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1.5,
+  },
+  statusText: { fontSize: 11, fontFamily: "SpaceGrotesk-Regular" },
+  nodeTitle: {
+    fontSize: 22,
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+  nodeDesc: {
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 20,
+    fontFamily: "SpaceGrotesk-Regular",
+  },
+  lockedBanner: {
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    gap: 6,
+    marginBottom: 20,
+  },
+  lockedText: { fontSize: 15, fontFamily: "SpaceGrotesk-SemiBold" },
+  lockedSub: { fontSize: 13, fontFamily: "SpaceGrotesk-Regular" },
+  progressSection: { gap: 10, marginBottom: 20 },
+  sectionLabel: { fontSize: 15, fontFamily: "SpaceGrotesk-SemiBold" },
+  progressRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  progressBarBg: {
+    flex: 1,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    overflow: "hidden",
+  },
+  progressBarFill: { height: "100%" },
+  progressLabel: { fontSize: 12, fontFamily: "SpaceMono-Regular" },
+  completedStamp: {
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 12,
+    alignItems: "center",
+  },
+  completedText: { fontSize: 14, fontFamily: "SpaceGrotesk-Bold" },
+  statRow: {
+    flexDirection: "row",
     borderWidth: 1,
     borderRadius: 12,
     overflow: "hidden",
+    marginBottom: 8,
   },
-  branchHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  branchEmoji: { fontSize: 14 },
-  branchLabel: {
-    fontSize: 13,
+  stat: { flex: 1, padding: 14 },
+  statDivider: { width: 1 },
+  statLabel: {
+    fontSize: 9,
     fontFamily: "SpaceGrotesk-Bold",
     fontWeight: "700",
-    flex: 1,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
   },
-  branchCount: { fontSize: 11 },
-  branchBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  branchBtnText: {
-    fontSize: 11,
+  statValue: {
+    fontSize: 16,
     fontFamily: "SpaceGrotesk-Bold",
     fontWeight: "700",
+    marginTop: 4,
   },
-  clusterRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+  footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(255,255,255,0.06)",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  clusterEmoji: { fontSize: 14, marginTop: 1 },
-  clusterTitle: {
-    fontSize: 12,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-  },
-  clusterSub: { fontSize: 10, marginTop: 2, lineHeight: 13 },
-  emptyState: {
+  closeBtn: {
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 14,
     alignItems: "center",
-    paddingVertical: 24,
   },
-  emptyText: { fontSize: 14 },
+  closeBtnText: {
+    fontSize: 15,
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
+  },
+  notFound: { flex: 1, alignItems: "center", justifyContent: "center" },
+  notFoundText: { fontSize: 14 },
 });
