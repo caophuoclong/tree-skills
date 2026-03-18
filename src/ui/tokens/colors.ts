@@ -68,7 +68,7 @@ export const LightThemeColors: IColors = {
 
 export const DarkThemeColors: IColors = {
   // Background
-  bgBase: "#0D0D0F",
+  bgBase: "#2b2b2e",
   bgSurface: "#161618",
   bgElevated: "#1E1E22",
 

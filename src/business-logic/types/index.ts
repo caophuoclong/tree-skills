@@ -54,3 +54,48 @@ export type OnboardingAnswer = {
   question_id: number;
   selected_branch: Branch;
 };
+
+// ─── Custom Skill Tree Builder ─────────────────────────────────────────────────
+
+/** A user-defined goal tree generated with AI assistance */
+export interface CustomGoalTree {
+  id: string;
+  goal: string;
+  created_at: string;
+  clusters: CustomCluster[];
+}
+
+/** A skill cluster (parent group) — always mapped to one Branch category */
+export interface CustomCluster {
+  id: string;
+  title: string;
+  branch: Branch;          // career | finance | softskills | wellbeing
+  emoji: string;
+  tier: 1 | 2 | 3;
+  skills: CustomSkillItem[];
+}
+
+/** A quest inside a custom skill */
+export interface CustomQuest {
+  id: string;
+  title: string;
+  difficulty: Difficulty;
+  duration_min: QuestDuration;
+}
+
+/** A single skill node inside a cluster */
+export interface CustomSkillItem {
+  id: string;
+  title: string;
+  description: string;
+  branch: Branch;          // inherited from cluster
+  duration_weeks: 1 | 2;
+  quests: CustomQuest[];   // 3 quests with actual content
+  status: NodeStatus;
+}
+
+/** Extended SkillNode with optional custom goal metadata */
+export interface SkillNodeMeta {
+  goalId?: string;         // id of the CustomGoalTree that created this node
+  goalTitle?: string;      // short display name of the goal
+}

@@ -1,205 +1,296 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@/src/ui/tokens';
-import { AppText } from '@/src/ui/atoms/Text';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useThemeStore } from '@/src/business-logic/stores/themeStore';
+import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { NeoBrutalAccent, NeoBrutalBox, NeoBrutalThemed } from '@/src/ui/atoms';
+import { useTheme } from '@/src/ui/tokens';
 
-export default function SettingsScreen() {
-  const router = useRouter();
+// ─── Theme option data ────────────────────────────────────────────────────────
+const THEME_OPTIONS = [
+  { value: 'light'  as const, label: 'Nền sáng',      icon: 'sunny'                 as const, color: '#F59E0B' },
+  { value: 'dark'   as const, label: 'Nền tối',        icon: 'moon'                  as const, color: '#7C6AF7' },
+  { value: 'system' as const, label: 'Theo hệ thống', icon: 'phone-portrait-outline' as const, color: '#22C55E' },
+];
+
+// ─── Section label ────────────────────────────────────────────────────────────
+function SectionLabel({ title }: { title: string }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  
-  const { themeMode, setThemeMode } = useThemeStore();
-
-  const handleBack = () => router.back();
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={28} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <AppText variant="title" style={styles.headerTitle}>Cài đặt</AppText>
-        <View style={styles.headerRight} />
-      </View>
-
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        {/* Appearance Section */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="caption" style={styles.sectionTitle}>Giao diện (Chưa hoạt động)</AppText>
-        </View>
-
-        <View style={styles.card}>
-          <TouchableOpacity 
-            style={styles.settingRow} 
-            onPress={() => setThemeMode('light')}
-          >
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="sunny" size={20} color={colors.warning} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <AppText variant="body" style={styles.settingLabel}>Nền sáng</AppText>
-            </View>
-            {themeMode === 'light' && (
-              <Ionicons name="checkmark" size={24} color={colors.brandPrimary} />
-            )}
-          </TouchableOpacity>
-          <View style={styles.divider} />
-          
-          <TouchableOpacity 
-            style={styles.settingRow}
-            onPress={() => setThemeMode('dark')}
-          >
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="moon" size={20} color={colors.brandPrimary} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <AppText variant="body" style={styles.settingLabel}>Nền tối</AppText>
-            </View>
-            {themeMode === 'dark' && (
-              <Ionicons name="checkmark" size={24} color={colors.brandPrimary} />
-            )}
-          </TouchableOpacity>
-          <View style={styles.divider} />
-
-          <TouchableOpacity 
-            style={styles.settingRow}
-            onPress={() => setThemeMode('system')}
-          >
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="phone-portrait-outline" size={20} color={colors.textSecondary} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <AppText variant="body" style={styles.settingLabel}>Theo hệ thống</AppText>
-            </View>
-            {themeMode === 'system' && (
-              <Ionicons name="checkmark" size={24} color={colors.brandPrimary} />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Notifications Section */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="caption" style={styles.sectionTitle}>Thông báo</AppText>
-        </View>
-        <View style={styles.card}>
-          <TouchableOpacity style={styles.settingRow}>
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="notifications" size={20} color={colors.softskills} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <AppText variant="body" style={styles.settingLabel}>Nhắc nhở hàng ngày</AppText>
-            </View>
-            <Ionicons name="toggle" size={32} color={colors.brandPrimary} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Account Section */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="caption" style={styles.sectionTitle}>Tài khoản</AppText>
-        </View>
-        <View style={styles.card}>
-          <TouchableOpacity style={styles.settingRow}>
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="person" size={20} color={colors.career} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <AppText variant="body" style={styles.settingLabel}>Thông tin cá nhân</AppText>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-          </TouchableOpacity>
-          <View style={styles.divider} />
-          <TouchableOpacity style={styles.settingRow}>
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="log-out" size={20} color={colors.danger} />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <AppText variant="body" style={[styles.settingLabel, { color: colors.danger }]}>Đăng xuất</AppText>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
-    </View>
+    <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{title}</Text>
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgBaseDayMode,
-  },
+// ─── Nav row (with NeoBrutalBox + press animation) ────────────────────────────
+function NavRow({
+  icon,
+  iconColor,
+  label,
+  onPress,
+  rightContent,
+  danger,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  iconColor: string;
+  label: string;
+  onPress?: () => void;
+  rightContent?: React.ReactNode;
+  danger?: boolean;
+}) {
+  const { colors } = useTheme();
+  return (
+    <NeoBrutalBox
+      borderColor={danger ? `${colors.danger}60` : colors.glassBorder}
+      backgroundColor={danger ? `${colors.danger}0E` : colors.bgSurface}
+      shadowColor={danger ? colors.danger : '#000'}
+      shadowOffsetX={3}
+      shadowOffsetY={3}
+      borderWidth={1.5}
+      borderRadius={14}
+      onPress={onPress}
+      contentStyle={styles.navRowContent}
+    >
+      {/* Icon container */}
+      <View style={[styles.iconBox, { backgroundColor: `${iconColor}20` }]}>
+        <Ionicons name={icon} size={18} color={iconColor} />
+      </View>
+      <Text style={[styles.navLabel, { color: danger ? colors.danger : colors.textPrimary }]}>
+        {label}
+      </Text>
+      {rightContent ?? (
+        onPress && (
+          <Ionicons name="chevron-forward" size={16} color={danger ? `${colors.danger}80` : colors.textMuted} />
+        )
+      )}
+    </NeoBrutalBox>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+export default function SettingsScreen() {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const { themeMode, setThemeMode } = useThemeStore();
+  const logout = useUserStore((s) => s.logout);
+
+  const handleLogout = () => {
+    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất không?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Đăng xuất',
+        style: 'destructive',
+        onPress: () => { logout(); router.replace('/(auth)/welcome'); },
+      },
+    ]);
+  };
+
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bgBase }]} edges={['top']}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.glassBorder }]}>
+        <NeoBrutalBox
+          borderColor={colors.glassBorder}
+          backgroundColor={colors.bgElevated}
+          shadowColor="#000"
+          shadowOffsetX={2}
+          shadowOffsetY={2}
+          borderWidth={1.5}
+          borderRadius={18}
+          onPress={() => router.back()}
+          contentStyle={styles.backBtnContent}
+        >
+          <Ionicons name="chevron-back" size={20} color={colors.textSecondary} />
+        </NeoBrutalBox>
+
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Cài đặt</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* ── GIAO DIỆN ──────────────────────────────────────────────────── */}
+        <SectionLabel title="GIAO DIỆN" />
+
+        {/* Theme selector — 3 options side-by-side using NeoBrutalAccent / NeoBrutalBox */}
+        <View style={styles.themeRow}>
+          {THEME_OPTIONS.map((opt) => {
+            const active = themeMode === opt.value;
+            return active ? (
+              <NeoBrutalAccent
+                key={opt.value}
+                accentColor={`${opt.color}28`}
+                strokeColor={opt.color}
+                shadowOffsetX={4}
+                shadowOffsetY={4}
+                borderWidth={2}
+                borderRadius={14}
+                onPress={() => setThemeMode(opt.value)}
+                style={{ flex: 1 }}
+                contentStyle={styles.themeOptionContent}
+              >
+                <Ionicons name={opt.icon} size={22} color={opt.color} />
+                <Text style={[styles.themeLabel, { color: opt.color }]}>{opt.label}</Text>
+                <View style={[styles.activeDot, { backgroundColor: opt.color }]} />
+              </NeoBrutalAccent>
+            ) : (
+              <NeoBrutalBox
+                key={opt.value}
+                borderColor={colors.glassBorder}
+                backgroundColor={colors.bgSurface}
+                shadowColor="#000"
+                shadowOffsetX={3}
+                shadowOffsetY={3}
+                borderWidth={1.5}
+                borderRadius={14}
+                onPress={() => setThemeMode(opt.value)}
+                style={{ flex: 1, opacity: 0.6 }}
+                contentStyle={styles.themeOptionContent}
+              >
+                <Ionicons name={opt.icon} size={22} color={colors.textMuted} />
+                <Text style={[styles.themeLabel, { color: colors.textMuted }]}>{opt.label}</Text>
+              </NeoBrutalBox>
+            );
+          })}
+        </View>
+
+        {/* ── THÔNG BÁO ──────────────────────────────────────────────────── */}
+        <SectionLabel title="THÔNG BÁO" />
+
+        <NavRow
+          icon="notifications"
+          iconColor={colors.softskills}
+          label="Nhắc nhở hàng ngày"
+          rightContent={
+            <NeoBrutalAccent
+              accentColor={`${colors.brandPrimary}22`}
+              strokeColor={colors.brandPrimary}
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderWidth={1.5}
+              borderRadius={10}
+              contentStyle={{ paddingHorizontal: 10, paddingVertical: 4 }}
+            >
+              <Text style={[styles.toggleText, { color: colors.brandPrimary }]}>BẬT</Text>
+            </NeoBrutalAccent>
+          }
+        />
+
+        {/* ── TÀI KHOẢN ──────────────────────────────────────────────────── */}
+        <SectionLabel title="TÀI KHOẢN" />
+
+        <View style={{ gap: 10 }}>
+          <NavRow
+            icon="person"
+            iconColor={colors.career}
+            label="Thông tin cá nhân"
+            onPress={() => {}}
+          />
+          <NavRow
+            icon="shield-checkmark-outline"
+            iconColor={colors.finance}
+            label="Bảo mật & Mật khẩu"
+            onPress={() => {}}
+          />
+          <NavRow
+            icon="help-circle-outline"
+            iconColor={colors.textSecondary}
+            label="Trợ giúp & Phản hồi"
+            onPress={() => {}}
+          />
+        </View>
+
+        {/* ── NGUY HIỂM ──────────────────────────────────────────────────── */}
+        <SectionLabel title="KHÁC" />
+
+        <NavRow
+          icon="log-out-outline"
+          iconColor={colors.danger}
+          label="Đăng xuất"
+          onPress={handleLogout}
+          danger
+        />
+
+        {/* Version note */}
+        <NeoBrutalThemed
+          shadowOffsetX={3}
+          shadowOffsetY={3}
+          borderWidth={1.5}
+          borderRadius={12}
+          style={{ marginTop: 8 }}
+          contentStyle={styles.versionContent}
+        >
+          <Text style={[styles.versionText, { color: colors.textMuted }]}>
+            Life Skills Tree
+          </Text>
+          <Text style={[styles.versionNum, { color: colors.textPrimary }]}>
+            Phiên bản 1.0.0 (build 42)
+          </Text>
+        </NeoBrutalThemed>
+
+        <View style={{ height: 60 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 60,
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    backgroundColor: colors.bgSurface,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
+    gap: 12,
   },
-  backButton: {
-    padding: Spacing.xs,
+  backBtnContent: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', textAlign: 'center' },
+
+  scrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40, gap: 10 },
+
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.8,
+    marginTop: 14,
+    marginBottom: 2,
   },
-  headerTitle: {
-    color: colors.textPrimary,
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: 40,
-  },
-  sectionHeader: {
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  settingRow: {
+
+  // Theme picker
+  themeRow: { flexDirection: 'row', gap: 10 },
+  themeOptionContent: { alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, gap: 6 },
+  themeLabel: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  activeDot: { width: 6, height: 6, borderRadius: 3, marginTop: 2 },
+
+  // Nav row
+  navRowContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 12,
   },
-  settingIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.md,
-    backgroundColor: colors.glassBg,
+  iconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing.md,
   },
-  settingTextContainer: {
-    flex: 1,
-  },
-  settingLabel: {
-    color: colors.textPrimary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.glassBorder,
-    marginLeft: Spacing.md + 36 + Spacing.md,
-  },
+  navLabel: { flex: 1, fontSize: 14, fontWeight: '600' },
+  toggleText: { fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
+
+  // Version
+  versionContent: { alignItems: 'center', paddingVertical: 14 },
+  versionText: { fontSize: 11, fontWeight: '600' },
+  versionNum: { fontSize: 12, fontWeight: '800', marginTop: 2 },
 });

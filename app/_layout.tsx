@@ -24,6 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="leaderboard" />
         <Stack.Screen name="wellbeing" />
         <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="skill-builder" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.bgBase} />
       <LevelUpModal />

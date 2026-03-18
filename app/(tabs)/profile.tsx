@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,10 +13,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
-import { Emoji } from "@/src/ui/atoms";
+import {
+  Emoji,
+  NeoBrutalAccent,
+  NeoBrutalBox,
+  NeoBrutalThemed,
+  ProgressBar,
+} from "@/src/ui/atoms";
 import { useTheme } from "@/src/ui/tokens";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getInitials(name: string): string {
   return name
@@ -32,35 +37,31 @@ function getBranchPercent(
   nodes: ReturnType<typeof useSkillTreeStore.getState>["nodes"],
   branch: Branch,
 ): number {
-  const branchNodes = nodes.filter((n) => n.branch === branch);
-  if (branchNodes.length === 0) return 0;
-  const completed = branchNodes.filter((n) => n.status === "completed").length;
-  return Math.round((completed / branchNodes.length) * 100);
+  const bn = nodes.filter((n) => n.branch === branch);
+  if (bn.length === 0) return 0;
+  return Math.round((bn.filter((n) => n.status === "completed").length / bn.length) * 100);
 }
 
-// ─── Branch progress row ─────────────────────────────────────────────────────
+// ─── Branch progress row ──────────────────────────────────────────────────────
 
 interface BranchRowProps {
   label: string;
   percent: number;
   color: string;
+  emoji: string;
 }
 
-function BranchProgressRow({ label, percent, color }: BranchRowProps) {
+function BranchProgressRow({ label, percent, color, emoji }: BranchRowProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
   return (
     <View style={styles.branchRow}>
-      <Text style={styles.branchLabel}>{label}</Text>
-      <Text style={styles.branchPercent}>{percent}%</Text>
-      <View style={styles.branchBarTrack}>
-        <View
-          style={[
-            styles.branchBarFill,
-            { width: `${percent}%` as any, backgroundColor: color },
-          ]}
-        />
+      <Text style={styles.branchEmoji}>{emoji}</Text>
+      <View style={{ flex: 1, gap: 5 }}>
+        <View style={styles.branchLabelRow}>
+          <Text style={[styles.branchLabel, { color: colors.textPrimary }]}>{label}</Text>
+          <Text style={[styles.branchPercent, { color }]}>{percent}%</Text>
+        </View>
+        <ProgressBar value={percent} color={color} variant="thick" animated />
       </View>
     </View>
   );
@@ -70,7 +71,6 @@ function BranchProgressRow({ label, percent, color }: BranchRowProps) {
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   const user = useUserStore((s) => s.user);
   const logout = useUserStore((s) => s.logout);
   const nodes = useSkillTreeStore((s) => s.nodes);
@@ -82,77 +82,28 @@ export default function ProfileScreen() {
   const bestStreak = user?.best_streak ?? 19;
   const initials = getInitials(name);
 
-  const careerPct = getBranchPercent(nodes, "career") || 80;
-  const financePct = getBranchPercent(nodes, "finance") || 60;
-  const softskillsPct = getBranchPercent(nodes, "softskills") || 40;
-  const wellbeingPct = getBranchPercent(nodes, "wellbeing") || 30;
+  const careerPct   = getBranchPercent(nodes, "career")     || 80;
+  const financePct  = getBranchPercent(nodes, "finance")    || 60;
+  const softPct     = getBranchPercent(nodes, "softskills") || 40;
+  const wellPct     = getBranchPercent(nodes, "wellbeing")  || 30;
 
-  const milestones = [
-    {
-      id: 1,
-      title: "Tân binh",
-      description: "Đạt 3 ngày liên tiếp",
-      icon: "medal-outline",
-      unlocked: streak >= 3,
-      color: colors.career,
-    },
-    {
-      id: 2,
-      title: "Kiên trì",
-      description: "Đạt 7 ngày liên tiếp",
-      icon: "ribbon-outline",
-      unlocked: streak >= 7,
-      color: colors.finance,
-    },
-    {
-      id: 3,
-      title: "Kỷ luật",
-      description: "Đạt 14 ngày liên tiếp",
-      icon: "shield-checkmark-outline",
-      unlocked: streak >= 14,
-      color: colors.softskills,
-    },
-    {
-      id: 4,
-      title: "Huyền thoại",
-      description: "Đạt 30 ngày liên tiếp",
-      icon: "star-outline",
-      unlocked: streak >= 30,
-      color: colors.wellbeing,
-    },
-    {
-      id: 5,
-      title: "Bậc thầy Sự nghiệp",
-      description: "Hoàn thành nhánh Sự nghiệp",
-      icon: "briefcase",
-      unlocked: careerPct >= 100,
-      color: colors.career,
-    },
-    {
-      id: 6,
-      title: "Bậc thầy Tài chính",
-      description: "Hoàn thành nhánh Tài chính",
-      icon: "wallet",
-      unlocked: financePct >= 100,
-      color: colors.finance,
-    },
-    {
-      id: 7,
-      title: "Bậc thầy Kỹ năng",
-      description: "Hoàn thành nhánh Kỹ năng mềm",
-      icon: "people",
-      unlocked: softskillsPct >= 100,
-      color: colors.softskills,
-    },
-    {
-      id: 8,
-      title: "Bậc thầy Sức khỏe",
-      description: "Hoàn thành nhánh Sức khỏe",
-      icon: "pulse",
-      unlocked: wellbeingPct >= 100,
-      color: colors.wellbeing,
-    },
-  ];
+  const milestones = useMemo(() => [
+    { id: 1, title: "Tân binh",    description: "Đạt 3 ngày liên tiếp",           icon: "medal-outline",          unlocked: streak >= 3,       color: colors.career },
+    { id: 2, title: "Kiên trì",    description: "Đạt 7 ngày liên tiếp",           icon: "ribbon-outline",         unlocked: streak >= 7,       color: colors.finance },
+    { id: 3, title: "Kỷ luật",     description: "Đạt 14 ngày liên tiếp",          icon: "shield-checkmark-outline",unlocked: streak >= 14,     color: colors.softskills },
+    { id: 4, title: "Huyền thoại", description: "Đạt 30 ngày liên tiếp",          icon: "star-outline",           unlocked: streak >= 30,      color: colors.wellbeing },
+    { id: 5, title: "Bậc thầy Sự nghiệp",  description: "Hoàn thành nhánh Sự nghiệp",   icon: "briefcase",  unlocked: careerPct  >= 100, color: colors.career },
+    { id: 6, title: "Bậc thầy Tài chính",  description: "Hoàn thành nhánh Tài chính",   icon: "wallet",     unlocked: financePct >= 100, color: colors.finance },
+    { id: 7, title: "Bậc thầy Kỹ năng",    description: "Hoàn thành nhánh Kỹ năng mềm",icon: "people",     unlocked: softPct    >= 100, color: colors.softskills },
+    { id: 8, title: "Bậc thầy Sức khỏe",   description: "Hoàn thành nhánh Sức khỏe",   icon: "pulse",      unlocked: wellPct    >= 100, color: colors.wellbeing },
+  ], [streak, careerPct, financePct, softPct, wellPct, colors]);
+
+  const STATS = useMemo(() => [
+    { value: "47",      label: "QUESTS\nDONE" },
+    { value: "23",      label: "ACTIVE\nDAYS" },
+    { value: bestStreak, label: "BEST\nSTREAK" },
+    { value: "3/4",     label: "BRANCHES\nDONE" },
+  ], [bestStreak]);
 
   const handleLogout = () => {
     Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất không?", [
@@ -160,205 +111,253 @@ export default function ProfileScreen() {
       {
         text: "Đăng xuất",
         style: "destructive",
-        onPress: () => {
-          logout();
-          router.replace("/(auth)/welcome");
-        },
+        onPress: () => { logout(); router.replace("/(auth)/welcome"); },
       },
     ]);
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={["top"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Avatar header ──────────────────────────────── */}
+
+        {/* ── Avatar header ─────────────────────────────────────────────────── */}
         <View style={styles.avatarSection}>
+          {/* Avatar circle — NeoBrutalBox as circle */}
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitials}>{initials}</Text>
-            </View>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>LVL {level}</Text>
-            </View>
+            <NeoBrutalBox
+              borderRadius={44}
+              borderColor={colors.brandPrimary}
+              backgroundColor={colors.bgSurface}
+              shadowColor="#000"
+              shadowOffsetX={4}
+              shadowOffsetY={4}
+              borderWidth={3}
+              contentStyle={{ width: 88, height: 88, alignItems: "center", justifyContent: "center" }}
+            >
+              <Text style={[styles.avatarInitials, { color: colors.textPrimary }]}>{initials}</Text>
+            </NeoBrutalBox>
+
+            {/* Level badge — absolute overlay */}
+            <NeoBrutalBox
+              borderRadius={20}
+              borderColor={colors.brandPrimary}
+              backgroundColor={colors.bgSurface}
+              shadowColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderWidth={2}
+              style={styles.levelBadge}
+              contentStyle={{ paddingHorizontal: 8, paddingVertical: 3 }}
+            >
+              <Text style={[styles.levelBadgeText, { color: colors.brandPrimary }]}>
+                LVL {level}
+              </Text>
+            </NeoBrutalBox>
           </View>
-          <Text style={styles.userName}>{name}</Text>
-          <Text style={styles.userSubtitle}>
+
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>{name}</Text>
+          <Text style={[styles.userSubtitle, { color: colors.textSecondary }]}>
             Level {level} · {currentXP.toLocaleString()} XP
           </Text>
         </View>
 
-        {/* ── Premium banner ─────────────────────────────── */}
-        <View style={styles.premiumBannerWrapper}>
-          <View style={styles.premiumBanner}>
-            <Text style={styles.premiumStar}>✦</Text>
-            <Text style={styles.premiumTitle}>PREMIUM PLAN · ACTIVE</Text>
-            <Text style={styles.premiumRenew}>Expires 17 Apr</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={16}
-              color={colors.textMuted}
-              style={styles.premiumChevron}
-            />
-          </View>
-        </View>
+        {/* ── Premium banner ────────────────────────────────────────────────── */}
+        <NeoBrutalBox
+          borderColor={colors.brandPrimary}
+          backgroundColor={`${colors.brandPrimary}15`}
+          shadowColor="#000"
+          shadowOffsetX={4}
+          shadowOffsetY={4}
+          borderWidth={2}
+          style={{ marginHorizontal: 20 }}
+          contentStyle={styles.premiumContent}
+          onPress={() => {}}
+        >
+          <Text style={[styles.premiumStar, { color: colors.brandPrimary }]}>✦</Text>
+          <Text style={[styles.premiumTitle, { color: colors.textPrimary }]}>
+            PREMIUM PLAN · ACTIVE
+          </Text>
+          <Text style={[styles.premiumRenew, { color: colors.textMuted }]}>Expires 17 Apr</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+        </NeoBrutalBox>
 
-        {/* ── Streak card ────────────────────────────────── */}
-        <View style={styles.streakCardWrapper}>
-          <View style={styles.streakCard}>
-            <View
-              style={[styles.accentBar, { backgroundColor: colors.warning }]}
-            />
-            <Text style={styles.streakTitle}><Emoji size={18}>🔥</Emoji> STREAK: {streak} DAYS</Text>
-            <Text style={styles.streakBest}>
-              Best record: {bestStreak} days
-            </Text>
-          </View>
-        </View>
+        {/* ── Streak card ───────────────────────────────────────────────────── */}
+        <NeoBrutalBox
+          borderColor={colors.warning}
+          backgroundColor={colors.bgElevated}
+          shadowColor={colors.warning}
+          shadowOffsetX={5}
+          shadowOffsetY={5}
+          borderWidth={2}
+          borderRadius={16}
+          style={{ marginHorizontal: 20, marginTop: 16 }}
+          contentStyle={styles.streakContent}
+        >
+          {/* Left accent bar */}
+          <View style={[styles.accentBar, { backgroundColor: colors.warning }]} />
+          <Text style={[styles.streakTitle, { color: colors.textPrimary }]}>
+            <Emoji size={18}>🔥</Emoji> STREAK: {streak} DAYS
+          </Text>
+          <Text style={[styles.streakBest, { color: colors.textSecondary }]}>
+            Best record: {bestStreak} days
+          </Text>
+        </NeoBrutalBox>
 
-        {/* ── Stats row ──────────────────────────────────── */}
+        {/* ── Stats row ─────────────────────────────────────────────────────── */}
         <View style={styles.statsRow}>
-          {[
-            { value: "47", label: "QUESTS DONE" },
-            { value: "23", label: "ACTIVE DAYS" },
-            { value: bestStreak, label: "BEST STREAK" },
-            { value: "3/4", label: "BRANCHES" },
-          ].map((stat, i) => (
-            <View key={i} style={styles.statCardWrapper}>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            </View>
+          {STATS.map((stat, i) => (
+            <NeoBrutalThemed
+              key={i}
+              shadowOffsetX={3}
+              shadowOffsetY={3}
+              borderWidth={2}
+              borderRadius={12}
+              style={{ flex: 1 }}
+              contentStyle={styles.statContent}
+            >
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                {stat.value}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                {stat.label}
+              </Text>
+            </NeoBrutalThemed>
           ))}
         </View>
 
-        {/* ── Milestone Badges ─────────────────────────── */}
+        {/* ── Milestone Badges ──────────────────────────────────────────────── */}
         <View style={styles.milestoneSection}>
-          <Text style={styles.sectionTitle}>MILESTONE BADGES</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            MILESTONE BADGES
+          </Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.milestoneList}
           >
             {milestones.map((m) => (
-              <View key={m.id} style={styles.milestoneCardWrapper}>
+              <NeoBrutalBox
+                key={m.id}
+                borderColor={m.unlocked ? m.color : colors.glassBorder}
+                backgroundColor={colors.bgSurface}
+                shadowColor={m.unlocked ? m.color : "#000"}
+                shadowOffsetX={m.unlocked ? 5 : 3}
+                shadowOffsetY={m.unlocked ? 5 : 3}
+                borderWidth={2}
+                borderRadius={20}
+                style={{ width: 140, opacity: m.unlocked ? 1 : 0.55 }}
+                contentStyle={styles.milestoneContent}
+              >
+                {/* Color accent bar on unlocked */}
+                {m.unlocked && (
+                  <View style={[styles.accentBar, { backgroundColor: m.color }]} />
+                )}
                 <View
                   style={[
-                    styles.milestoneCard,
-                    !m.unlocked && styles.milestoneLocked,
-                    m.unlocked && { borderColor: m.color },
+                    styles.milestoneIcon,
+                    { backgroundColor: m.unlocked ? `${m.color}20` : colors.bgElevated },
                   ]}
                 >
-                  {m.unlocked && (
-                    <View
-                      style={[styles.accentBar, { backgroundColor: m.color }]}
-                    />
-                  )}
-                  <View
-                    style={[
-                      styles.milestoneIcon,
-                      {
-                        backgroundColor: m.unlocked
-                          ? `${m.color}20`
-                          : colors.bgElevated,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={m.icon as any}
-                      size={24}
-                      color={m.unlocked ? m.color : colors.textMuted}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.milestoneTitle,
-                      !m.unlocked && { color: colors.textMuted },
-                    ]}
-                  >
-                    {m.title}
-                  </Text>
-                  <Text style={styles.milestoneDesc}>{m.description}</Text>
+                  <Ionicons
+                    name={m.icon as any}
+                    size={24}
+                    color={m.unlocked ? m.color : colors.textMuted}
+                  />
                 </View>
-              </View>
+                <Text
+                  style={[
+                    styles.milestoneTitle,
+                    { color: m.unlocked ? colors.textPrimary : colors.textMuted },
+                  ]}
+                >
+                  {m.title}
+                </Text>
+                <Text style={[styles.milestoneDesc, { color: colors.textMuted }]}>
+                  {m.description}
+                </Text>
+              </NeoBrutalBox>
             ))}
           </ScrollView>
         </View>
 
-        {/* ── Skill Branch Progress ──────────────────────── */}
-        <View style={styles.branchSection}>
-          <Text style={styles.sectionTitle}>SKILL BRANCH PROGRESS</Text>
-          <View style={styles.branchRows}>
-            <BranchProgressRow
-              label="Sự nghiệp"
-              percent={careerPct}
-              color={colors.career}
-            />
-            <BranchProgressRow
-              label="Tài chính"
-              percent={financePct}
-              color={colors.finance}
-            />
-            <BranchProgressRow
-              label="Kỹ năng mềm"
-              percent={softskillsPct}
-              color={colors.softskills}
-            />
-            <BranchProgressRow
-              label="Sức khỏe"
-              percent={wellbeingPct}
-              color={colors.wellbeing}
-            />
-          </View>
+        {/* ── Skill Branch Progress ─────────────────────────────────────────── */}
+        <View style={{ marginHorizontal: 20, marginTop: 24 }}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            SKILL BRANCH PROGRESS
+          </Text>
+          <NeoBrutalThemed
+            shadowOffsetX={4}
+            shadowOffsetY={4}
+            borderWidth={2}
+            borderRadius={16}
+            contentStyle={styles.branchCard}
+          >
+            <BranchProgressRow label="Sự nghiệp"    percent={careerPct}  color={colors.career}     emoji="💼" />
+            <View style={[styles.branchDivider, { backgroundColor: colors.glassBorder }]} />
+            <BranchProgressRow label="Tài chính"    percent={financePct} color={colors.finance}    emoji="💰" />
+            <View style={[styles.branchDivider, { backgroundColor: colors.glassBorder }]} />
+            <BranchProgressRow label="Kỹ năng mềm"  percent={softPct}    color={colors.softskills} emoji="💬" />
+            <View style={[styles.branchDivider, { backgroundColor: colors.glassBorder }]} />
+            <BranchProgressRow label="Sức khỏe"     percent={wellPct}    color={colors.wellbeing}  emoji="🧘" />
+          </NeoBrutalThemed>
         </View>
 
-        <TouchableOpacity
-          style={styles.settingsRow}
-          onPress={() => router.push("/settings")}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="settings-outline"
-            size={18}
-            color={colors.textPrimary}
-          />
-          <Text style={styles.settingsText}>Cài đặt</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-        </TouchableOpacity>
+        {/* ── Navigation rows ───────────────────────────────────────────────── */}
+        <View style={styles.navSection}>
+          <NeoBrutalBox
+            borderColor={colors.glassBorder}
+            backgroundColor={colors.bgSurface}
+            shadowColor="#000"
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={1.5}
+            borderRadius={14}
+            onPress={() => router.push("/settings")}
+            contentStyle={styles.navContent}
+          >
+            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+            <Text style={[styles.navText, { color: colors.textPrimary }]}>Cài đặt</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+          </NeoBrutalBox>
 
-        {/* ── Leaderboard row ────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.settingsRow}
-          onPress={() => router.push("/leaderboard")}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="trophy-outline"
-            size={18}
-            color={colors.textPrimary}
-          />
-          <Text style={styles.settingsText}>Bảng xếp hạng</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-        </TouchableOpacity>
+          <NeoBrutalBox
+            borderColor={colors.glassBorder}
+            backgroundColor={colors.bgSurface}
+            shadowColor="#000"
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={1.5}
+            borderRadius={14}
+            onPress={() => router.push("/leaderboard")}
+            contentStyle={styles.navContent}
+          >
+            <Ionicons name="trophy-outline" size={20} color={colors.textPrimary} />
+            <Text style={[styles.navText, { color: colors.textPrimary }]}>Bảng xếp hạng</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+          </NeoBrutalBox>
 
-        {/* ── Logout row ─────────────────────────────────── */}
-        <TouchableOpacity
-          style={[styles.settingsRow, { marginTop: 8 }]}
-          onPress={handleLogout}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="log-out-outline" size={18} color={colors.danger} />
-          <Text style={[styles.settingsText, { color: colors.danger }]}>
-            Đăng xuất
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-        </TouchableOpacity>
+          {/* Logout — danger accent */}
+          <NeoBrutalAccent
+            accentColor={`${colors.danger}18`}
+            strokeColor={colors.danger}
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={1.5}
+            borderRadius={14}
+            onPress={handleLogout}
+            contentStyle={styles.navContent}
+          >
+            <Ionicons name="log-out-outline" size={20} color={colors.danger} />
+            <Text style={[styles.navText, { color: colors.danger }]}>Đăng xuất</Text>
+            <Ionicons name="chevron-forward" size={16} color={`${colors.danger}80`} />
+          </NeoBrutalAccent>
+        </View>
 
-        <View style={styles.bottomSpacer} />
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -366,326 +365,103 @@ export default function ProfileScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const createStyles = (colors: any) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.bgBase,
-    },
-    scroll: {
-      flex: 1,
-    },
-    scrollContent: {
-      paddingBottom: 40,
-    },
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 40 },
 
-    // Avatar section
-    avatarSection: {
-      alignItems: "center",
-      paddingVertical: 24,
-      paddingHorizontal: 20,
-    },
-    avatarContainer: {
-      position: "relative",
-      marginBottom: 12,
-    },
-    avatarCircle: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: colors.bgSurface,
-      borderWidth: 3,
-      borderColor: colors.brandPrimary,
-      alignItems: "center",
-      justifyContent: "center",
-      // Neobrutalism shadow
-      shadowColor: "#000000",
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 4,
-    },
-    avatarInitials: {
-      fontSize: 24,
-      fontWeight: "800", // Display bold
-      color: colors.textPrimary,
-      textShadowColor: "rgba(0,0,0,0.4)",
-      textShadowOffset: { width: 1.5, height: 1.5 },
-      textShadowRadius: 0,
-    },
-    levelBadge: {
-      position: "absolute",
-      bottom: -2,
-      right: -2,
-      backgroundColor: colors.bgSurface,
-      borderRadius: 9999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 2,
-      borderColor: colors.brandPrimary,
-      // Neobrutalism shadow
-      shadowColor: "#000000",
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 2,
-    },
-    levelBadgeText: {
-      fontSize: 10,
-      fontWeight: "800",
-      color: colors.brandPrimary,
-      letterSpacing: 0.5,
-      textShadowColor: "rgba(0,0,0,0.3)",
-      textShadowOffset: { width: 0.5, height: 0.5 },
-      textShadowRadius: 0,
-    },
-    userName: {
-      fontSize: 22,
-      fontWeight: "700",
-      color: colors.textPrimary,
-      marginBottom: 4,
-    },
-    userSubtitle: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: colors.textSecondary,
-      marginTop: 4,
-    },
+  // Avatar
+  avatarSection: { alignItems: "center", paddingVertical: 28, paddingHorizontal: 20 },
+  avatarContainer: { position: "relative", marginBottom: 14 },
+  avatarInitials: { fontSize: 26, fontWeight: "900" },
+  levelBadge: { position: "absolute", bottom: -4, right: -8 },
+  levelBadgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
+  userName: { fontSize: 22, fontWeight: "800", marginBottom: 4 },
+  userSubtitle: { fontSize: 12, fontWeight: "600", marginTop: 2 },
 
-    // Premium banner
-    premiumBannerWrapper: {
-      marginHorizontal: 20,
-      backgroundColor: "#000000",
-      borderRadius: 12,
-    },
-    premiumBanner: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: 12,
-      padding: 14,
-      flexDirection: "row",
-      alignItems: "center",
-      borderWidth: 2,
-      borderColor: colors.brandPrimary,
-      transform: [{ translateX: -4 }, { translateY: -4 }],
-    },
-    premiumStar: {
-      fontSize: 16,
-      color: colors.brandPrimary,
-      marginRight: 8,
-    },
-    premiumTitle: {
-      fontSize: 12,
-      fontWeight: "800",
-      color: colors.textPrimary,
-      flex: 1,
-      letterSpacing: 0.5,
-    },
-    premiumRenew: {
-      fontSize: 10,
-      fontWeight: "600",
-      color: colors.textMuted,
-      marginRight: 4,
-    },
-    premiumChevron: {
-      marginLeft: 4,
-    },
+  // Premium banner
+  premiumContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  premiumStar: { fontSize: 16 },
+  premiumTitle: { fontSize: 12, fontWeight: "900", flex: 1, letterSpacing: 0.5 },
+  premiumRenew: { fontSize: 10, fontWeight: "600" },
 
-    // Streak card
-    streakCardWrapper: {
-      marginHorizontal: 20,
-      marginTop: 16,
-      backgroundColor: "#000000",
-      borderRadius: 16,
-    },
-    streakCard: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: 16,
-      padding: 20,
-      alignItems: "center",
-      borderWidth: 2,
-      borderColor: colors.warning,
-      overflow: "hidden",
-      transform: [{ translateX: -4 }, { translateY: -4 }],
-    },
-    accentBar: {
-      position: "absolute",
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 6,
-    },
-    streakTitle: {
-      fontSize: 18,
-      fontWeight: "800",
-      color: colors.textPrimary,
-      letterSpacing: 0.5,
-    },
-    streakBest: {
-      fontSize: 10,
-      fontWeight: "600",
-      color: colors.textSecondary,
-      marginTop: 6,
-    },
+  // Streak
+  streakContent: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 20 },
+  accentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 6,
+  },
+  streakTitle: { fontSize: 18, fontWeight: "900", letterSpacing: 0.5 },
+  streakBest: { fontSize: 10, fontWeight: "600", marginTop: 6 },
 
-    // Stats row
-    statsRow: {
-      flexDirection: "row",
-      gap: 12,
-      marginHorizontal: 20,
-      marginTop: 16,
-    },
-    statCardWrapper: {
-      flex: 1,
-      backgroundColor: "#000000",
-      borderRadius: 12,
-    },
-    statCard: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: 12,
-      padding: 12,
-      alignItems: "center",
-      borderWidth: 2,
-      borderColor: colors.glassBorder,
-      transform: [{ translateX: -3 }, { translateY: -3 }],
-    },
-    statValue: {
-      fontSize: 16,
-      fontWeight: "800",
-      color: colors.textPrimary,
-      textShadowColor: "rgba(0,0,0,0.3)",
-      textShadowOffset: { width: 1.5, height: 1.5 },
-      textShadowRadius: 0,
-    },
-    statLabel: {
-      fontSize: 8,
-      fontWeight: "700",
-      color: colors.textMuted,
-      textAlign: "center",
-      marginTop: 6,
-      lineHeight: 10,
-      letterSpacing: 0.2,
-    },
+  // Stats
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginHorizontal: 20,
+    marginTop: 16,
+  },
+  statContent: { alignItems: "center", paddingVertical: 14, paddingHorizontal: 8 },
+  statValue: { fontSize: 18, fontWeight: "900" },
+  statLabel: {
+    fontSize: 8,
+    fontWeight: "800",
+    textAlign: "center",
+    marginTop: 5,
+    lineHeight: 11,
+    letterSpacing: 0.3,
+  },
 
-    // Branch section
-    branchSection: {
-      marginHorizontal: 20,
-      marginTop: 24,
-    },
-    sectionTitle: {
-      fontSize: 14,
-      fontWeight: "800",
-      color: colors.textPrimary,
-      marginBottom: 16,
-      letterSpacing: 1,
-    },
-    branchRows: {
-      gap: 12,
-    },
+  // Milestones
+  milestoneSection: { marginTop: 32 },
+  milestoneList: { paddingLeft: 20, paddingRight: 10, gap: 14, flexDirection: "row", paddingBottom: 8 },
+  milestoneContent: { alignItems: "center", padding: 16 },
+  milestoneIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  milestoneTitle: { fontSize: 11, fontWeight: "900", textAlign: "center", marginBottom: 5, letterSpacing: 0.2 },
+  milestoneDesc: { fontSize: 9, fontWeight: "500", textAlign: "center", lineHeight: 12 },
 
-    // Milestones
-    milestoneSection: {
-      marginTop: 32,
-    },
-    milestoneList: {
-      paddingLeft: 20,
-      paddingRight: 10,
-      gap: 16,
-      flexDirection: "row",
-      paddingBottom: 8,
-    },
-    milestoneCardWrapper: {
-      width: 140,
-      backgroundColor: "#000000",
-      borderRadius: 20,
-    },
-    milestoneCard: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: 20,
-      padding: 16,
-      alignItems: "center",
-      borderWidth: 2,
-      borderColor: colors.glassBorder,
-      overflow: "hidden",
-      transform: [{ translateX: -4 }, { translateY: -4 }],
-    },
-    milestoneLocked: {
-      opacity: 0.7,
-      borderColor: colors.glassBorder,
-    },
-    milestoneIcon: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 12,
-      borderWidth: 1.5,
-      borderColor: "transparent",
-    },
-    milestoneTitle: {
-      fontSize: 11,
-      fontWeight: "800",
-      color: colors.textPrimary,
-      textAlign: "center",
-      marginBottom: 6,
-      letterSpacing: 0.2,
-    },
-    milestoneDesc: {
-      fontSize: 9,
-      fontWeight: "500",
-      color: colors.textMuted,
-      textAlign: "center",
-      lineHeight: 12,
-    },
-    branchRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    branchLabel: {
-      fontSize: 13,
-      color: colors.textPrimary,
-      flex: 1,
-    },
-    branchPercent: {
-      fontSize: 13,
-      color: colors.textMuted,
-      width: 36,
-      textAlign: "right",
-    },
-    branchBarTrack: {
-      flex: 2,
-      height: 6,
-      backgroundColor: "rgba(255,255,255,0.08)",
-      borderRadius: 3,
-      overflow: "hidden",
-    },
-    branchBarFill: {
-      height: 6,
-      borderRadius: 3,
-    },
+  // Branch progress card
+  branchCard: { padding: 18, gap: 14 },
+  branchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  branchEmoji: { fontSize: 16, width: 24, textAlign: "center" },
+  branchLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2 },
+  branchLabel: { fontSize: 13, fontWeight: "600" },
+  branchPercent: { fontSize: 12, fontWeight: "800" },
+  branchDivider: { height: StyleSheet.hairlineWidth },
 
-    // Settings rows
-    settingsRow: {
-      marginHorizontal: 20,
-      marginTop: 8,
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-      borderRadius: 12,
-      padding: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-      borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.08)",
-    },
-    settingsText: {
-      fontSize: 14,
-      color: colors.textPrimary,
-      flex: 1,
-    },
+  // Navigation rows
+  navSection: { marginHorizontal: 20, marginTop: 24, gap: 10 },
+  navContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  navText: { fontSize: 14, fontWeight: "600", flex: 1 },
 
-    // Bottom
-    bottomSpacer: {
-      height: 100,
-    },
-  });
+  // Section title
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "900",
+    marginBottom: 14,
+    letterSpacing: 1.2,
+    paddingHorizontal: 20,
+  },
+});

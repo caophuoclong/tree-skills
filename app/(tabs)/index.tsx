@@ -5,7 +5,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
-import { NeoBrutalCard, Emoji } from "@/src/ui/atoms";
+import { Emoji, NeoBrutalAccent, NeoBrutalCard } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -479,12 +479,22 @@ export default function HomeScreen() {
         </View>
 
         {/* ── Suggested banner ────────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.suggestedBanner}
+        <NeoBrutalAccent
+          accentColor={colors.brandGlow}
+          style={{
+            padding: 4,
+            marginVertical: 4,
+          }}
           onPress={() => router.push("/(tabs)/quests")}
-          activeOpacity={0.9}
         >
-          <View style={styles.suggestedLeft}>
+          <View
+            style={{
+              ...styles.suggestedLeft,
+              padding: 12,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
             <Text style={styles.suggestedStar}>✦</Text>
             <View style={styles.suggestedText}>
               <Text style={styles.suggestedTitle}>Gợi ý: Networking</Text>
@@ -493,8 +503,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
+        </NeoBrutalAccent>
 
         {/* ── Today's Quests Preview (E4/B2) ─────────────────── */}
         <View style={styles.questPreviewSection}>
@@ -506,11 +515,14 @@ export default function HomeScreen() {
           </View>
 
           {quests.slice(0, 3).map((quest) => (
-            <TouchableOpacity
+            <NeoBrutalAccent
+              accentColor={colors.bgBase}
               key={quest.quest_id}
-              style={styles.miniQuestCard}
+              style={{ marginVertical: 6 }}
+              contentStyle={{
+                padding: 4,
+              }}
               onPress={() => router.push(`/quest/${quest.quest_id}`)}
-              activeOpacity={0.7}
             >
               <View style={styles.miniQuestContent}>
                 <View
@@ -531,7 +543,7 @@ export default function HomeScreen() {
                   +{quest.xp_reward} XP
                 </Text>
               </View>
-            </TouchableOpacity>
+            </NeoBrutalAccent>
           ))}
         </View>
 
@@ -933,8 +945,8 @@ const createStyles = (colors: IColors) =>
       padding: 16,
       backgroundColor: colors.brandPrimary,
       flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      // alignItems: "center",
+      // justifyContent: "space-between",
     },
     suggestedLeft: {
       flexDirection: "row",
@@ -1005,7 +1017,7 @@ const createStyles = (colors: IColors) =>
       flex: 1,
     },
     miniQuestXP: {
-      backgroundColor: "rgba(251,191,36,0.1)",
+      // backgroundColor: "rgba(251,191,36,0.1)",
       paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 6,
