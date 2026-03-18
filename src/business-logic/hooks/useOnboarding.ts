@@ -1,13 +1,15 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { useUserStore } from '../stores/userStore';
-import { ASSESSMENT_QUESTIONS, calculateBranchWeights, getPrimaryBranch } from '../data/assessment-questions';
+import { assessmentService } from '../api/services/assessmentService';
+import { calculateBranchWeights, getPrimaryBranch } from '../data/assessment-questions';
 import { getInitialNodes } from '../data/skill-tree-nodes';
 import type { Branch, OnboardingAnswer } from '../types';
 
 export interface OnboardingResult {
-  currentQuestion: (typeof ASSESSMENT_QUESTIONS)[0] | null;
+  currentQuestion: any | null;
   currentIndex: number;
   totalQuestions: number;
   progress: number;
@@ -17,6 +19,7 @@ export interface OnboardingResult {
   goBack: () => void;
   skip: () => void;
   finishOnboarding: () => void;
+  isLoadingQuestions: boolean;
 }
 
 export function useOnboarding(): OnboardingResult {
@@ -33,9 +36,16 @@ export function useOnboarding(): OnboardingResult {
 
   const { user, setUser } = useUserStore();
 
-  const currentQuestion = ASSESSMENT_QUESTIONS[currentQuestionIndex] ?? null;
-  const totalQuestions = ASSESSMENT_QUESTIONS.length;
-  const progress = (currentQuestionIndex / totalQuestions) * 100;
+  // Fetch assessment questions from API
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
+    queryKey: ['assessment', 'questions'],
+    queryFn: () => assessmentService.getQuestions(),
+    staleTime: Infinity, // questions never change during session
+  });
+
+  const currentQuestion = questions[currentQuestionIndex] ?? null;
+  const totalQuestions = questions.length;
+  const progress = totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0;
 
   const selectAnswer = useCallback(
     (branch: Branch) => {
@@ -99,5 +109,6 @@ export function useOnboarding(): OnboardingResult {
     goBack: previousQuestion,
     skip: handleSkip,
     finishOnboarding,
+    isLoadingQuestions,
   };
 }
