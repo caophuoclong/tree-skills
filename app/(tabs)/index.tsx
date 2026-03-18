@@ -5,7 +5,12 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
-import { Emoji, NeoBrutalAccent, NeoBrutalBox, NeoBrutalCard } from "@/src/ui/atoms";
+import {
+  Emoji,
+  NeoBrutalAccent,
+  NeoBrutalBox,
+  NeoBrutalCard,
+} from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -23,6 +28,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Circle } from "react-native-svg";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -66,43 +72,82 @@ interface ProgressRingProps {
   label: string;
 }
 
-const RING_SIZE = 56;
+// ─── NB Circular Progress Ring ────────────────────────────────────────────────
+// DISC = outer circle diameter; SHADOW_OFF = hard-shadow pixel offset (NB style)
+// Arc starts from top (rotate -90°); strokeLinecap="butt" for NB flat/blocky feel
+const DISC = 62;
+const SHADOW_OFF = 4;
+const SVG_SIZE = DISC + SHADOW_OFF; // reserves space for shadow so it doesn't clip
+const CX = DISC / 2;               // main disc center in SVG coords
+const CY = DISC / 2;
+const STROKE_W = 8;
+const BORDER_W = 2;
+const ARC_R = DISC / 2 - STROKE_W / 2 - BORDER_W;
+const CIRC = 2 * Math.PI * ARC_R;
 
 function ProgressRing({ percent, color, label }: ProgressRingProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const clamp = Math.min(100, Math.max(0, percent));
+  const dash = (clamp / 100) * CIRC;
 
   return (
     <View style={styles.ringWrapper}>
-      {/* Manual NB circle: hard shadow layer behind + main circle on top */}
-      <View style={{ width: RING_SIZE + 3, height: RING_SIZE + 3 }}>
-        {/* Hard shadow — solid color, offset by (3,3) */}
+      <View style={{ width: SVG_SIZE, height: SVG_SIZE }}>
+        <Svg width={SVG_SIZE} height={SVG_SIZE}>
+          {/* ① Hard-shadow disc — solid, offset by SHADOW_OFF (NB signature) */}
+          <Circle
+            cx={CX + SHADOW_OFF}
+            cy={CY + SHADOW_OFF}
+            r={DISC / 2}
+            fill={color}
+            opacity={0.4}
+          />
+          {/* ② Main disc background */}
+          <Circle
+            cx={CX}
+            cy={CY}
+            r={DISC / 2 - BORDER_W / 2}
+            fill={colors.bgElevated}
+            stroke={color}
+            strokeWidth={BORDER_W}
+          />
+          {/* ③ Track (empty ring portion) */}
+          <Circle
+            cx={CX}
+            cy={CY}
+            r={ARC_R}
+            fill="none"
+            stroke={`${color}28`}
+            strokeWidth={STROKE_W}
+          />
+          {/* ④ Progress arc — butt cap for blocky NB feel, starts from top */}
+          {clamp > 0 && (
+            <Circle
+              cx={CX}
+              cy={CY}
+              r={ARC_R}
+              fill="none"
+              stroke={color}
+              strokeWidth={STROKE_W}
+              strokeDasharray={`${dash} ${CIRC - dash}`}
+              strokeLinecap="butt"
+              transform={`rotate(-90 ${CX} ${CY})`}
+            />
+          )}
+        </Svg>
+        {/* ⑤ % label centered over the disc (not the shadow) */}
         <View
           pointerEvents="none"
           style={{
             position: "absolute",
-            width: RING_SIZE,
-            height: RING_SIZE,
-            borderRadius: RING_SIZE / 2,
-            backgroundColor: color,
-            top: 3,
-            left: 3,
-          }}
-        />
-        {/* Main circle */}
-        <View
-          style={{
-            width: RING_SIZE,
-            height: RING_SIZE,
-            borderRadius: RING_SIZE / 2,
-            backgroundColor: `${color}18`,
-            borderWidth: 2,
-            borderColor: color,
+            top: 0, left: 0,
+            width: DISC, height: DISC,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Text style={[styles.ringPercent, { color }]}>{percent}%</Text>
+          <Text style={[styles.ringPercent, { color }]}>{clamp}%</Text>
         </View>
       </View>
       <Text style={styles.ringLabel} numberOfLines={1}>
@@ -287,7 +332,12 @@ export default function HomeScreen() {
               borderWidth={1.5}
               borderRadius={18}
               onPress={() => setNotifVisible(true)}
-              contentStyle={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
+              contentStyle={{
+                width: 36,
+                height: 36,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <Ionicons
                 name="notifications-outline"
@@ -306,7 +356,12 @@ export default function HomeScreen() {
               onPress={() =>
                 Alert.alert("Cài đặt", "Tính năng đang được phát triển.")
               }
-              contentStyle={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
+              contentStyle={{
+                width: 36,
+                height: 36,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <Ionicons
                 name="settings-outline"
@@ -553,7 +608,12 @@ export default function HomeScreen() {
               borderRadius={12}
               style={{ marginBottom: 8 }}
               onPress={() => router.push(`/quest/${quest.quest_id}`)}
-              contentStyle={{ padding: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+              contentStyle={{
+                padding: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
               <View style={styles.miniQuestContent}>
                 <View
@@ -614,7 +674,12 @@ export default function HomeScreen() {
         >
           <View style={styles.notifContent}>
             {/* NB accent strip at top */}
-            <View style={[styles.notifAccentStrip, { backgroundColor: colors.brandPrimary }]} />
+            <View
+              style={[
+                styles.notifAccentStrip,
+                { backgroundColor: colors.brandPrimary },
+              ]}
+            />
             {/* Drag handle */}
             <View style={styles.notifHandle} />
 
@@ -629,7 +694,12 @@ export default function HomeScreen() {
                 borderWidth={1.5}
                 borderRadius={14}
                 onPress={() => setNotifVisible(false)}
-                contentStyle={{ width: 32, height: 32, alignItems: "center", justifyContent: "center" }}
+                contentStyle={{
+                  width: 32,
+                  height: 32,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
                 <Ionicons name="close" size={16} color={colors.textSecondary} />
               </NeoBrutalBox>
@@ -637,7 +707,13 @@ export default function HomeScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {notifications.map((notif) => (
-                <View key={notif.id} style={[styles.notifItem, { borderBottomColor: colors.glassBorder }]}>
+                <View
+                  key={notif.id}
+                  style={[
+                    styles.notifItem,
+                    { borderBottomColor: colors.glassBorder },
+                  ]}
+                >
                   <NeoBrutalBox
                     borderColor={`${notif.color}60`}
                     backgroundColor={`${notif.color}18`}
@@ -646,9 +722,18 @@ export default function HomeScreen() {
                     shadowOffsetY={2}
                     borderWidth={1.5}
                     borderRadius={12}
-                    contentStyle={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+                    contentStyle={{
+                      width: 40,
+                      height: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
-                    <Ionicons name={notif.icon as any} size={18} color={notif.color} />
+                    <Ionicons
+                      name={notif.icon as any}
+                      size={18}
+                      color={notif.color}
+                    />
                   </NeoBrutalBox>
                   <View style={styles.notifText}>
                     <Text style={styles.notifTitle}>{notif.title}</Text>
@@ -792,8 +877,9 @@ const createStyles = (colors: IColors) =>
       marginBottom: 8,
     },
     ringPercent: {
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: "900",
+      letterSpacing: -0.3,
     },
     ringLabel: {
       fontSize: 9,
