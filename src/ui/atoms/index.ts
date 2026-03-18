@@ -1,4 +1,5 @@
 export { Avatar } from "./Avatar";
+export { ConfettiOverlay } from "./ConfettiOverlay";
 export { Emoji } from "./Emoji";
 export { Badge } from "./Badge";
 export { Button } from "./Button";
