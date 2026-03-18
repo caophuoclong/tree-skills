@@ -323,12 +323,11 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function TabLayout() {
-  const { colors } = useTheme();
-  const renderTabBar = useMemo(
-    () => (props: BottomTabBarProps) => <FloatingNavBar {...props} />,
-
-    [],
-  );
+  const renderTabBar = useMemo(() => {
+    const TabBar = (props: BottomTabBarProps) => <FloatingNavBar {...props} />;
+    TabBar.displayName = "TabBar";
+    return TabBar;
+  }, []);
 
   return (
     <Tabs

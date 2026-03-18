@@ -17,7 +17,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { getComboMultiplier } from "@/src/business-logic/hooks/useXPEngine";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
-import { NeoBrutalBox, Emoji } from "@/src/ui/atoms";
+import { Emoji, NeoBrutalBox } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 
 // ─── Branch helpers ───────────────────────────────────────────────────────────
@@ -356,7 +356,7 @@ export default function QuestsScreen() {
             style={{
               ...styles.challengeCard,
             }}
-            shadowColor={`${colors.wellbeing}40`}
+            // shadowColor={`${colors.wellbeing}40`}
             contentStyle={{
               padding: 16,
             }}
@@ -675,7 +675,6 @@ const createStyles = (colors: IColors) =>
       color: colors.textPrimary,
     },
     challengeCard: {
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
       overflow: "hidden",
     },
     challengeCardMain: {
