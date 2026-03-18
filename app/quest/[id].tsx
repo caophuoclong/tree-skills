@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useQuestManager } from "@/src/business-logic/hooks/useQuestManager";
-import { useXPEngine } from "@/src/business-logic/hooks/useXPEngine";
+import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
 import { NeoBrutalBox } from "@/src/ui/atoms";
@@ -19,6 +19,7 @@ import {
   QuestCompleteButton,
   QuestMetaRow,
   QuestStepList,
+  StaminaBar,
 } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
 
@@ -174,7 +175,7 @@ export default function QuestDetailScreen() {
 
   const { id } = useLocalSearchParams<{ id: string }>();
   const { quests, completeQuest } = useQuestManager();
-  const { addXP } = useXPEngine();
+  const { stamina, status, isGated } = useStaminaSystem();
   const { dailyStats } = useUserStore();
 
   const quest: Quest | undefined = quests.find((q) => q.quest_id === id);
@@ -187,15 +188,12 @@ export default function QuestDetailScreen() {
   const handleComplete = useCallback(() => {
     if (!quest || isCompleted) return;
 
-    // Mark quest complete
+    // Mark quest complete (internally handles XP with stamina multiplier)
     completeQuest(quest.quest_id);
-
-    // Award XP with multiplier
-    addXP(quest.xp_reward);
 
     // Auto-navigate back after animations finish
     setTimeout(() => router.back(), 1200);
-  }, [quest, isCompleted, completeQuest, addXP]);
+  }, [quest, isCompleted, completeQuest]);
 
   if (!quest) {
     return (
@@ -309,16 +307,40 @@ export default function QuestDetailScreen() {
 
       {/* ── Footer ───────────────────────────────────────── */}
       <View style={styles.footer}>
-        <Text style={styles.footerNote}>
-          ⚡ Không tốn Thể lực · Nhận XP thuần
-        </Text>
-        <QuestCompleteButton
-          questId={quest.quest_id}
-          xpReward={quest.xp_reward}
-          isCompleted={isCompleted}
-          sessionCombo={dailyStats.session_combo}
-          onComplete={handleComplete}
-        />
+        {/* Show stamina bar only if stamina < 70 and quest is career/finance */}
+        {stamina < 70 && (quest.branch === 'career' || quest.branch === 'finance') && (
+          <View style={styles.staminaBarContainer}>
+            <StaminaBar value={stamina} />
+          </View>
+        )}
+
+        {/* Show gated state if stamina is 0 and career/finance quest */}
+        {isGated(quest.branch) ? (
+          <QuestCompleteButton
+            questId={quest.quest_id}
+            xpReward={quest.xp_reward}
+            isCompleted={isCompleted}
+            sessionCombo={dailyStats.session_combo}
+            onComplete={handleComplete}
+            isGated={true}
+            staminaStatus={status}
+          />
+        ) : (
+          <>
+            <Text style={styles.footerNote}>
+              {status === 'warning' ? '⚡ XP -25%' : status === 'debuff' ? '⚡ XP -50%' : '⚡ Không tốn Thể lực · Nhận XP thuần'}
+            </Text>
+            <QuestCompleteButton
+              questId={quest.quest_id}
+              xpReward={quest.xp_reward}
+              isCompleted={isCompleted}
+              sessionCombo={dailyStats.session_combo}
+              onComplete={handleComplete}
+              staminaStatus={status}
+            />
+          </>
+        )}
+
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Text style={styles.skipText}>Bỏ qua hôm nay</Text>
         </TouchableOpacity>
@@ -444,6 +466,9 @@ const createStyles = (colors: any) =>
       borderTopWidth: 1,
       borderTopColor: colors.glassBorder,
       backgroundColor: colors.bgBase,
+    },
+    staminaBarContainer: {
+      marginBottom: 16,
     },
     footerNote: {
       fontSize: 11,
