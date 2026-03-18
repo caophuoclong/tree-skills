@@ -24,7 +24,7 @@ import { useCustomSkillTreeStore } from "@/src/business-logic/stores/customSkill
 import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import type { Branch, SkillNode } from "@/src/business-logic/types";
-import { Emoji } from "@/src/ui/atoms";
+import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
 import { useTheme } from "@/src/ui/tokens";
 
 // ─── Layout constants ──────────────────────────────────────────────────────────
@@ -203,20 +203,21 @@ function TierBannerView({
       pointerEvents="none"
       style={[styles.bannerWrap, { top: banner.y, height: HEADER_H }]}
     >
-      <View
-        style={[
-          styles.bannerPill,
-          {
-            backgroundColor: colors.bgSurface,
-            borderColor: `${branchColor}35`,
-          },
-        ]}
+      {/* Main pill content */}
+
+      <NeoBrutalAccent
+        accentColor={branchColor}
+        strokeColor="#000"
+        borderWidth={1.5}
+        borderRadius={9999}
       >
-        <Emoji size={12}>{TIER_ICON[banner.tier] ?? ""}</Emoji>
-        <Text style={[styles.bannerText, { color: branchColor }]}>
-          {banner.label}
-        </Text>
-      </View>
+        <View style={[styles.bannerPill]}>
+          <Emoji size={12}>{TIER_ICON[banner.tier] ?? ""}</Emoji>
+          <Text style={[styles.bannerText, { color: "#fff" }]}>
+            {banner.label}
+          </Text>
+        </View>
+      </NeoBrutalAccent>
     </View>
   );
 }
@@ -304,6 +305,22 @@ function NodeCircle({
       onPress={() => !isLocked && onPress(node)}
       style={[styles.nodeWrap, { left: x, top: y }]}
     >
+      {/* Hard shadow view — sits behind the main circle */}
+      {!isLocked && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            width: NODE_SIZE,
+            height: NODE_SIZE,
+            borderRadius: NODE_SIZE / 2,
+            backgroundColor: isCompleted ? branchColor : "rgba(0,0,0,0.5)",
+            top: 3,
+            left: 3,
+          }}
+        />
+      )}
+
       {/* Pulse ring */}
       {isInProgress && (
         <Animated.View
@@ -323,43 +340,19 @@ function NodeCircle({
         />
       )}
 
-      {/* Outer accent ring */}
-      {!isLocked && (
-        <View
-          style={{
-            position: "absolute",
-            top: -3,
-            left: -3,
-            width: NODE_SIZE + 6,
-            height: NODE_SIZE + 6,
-            borderRadius: (NODE_SIZE + 6) / 2,
-            borderWidth: isInProgress ? 2.5 : 2,
-            borderColor: isCompleted ? `${branchColor}80` : `${branchColor}45`,
-          }}
-        />
-      )}
-
       {/* Main circle */}
       <View
         style={[
           styles.nodeCircle,
           isCompleted && {
             backgroundColor: branchColor,
-            shadowColor: branchColor,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.55,
-            shadowRadius: 12,
-            elevation: 10,
+            borderWidth: 2.5,
+            borderColor: "rgba(0,0,0,0.5)",
           },
           isInProgress && {
             backgroundColor: `${branchColor}25`,
             borderColor: branchColor,
             borderWidth: 2.5,
-            shadowColor: branchColor,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.9,
-            shadowRadius: 18,
-            elevation: 14,
           },
           isLocked && {
             backgroundColor: colors.bgElevated,
@@ -564,15 +557,27 @@ export default function TreeScreen() {
             Lộ trình phát triển bản thân
           </Text>
         </View>
-        <TouchableOpacity
-          style={[styles.iconBtn, { backgroundColor: colors.bgElevated }]}
+        <NeoBrutalBox
+          borderColor={colors.glassBorder}
+          backgroundColor={colors.bgElevated}
+          shadowColor="#000"
+          shadowOffsetX={2}
+          shadowOffsetY={2}
+          borderWidth={1.5}
+          borderRadius={18}
+          contentStyle={{
+            width: 36,
+            height: 36,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <Ionicons
             name="notifications-outline"
             size={20}
             color={colors.textSecondary}
           />
-        </TouchableOpacity>
+        </NeoBrutalBox>
       </View>
 
       {/* Goal filter pills — only renders when user has created at least one goal tree */}
@@ -584,99 +589,138 @@ export default function TreeScreen() {
           contentContainerStyle={styles.goalPillsRow}
         >
           {/* "All" pill */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setSelectedGoalId(null)}
-            style={[
-              styles.goalPill,
-              !goalFilterActive
-                ? {
-                    backgroundColor: `${colors.brandPrimary}1E`,
-                    borderColor: `${colors.brandPrimary}55`,
-                  }
-                : {
-                    backgroundColor: colors.bgElevated,
-                    borderColor: colors.glassBorder,
-                  },
-            ]}
-          >
-            <Text
-              style={[
-                styles.goalPillText,
-                {
-                  color: !goalFilterActive
-                    ? colors.brandPrimary
-                    : colors.textMuted,
-                },
-              ]}
+          {!goalFilterActive ? (
+            <NeoBrutalAccent
+              accentColor={colors.brandPrimary}
+              strokeColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderRadius={9999}
+              onPress={() => setSelectedGoalId(null)}
+              contentStyle={{
+                paddingHorizontal: 14,
+                paddingVertical: 6,
+              }}
             >
-              ✦ Tất cả
-            </Text>
-          </TouchableOpacity>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#fff" }}>
+                ✦ Tất cả
+              </Text>
+            </NeoBrutalAccent>
+          ) : (
+            <NeoBrutalBox
+              borderColor={colors.glassBorder}
+              backgroundColor={colors.bgElevated}
+              shadowColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderRadius={9999}
+              onPress={() => setSelectedGoalId(null)}
+              contentStyle={{
+                paddingHorizontal: 14,
+                paddingVertical: 6,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "700",
+                  color: colors.textSecondary,
+                }}
+              >
+                ✦ Tất cả
+              </Text>
+            </NeoBrutalBox>
+          )}
 
           {/* One pill per saved goal tree */}
           {customTrees.map((tree) => {
             const active = selectedGoalId === tree.id;
-            return (
-              <TouchableOpacity
+            return active ? (
+              <NeoBrutalAccent
                 key={tree.id}
-                activeOpacity={0.8}
+                accentColor={colors.brandPrimary}
+                strokeColor="#000"
+                shadowOffsetX={2}
+                shadowOffsetY={2}
+                borderRadius={9999}
                 onPress={() => {
                   setSelectedGoalId(tree.id);
                   setShowOnlyCustom(false);
                 }}
-                style={[
-                  styles.goalPill,
-                  active
-                    ? {
-                        backgroundColor: `${colors.brandPrimary}1E`,
-                        borderColor: `${colors.brandPrimary}55`,
-                      }
-                    : {
-                        backgroundColor: colors.bgElevated,
-                        borderColor: colors.glassBorder,
-                      },
-                ]}
+                contentStyle={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  maxWidth: 180,
+                }}
               >
                 <Text
-                  style={[
-                    styles.goalPillText,
-                    {
-                      color: active
-                        ? colors.brandPrimary
-                        : colors.textSecondary,
-                    },
-                  ]}
+                  style={{ fontSize: 12, fontWeight: "700", color: "#fff" }}
                   numberOfLines={1}
                 >
                   🎯 {tree.goal}
                 </Text>
-              </TouchableOpacity>
+              </NeoBrutalAccent>
+            ) : (
+              <NeoBrutalBox
+                key={tree.id}
+                borderColor={colors.glassBorder}
+                backgroundColor={colors.bgElevated}
+                shadowColor="#000"
+                shadowOffsetX={2}
+                shadowOffsetY={2}
+                borderRadius={9999}
+                onPress={() => {
+                  setSelectedGoalId(tree.id);
+                  setShowOnlyCustom(false);
+                }}
+                contentStyle={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  maxWidth: 180,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: colors.textSecondary,
+                  }}
+                  numberOfLines={1}
+                >
+                  🎯 {tree.goal}
+                </Text>
+              </NeoBrutalBox>
             );
           })}
-          {/* Tạo cây kỹ năng button — inline with tabs */}
-          <TouchableOpacity
-            activeOpacity={0.82}
+
+          {/* Tạo mới button */}
+          <NeoBrutalAccent
+            accentColor={`${colors.brandPrimary}`}
+            // strokeColor={colors.brandPrimary}
+            shadowOffsetX={2}
+            shadowOffsetY={2}
+            borderWidth={1.5}
+            borderRadius={9999}
             onPress={() => router.push("/skill-builder")}
-            style={[
-              styles.tab,
-              styles.tabCreate,
-              {
-                backgroundColor: `${colors.brandPrimary}1C`,
-                borderColor: `${colors.brandPrimary}55`,
-              },
-            ]}
+            contentStyle={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              gap: 5,
+            }}
           >
-            <Ionicons name="sparkles" size={12} color={colors.brandPrimary} />
+            <Ionicons name="sparkles" size={12} color={colors.textPrimary} />
             <Text
-              style={[
-                styles.tabText,
-                { color: colors.brandPrimary, fontWeight: "700" },
-              ]}
+              style={{
+                fontSize: 13,
+                fontWeight: "700",
+                color: colors.textPrimary,
+              }}
             >
               Tạo mới
             </Text>
-          </TouchableOpacity>
+          </NeoBrutalAccent>
         </ScrollView>
       )}
 
@@ -702,8 +746,12 @@ export default function TreeScreen() {
                 styles.tab,
                 // When goal active: ALL tabs lose their highlight — no "active" state
                 !goalFilterActive && active
-                  ? { backgroundColor: `${col}1E`, borderColor: `${col}55` }
-                  : { borderColor: "transparent" },
+                  ? {
+                      backgroundColor: `${col}1E`,
+                      borderColor: col,
+                      borderWidth: 1.5,
+                    }
+                  : { borderColor: "transparent", borderWidth: 1.5 },
                 // When goal active: all tabs equally dimmed, just color hints
                 goalFilterActive && { opacity: 0.38 },
               ]}
@@ -734,7 +782,23 @@ export default function TreeScreen() {
       </ScrollView>
 
       {/* Progress strip */}
-      <View style={[styles.strip, { backgroundColor: colors.bgSurface }]}>
+      <NeoBrutalBox
+        borderColor={goalFilterActive ? colors.brandPrimary : branchColor}
+        backgroundColor={colors.bgSurface}
+        shadowColor={goalFilterActive ? colors.brandPrimary : branchColor}
+        shadowOffsetX={3}
+        shadowOffsetY={3}
+        borderWidth={1.5}
+        borderRadius={12}
+        style={{ marginHorizontal: 20, marginTop: 10 }}
+        contentStyle={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          gap: 10,
+        }}
+      >
         <View style={{ flex: 1 }}>
           <Text
             style={[styles.stripName, { color: colors.textPrimary }]}
@@ -815,7 +879,7 @@ export default function TreeScreen() {
             )}
           </TouchableOpacity>
         )}
-      </View>
+      </NeoBrutalBox>
 
       {/* ── Winding path canvas ── */}
       <ScrollView
@@ -867,20 +931,30 @@ export default function TreeScreen() {
 
         {/* Today quest banner */}
         {todayQ && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[
-              styles.questBanner,
-              { backgroundColor: `${branchColor}E8` },
-            ]}
+          <NeoBrutalAccent
+            accentColor={branchColor}
+            strokeColor="rgba(0,0,0,0.5)"
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={1.5}
+            borderRadius={12}
+            style={{ marginHorizontal: 20, marginTop: 4 }}
             onPress={() => router.push("/(tabs)/quests")}
+            contentStyle={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              gap: 6,
+            }}
           >
             <Emoji size={13}>✦</Emoji>
             <Text style={styles.questText} numberOfLines={1}>
-              {"  "}Hôm nay: {todayQ.title}
+              {" "}
+              Hôm nay: {todayQ.title}
             </Text>
             <Ionicons name="chevron-forward" size={14} color="#fff" />
-          </TouchableOpacity>
+          </NeoBrutalAccent>
         )}
       </ScrollView>
 
@@ -904,16 +978,24 @@ export default function TreeScreen() {
             <View style={styles.handle} />
 
             <View style={styles.sheetHdr}>
-              <View
-                style={[
-                  styles.sheetIcon,
-                  { backgroundColor: `${branchColor}22` },
-                ]}
+              <NeoBrutalAccent
+                accentColor={`${branchColor}22`}
+                strokeColor={branchColor}
+                shadowOffsetX={2}
+                shadowOffsetY={2}
+                borderWidth={1.5}
+                borderRadius={14}
+                contentStyle={{
+                  width: 50,
+                  height: 50,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
                 <Emoji size={22}>
                   {selected ? BRANCH_ICON[selected.branch] : "📚"}
                 </Emoji>
-              </View>
+              </NeoBrutalAccent>
               <View style={{ flex: 1 }}>
                 <Text
                   style={[styles.sheetTitle, { color: colors.textPrimary }]}
@@ -956,36 +1038,56 @@ export default function TreeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              disabled={selected?.status === "locked"}
-              style={[
-                styles.sheetBtn,
-                {
-                  backgroundColor:
-                    selected?.status === "locked"
-                      ? colors.bgElevated
-                      : branchColor,
-                },
-              ]}
-              onPress={() => {
-                setSheetOpen(false);
-                router.push("/(tabs)/quests");
-              }}
-            >
-              <Text
-                style={[
-                  styles.sheetBtnText,
-                  {
-                    color:
-                      selected?.status === "locked" ? colors.textMuted : "#fff",
-                  },
-                ]}
+            {selected?.status === "locked" ? (
+              <NeoBrutalBox
+                borderColor={colors.glassBorder}
+                backgroundColor={colors.bgElevated}
+                shadowColor="#000"
+                shadowOffsetX={3}
+                shadowOffsetY={3}
+                borderWidth={1.5}
+                borderRadius={26}
+                contentStyle={{
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                {selected?.status === "locked"
-                  ? "Chưa đủ điều kiện mở khoá"
-                  : "Bắt đầu ngay →"}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "700",
+                    color: colors.textMuted,
+                  }}
+                >
+                  Chưa đủ điều kiện mở khoá
+                </Text>
+              </NeoBrutalBox>
+            ) : (
+              <NeoBrutalAccent
+                accentColor={branchColor}
+                strokeColor="rgba(0,0,0,0.5)"
+                shadowOffsetX={3}
+                shadowOffsetY={3}
+                borderWidth={1.5}
+                borderRadius={26}
+                onPress={() => {
+                  setSheetOpen(false);
+                  router.push("/(tabs)/quests");
+                }}
+                contentStyle={{
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}
+                >
+                  Bắt đầu ngay →
+                </Text>
+              </NeoBrutalAccent>
+            )}
           </View>
         </Pressable>
       </Modal>
@@ -1171,13 +1273,6 @@ const styles = StyleSheet.create({
   },
   hTitle: { fontSize: 24, fontWeight: "800" },
   hSub: { fontSize: 12, marginTop: 2 },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
   // Goal filter pills
   goalPillsScroll: { marginTop: 12, flexGrow: 0, flexShrink: 0, maxHeight: 32 },
@@ -1186,13 +1281,6 @@ const styles = StyleSheet.create({
     gap: 8,
     flexDirection: "row",
     alignItems: "center",
-  },
-  goalPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 9999,
-    borderWidth: 1,
-    maxWidth: 180,
   },
   goalPillText: { fontSize: 12, fontWeight: "700" },
 
@@ -1207,26 +1295,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 9999,
-    borderWidth: 1,
-  },
-  tabCreate: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
   },
   tabSep: { width: 1, height: 20, alignSelf: "center", marginHorizontal: 4 },
   tabText: { fontSize: 13 },
 
-  strip: {
-    marginHorizontal: 20,
-    marginTop: 10,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
   stripName: { fontSize: 13, fontWeight: "700" },
   stripCount: { fontSize: 11, marginTop: 1 },
   track: { width: 80, height: 5, borderRadius: 3, overflow: "hidden" },
@@ -1285,7 +1357,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    borderWidth: 1,
   },
   bannerText: {
     fontSize: 10,
@@ -1295,16 +1366,6 @@ const styles = StyleSheet.create({
   },
 
   // Today quest
-  questBanner: {
-    marginHorizontal: 20,
-    marginTop: 4,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
   questText: { flex: 1, fontSize: 13, fontWeight: "600", color: "#fff" },
 
   // Modal
@@ -1335,13 +1396,6 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 14,
   },
-  sheetIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   sheetTitle: { fontSize: 18, fontWeight: "700" },
   sheetSub: {
     fontSize: 11,
@@ -1358,12 +1412,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   statValue: { fontSize: 16, fontWeight: "700", marginTop: 3 },
-  sheetBtn: {
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   sheetBtnText: { fontSize: 15, fontWeight: "700" },
 
   // Goal badge on custom nodes
