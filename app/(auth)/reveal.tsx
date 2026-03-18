@@ -201,7 +201,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   // Branches label
   branchesLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
     color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -231,7 +231,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   pillText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
   },
 
   // CTA
@@ -251,7 +251,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   ctaBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: '#FFFFFF',
   },
 

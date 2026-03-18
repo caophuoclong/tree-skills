@@ -227,7 +227,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   stepLabel: {
     fontSize: 12,
     color: colors.textMuted,
-    fontWeight: '500',
+    fontFamily: 'SpaceGrotesk-Medium', fontWeight: '500',
   },
 
   // Progress
@@ -304,7 +304,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   optionTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: colors.textPrimary,
   },
   optionSubtitle: {

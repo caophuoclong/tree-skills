@@ -65,6 +65,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   percent: {
     marginLeft: 'auto',
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
   },
 });

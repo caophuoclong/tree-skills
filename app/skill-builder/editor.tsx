@@ -527,17 +527,17 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
 
   editorHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, gap: 8 },
-  headerAction: { fontSize: 15, fontWeight: '600', minWidth: 44, textAlign: 'center' },
-  editorHeaderTitle: { fontSize: 15, fontWeight: '700' },
+  headerAction: { fontSize: 15, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600', minWidth: 44, textAlign: 'center' },
+  editorHeaderTitle: { fontSize: 15, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
   editorHeaderSub: { fontSize: 11, marginTop: 1 },
 
   statsStrip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16, marginHorizontal: 16, marginTop: 10, borderRadius: 12, gap: 4 },
   statItem: { alignItems: 'center', paddingHorizontal: 8 },
   statNum: { fontSize: 16, fontWeight: '800' },
-  statLbl: { fontSize: 9, fontWeight: '600', letterSpacing: 0.5 },
+  statLbl: { fontSize: 9, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600', letterSpacing: 0.5 },
   statDivider: { width: 1, height: 28, marginHorizontal: 2 },
   miniChip: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, borderWidth: 1 },
-  miniChipCount: { fontSize: 11, fontWeight: '700' },
+  miniChipCount: { fontSize: 11, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
 
   hintRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, marginHorizontal: 16, marginTop: 8, borderRadius: 10 },
   hintText: { fontSize: 11, flex: 1, lineHeight: 16 },
@@ -551,16 +551,16 @@ const styles = StyleSheet.create({
   clusterHeader: { flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 10, paddingVertical: 12, gap: 6 },
   clusterHeaderInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   clusterEmoji: { fontSize: 22, width: 32, textAlign: 'center' },
-  clusterTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  clusterTitleInput: { fontSize: 15, fontWeight: '700', borderBottomWidth: 1.5, paddingVertical: 2, marginBottom: 4 },
+  clusterTitle: { fontSize: 15, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', marginBottom: 4 },
+  clusterTitleInput: { fontSize: 15, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', borderBottomWidth: 1.5, paddingVertical: 2, marginBottom: 4 },
   clusterHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  clusterCount: { fontSize: 11, fontWeight: '600' },
+  clusterCount: { fontSize: 11, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   removeClusterBtn: { padding: 4 },
   branchBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
   branchBadgeEmoji: { fontSize: 10 },
-  branchBadgeLabel: { fontSize: 10, fontWeight: '700' },
+  branchBadgeLabel: { fontSize: 10, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
   branchPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1 },
-  branchPillLabel: { fontSize: 12, fontWeight: '600' },
+  branchPillLabel: { fontSize: 12, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
 
   // Skills
   skillsList: { paddingHorizontal: 14, paddingBottom: 12, gap: 2 },
@@ -570,9 +570,9 @@ const styles = StyleSheet.create({
   skillHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
   sortCol: { alignItems: 'center', gap: 0 },
   bullet: { width: 7, height: 7, borderRadius: 3.5, flexShrink: 0 },
-  skillTitle: { fontSize: 13, fontWeight: '500', lineHeight: 18 },
+  skillTitle: { fontSize: 13, fontFamily: 'SpaceGrotesk-Medium', fontWeight: '500', lineHeight: 18 },
   skillMeta: { fontSize: 10, marginTop: 1 },
-  skillTitleInput: { fontSize: 13, fontWeight: '500', borderBottomWidth: 1.5, paddingVertical: 2 },
+  skillTitleInput: { fontSize: 13, fontFamily: 'SpaceGrotesk-Medium', fontWeight: '500', borderBottomWidth: 1.5, paddingVertical: 2 },
   expandBtn: { padding: 5, borderRadius: 8, borderWidth: 1 },
 
   // Quest sub-list
@@ -584,17 +584,17 @@ const styles = StyleSheet.create({
   questTitle: { fontSize: 12, lineHeight: 17 },
   questTitleInput: { fontSize: 12, borderBottomWidth: 1.5, paddingVertical: 1 },
   questDurBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
-  questDurText: { fontSize: 10, fontWeight: '600' },
+  questDurText: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   addQuestBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, borderWidth: 1, borderStyle: 'dashed', borderRadius: 6, justifyContent: 'center', marginTop: 4 },
-  addQuestText: { fontSize: 11, fontWeight: '700' },
+  addQuestText: { fontSize: 11, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
 
   // Add skill
   addSkillBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 4, marginTop: 4, borderWidth: 1, borderStyle: 'dashed', borderRadius: 8, justifyContent: 'center' },
-  addSkillText: { fontSize: 12, fontWeight: '700' },
+  addSkillText: { fontSize: 12, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
 
   // Add cluster
   addClusterBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed' },
-  addClusterText: { fontSize: 14, fontWeight: '700' },
+  addClusterText: { fontSize: 14, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
 
   // Confirm
   confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18, borderRadius: 28, marginTop: 4 },

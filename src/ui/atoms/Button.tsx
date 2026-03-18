@@ -130,7 +130,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   label: {
     ...Typography.bodyLG,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
   },
   disabled: {
     opacity: 0.5,

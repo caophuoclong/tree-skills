@@ -14,11 +14,29 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { queryClient } from '@/src/business-logic/api/query-client';
 import { LevelUpModal, LoginBonusModal } from '@/src/ui/molecules';
 import { useTheme } from '@/src/ui/tokens';
+
+// ─── Global font defaults ────────────────────────────────────────────────────
+// Patch every React Native Text so Space Grotesk is the base font.
+// Components that need Bold/SemiBold set fontFamily explicitly in their styles.
+//
+// fontWeight → fontFamily mapping for Space Grotesk:
+//   '400' / 'normal' → SpaceGrotesk-Regular
+//   '500'            → SpaceGrotesk-Medium
+//   '600'            → SpaceGrotesk-SemiBold
+//   '700' / 'bold'   → SpaceGrotesk-Bold
+//
+// NOTE: On iOS, custom fonts IGNORE fontWeight — you must set fontFamily to
+// the correct weight variant explicitly. This default sets the Regular base;
+// individual components override it by setting fontFamily themselves.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Text as any).defaultProps = (Text as any).defaultProps ?? {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Text as any).defaultProps.style = { fontFamily: 'SpaceGrotesk-Regular' };
 
 export const unstable_settings = {
   anchor: '(tabs)',

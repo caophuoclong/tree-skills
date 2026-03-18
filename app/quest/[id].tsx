@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useQuestManager } from '@/src/business-logic/hooks/useQuestManager';
 import { useTheme } from '@/src/ui/tokens';
+import { NeoBrutalBox, NeoBrutalAccent } from '@/src/ui/atoms';
 import type { Quest } from '@/src/business-logic/types';
 
 
@@ -223,13 +224,19 @@ export default function QuestDetailScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* ── Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeoBrutalBox
+          borderColor={colors.glassBorder}
+          backgroundColor={colors.bgElevated}
+          shadowColor="#000"
+          shadowOffsetX={2}
+          shadowOffsetY={2}
+          borderWidth={1.5}
+          borderRadius={12}
+          contentStyle={styles.backButton}
           onPress={() => router.back()}
-          style={styles.backButton}
-          hitSlop={8}
         >
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        </NeoBrutalBox>
         <Text style={[styles.headerBranchLabel, { color: branchColor }]}>
           {BRANCH_CATEGORY_LABELS[quest.branch] ?? 'Quest'}
         </Text>
@@ -241,28 +248,57 @@ export default function QuestDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Title card ─────────────────────────────────────── */}
-        <View style={styles.titleCard}>
+        <NeoBrutalBox
+          borderColor={branchColor}
+          backgroundColor={colors.bgSurface}
+          shadowColor={branchColor}
+          shadowOffsetX={4}
+          shadowOffsetY={4}
+          borderWidth={2}
+          borderRadius={16}
+          contentStyle={styles.titleCard}
+        >
           <Text style={styles.questTitle}>{quest.title}</Text>
           <View style={styles.tagsRow}>
-            <View
-              style={[
-                styles.tagChip,
-                { backgroundColor: `${branchColor}26` },
-              ]}
+            <NeoBrutalAccent
+              accentColor={`${branchColor}26`}
+              strokeColor={branchColor}
+              borderWidth={1}
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderRadius={9999}
+              contentStyle={styles.tagChip}
             >
               <Text style={[styles.tagText, { color: branchColor }]}>
                 {BRANCH_LABELS[quest.branch] ?? quest.branch}
               </Text>
-            </View>
-            <View style={styles.tagChipNeutral}>
+            </NeoBrutalAccent>
+            <NeoBrutalBox
+              borderColor={colors.glassBorder}
+              backgroundColor={colors.bgElevated}
+              shadowColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderWidth={1}
+              borderRadius={9999}
+              contentStyle={styles.tagChipNeutral}
+            >
               <Text style={styles.tagTextNeutral}>{quest.duration_min} MIN</Text>
-            </View>
-            <View style={styles.tagChipXP}>
+            </NeoBrutalBox>
+            <NeoBrutalAccent
+              accentColor="rgba(251,191,36,0.15)"
+              strokeColor="#FBBF24"
+              borderWidth={1}
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderRadius={9999}
+              contentStyle={styles.tagChipXP}
+            >
               <Ionicons name="flash" size={10} color={colors.softskills} />
               <Text style={styles.tagTextXP}>+{quest.xp_reward} XP</Text>
-            </View>
+            </NeoBrutalAccent>
           </View>
-        </View>
+        </NeoBrutalBox>
 
         {/* ── Tại sao điều này quan trọng ──────────────────── */}
         <View style={styles.section}>
@@ -276,9 +312,18 @@ export default function QuestDetailScreen() {
           <View style={styles.stepsContainer}>
             {steps.map((step, index) => (
               <View key={index} style={styles.stepRow}>
-                <View style={styles.stepNumber}>
+                <NeoBrutalBox
+                  borderColor={colors.brandPrimary}
+                  backgroundColor={colors.bgBase}
+                  shadowColor={colors.brandPrimary}
+                  shadowOffsetX={2}
+                  shadowOffsetY={2}
+                  borderWidth={1.5}
+                  borderRadius={12}
+                  contentStyle={styles.stepNumber}
+                >
                   <Text style={styles.stepNumberText}>{index + 1}</Text>
-                </View>
+                </NeoBrutalBox>
                 <Text style={styles.stepText}>{step}</Text>
               </View>
             ))}
@@ -322,18 +367,32 @@ export default function QuestDetailScreen() {
           ⚡ Không tốn Thể lực · Nhận XP thuần
         </Text>
         {isCompleted ? (
-          <View style={styles.completedBtn}>
+          <NeoBrutalBox
+            borderColor={`${colors.finance}33`}
+            backgroundColor={`${colors.finance}1A`}
+            shadowColor={colors.finance}
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={1}
+            borderRadius={26}
+            contentStyle={styles.completedBtn}
+          >
             <Ionicons name="checkmark-circle" size={20} color={colors.finance} />
             <Text style={styles.completedBtnText}>Đã hoàn thành</Text>
-          </View>
+          </NeoBrutalBox>
         ) : (
-          <TouchableOpacity
-            style={styles.completeBtn}
+          <NeoBrutalAccent
+            accentColor={branchColor}
+            strokeColor="rgba(0,0,0,0.5)"
+            shadowOffsetX={4}
+            shadowOffsetY={4}
+            borderWidth={2}
+            borderRadius={26}
+            contentStyle={styles.completeBtn}
             onPress={handleComplete}
-            activeOpacity={0.85}
           >
             <Text style={styles.completeBtnText}>Đánh dấu hoàn thành</Text>
-          </TouchableOpacity>
+          </NeoBrutalAccent>
         )}
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Text style={styles.skipText}>Bỏ qua hôm nay</Text>
@@ -344,7 +403,7 @@ export default function QuestDetailScreen() {
       {showXP && (
         <Animated.View
           style={[
-            styles.xpFloat,
+            styles.xpFloatContainer,
             {
               opacity: xpAnim,
               transform: [
@@ -358,17 +417,21 @@ export default function QuestDetailScreen() {
             },
           ]}
         >
-          <Text style={styles.xpFloatText}>
-            +{quest?.xp_reward} XP
-            {xpResult && xpResult.bonusXP > 0 && (
-              <Text style={styles.xpBonusText}> +{xpResult.bonusXP} COMBO</Text>
+          {/* Hard offset shadow background */}
+          <View style={[styles.xpFloatShadow, { top: 3, left: 3 }]} />
+          <View style={styles.xpFloat}>
+            <Text style={styles.xpFloatText}>
+              +{quest?.xp_reward} XP
+              {xpResult && xpResult.bonusXP > 0 && (
+                <Text style={styles.xpBonusText}> +{xpResult.bonusXP} COMBO</Text>
+              )}
+            </Text>
+            {xpResult && xpResult.multiplier > 1 && (
+              <View style={styles.comboBadge}>
+                <Text style={styles.comboText}>X{xpResult.multiplier} MULTIPLIER</Text>
+              </View>
             )}
-          </Text>
-          {xpResult && xpResult.multiplier > 1 && (
-            <View style={styles.comboBadge}>
-              <Text style={styles.comboText}>X{xpResult.multiplier} MULTIPLIER</Text>
-            </View>
-          )}
+          </View>
         </Animated.View>
       )}
     </SafeAreaView>
@@ -408,28 +471,42 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   backButton: {
     marginRight: 4,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerBranchLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
   },
 
-  // XP Float
-  xpFloat: {
+  // XP Float Container
+  xpFloatContainer: {
     position: 'absolute',
     bottom: 120,
     alignSelf: 'center',
+  },
+  // XP Float hard offset shadow
+  xpFloatShadow: {
+    position: 'absolute',
+    backgroundColor: `${colors.softskills}33`,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.softskills,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    width: 'auto',
+    minWidth: 160,
+  },
+  // XP Float main content
+  xpFloat: {
     backgroundColor: colors.bgSurface,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.softskills,
-    shadowColor: colors.softskills,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
   },
   xpFloatText: {
     fontSize: 20,
@@ -466,14 +543,12 @@ const createStyles = (colors: any) => StyleSheet.create({
 
   // Title card
   titleCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: 16,
     padding: 20,
     marginBottom: 0,
   },
   questTitle: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: colors.textPrimary,
   },
   tagsRow: {
@@ -485,37 +560,32 @@ const createStyles = (colors: any) => StyleSheet.create({
   tagChip: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 9999,
   },
   tagText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   tagChipNeutral: {
-    backgroundColor: colors.bgElevated,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 9999,
   },
   tagTextNeutral: {
     fontSize: 10,
     color: colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
   },
   tagChipXP: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: 'rgba(251,191,36,0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 9999,
   },
   tagTextXP: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: colors.softskills,
   },
 
@@ -525,7 +595,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
     color: colors.textMuted,
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -549,15 +619,13 @@ const createStyles = (colors: any) => StyleSheet.create({
   stepNumber: {
     width: 24,
     height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.bgElevated,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   stepNumberText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: colors.brandPrimary,
   },
   stepText: {
@@ -606,15 +674,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 16,
   },
   completeBtn: {
-    backgroundColor: colors.brandPrimary,
     height: 52,
-    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
   completeBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: '#FFFFFF',
   },
   completedBtn: {
@@ -623,14 +689,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
     height: 52,
     gap: 8,
-    backgroundColor: `${colors.finance}1A`,
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: `${colors.finance}33`,
   },
   completedBtnText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
     color: colors.finance,
   },
   skipText: {

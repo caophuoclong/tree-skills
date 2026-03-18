@@ -173,7 +173,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   xpLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
     color: colors.softskills,
     marginTop: -4,
   },

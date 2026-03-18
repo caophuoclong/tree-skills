@@ -1,15 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useRef } from "react";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useTheme } from '@/src/ui/tokens';
+import { useTheme } from "@/src/ui/tokens";
 
 const STEPS = [
-  { label: 'Phân tích mục tiêu của bạn...', emoji: '🔍' },
-  { label: 'Xác định các nhóm kỹ năng...', emoji: '🗂️' },
-  { label: 'Phân loại theo danh mục kỹ năng sống...', emoji: '🏷️' },
-  { label: 'Tạo lộ trình cá nhân hoá...', emoji: '🗺️' },
-  { label: 'Gần xong rồi...', emoji: '✨' },
+  { label: "Phân tích mục tiêu của bạn...", emoji: "🔍" },
+  { label: "Xác định các nhóm kỹ năng...", emoji: "🗂️" },
+  { label: "Phân loại theo danh mục kỹ năng sống...", emoji: "🏷️" },
+  { label: "Tạo lộ trình cá nhân hoá...", emoji: "🗺️" },
+  { label: "Gần xong rồi...", emoji: "✨" },
 ];
 
 export default function GeneratingScreen() {
@@ -42,16 +42,30 @@ export default function GeneratingScreen() {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.18, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulse, {
+          toValue: 1.18,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
       ]),
     ).start();
   }, [pulse]);
 
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const rotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bgBase }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: colors.bgBase }]}
+      edges={["top", "bottom"]}
+    >
       <View style={styles.center}>
         {/* Orb */}
         <Animated.View
@@ -68,7 +82,10 @@ export default function GeneratingScreen() {
           <Animated.View
             style={[
               styles.ring,
-              { borderColor: `${colors.brandPrimary}60`, transform: [{ rotate }] },
+              {
+                borderColor: `${colors.brandPrimary}60`,
+                transform: [{ rotate }],
+              },
             ]}
           />
           <Text style={styles.orbEmoji}>🤖</Text>
@@ -95,9 +112,12 @@ export default function GeneratingScreen() {
                       backgroundColor: done
                         ? colors.brandPrimary
                         : active
-                        ? `${colors.brandPrimary}55`
-                        : colors.bgElevated,
-                      borderColor: done || active ? colors.brandPrimary : colors.glassBorder,
+                          ? `${colors.brandPrimary}55`
+                          : colors.bgElevated,
+                      borderColor:
+                        done || active
+                          ? colors.brandPrimary
+                          : colors.glassBorder,
                     },
                   ]}
                 >
@@ -106,7 +126,10 @@ export default function GeneratingScreen() {
                     <Animated.View
                       style={[
                         styles.dotPulse,
-                        { backgroundColor: colors.brandPrimary, opacity: pulse },
+                        {
+                          backgroundColor: colors.brandPrimary,
+                          opacity: pulse,
+                        },
                       ]}
                     />
                   )}
@@ -118,13 +141,16 @@ export default function GeneratingScreen() {
                       color: done
                         ? colors.textPrimary
                         : active
-                        ? colors.brandPrimary
-                        : colors.textMuted,
-                      fontWeight: active ? '700' : '400',
+                          ? colors.brandPrimary
+                          : colors.textMuted,
+                      fontFamily: active ? 'SpaceGrotesk-Bold' : 'SpaceGrotesk-Regular',
+                      fontWeight: active ? "700" : "400",
                     },
                   ]}
                 >
-                  {s.emoji}{'  '}{s.label}
+                  {s.emoji}
+                  {"  "}
+                  {s.label}
                 </Text>
               </View>
             );
@@ -137,42 +163,52 @@ export default function GeneratingScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
 
   orb: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1.5,
     marginBottom: 28,
   },
   ring: {
-    position: 'absolute',
+    position: "absolute",
     width: 116,
     height: 116,
     borderRadius: 58,
     borderWidth: 2.5,
-    borderTopColor: 'transparent',
+    borderTopColor: "transparent",
   },
   orbEmoji: { fontSize: 40 },
 
-  title: { fontSize: 22, fontWeight: '800', marginBottom: 6, textAlign: 'center' },
-  sub: { fontSize: 13, textAlign: 'center', marginBottom: 36 },
+  title: {
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  sub: { fontSize: 13, textAlign: "center", marginBottom: 36 },
 
-  stepList: { width: '100%', gap: 14 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  stepList: { width: "100%", gap: 14 },
+  stepRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   stepDot: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
   },
-  dotCheck: { fontSize: 11, color: '#fff', fontWeight: '800' },
+  dotCheck: { fontSize: 11, color: "#fff", fontWeight: "800" },
   dotPulse: { width: 8, height: 8, borderRadius: 4 },
   stepLabel: { fontSize: 13, flex: 1 },
 });

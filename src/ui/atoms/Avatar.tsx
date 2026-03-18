@@ -56,6 +56,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   initials: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700',
   },
 });

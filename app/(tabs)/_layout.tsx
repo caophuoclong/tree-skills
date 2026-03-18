@@ -250,7 +250,7 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
                   style={[
                     styles.navLabel,
                     { color: col },
-                    active && { fontWeight: "700" },
+                    active && { fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
                   ]}
                 >
                   {meta.label}
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   },
   navLabel: {
     fontSize: 12,
-    fontWeight: "500",
+    fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500",
   },
   divider: {
     width: 1.5,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   allTitle: {
     fontSize: 9,
-    fontWeight: "700",
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
     letterSpacing: 1.5,
     textTransform: "uppercase",
     paddingHorizontal: 16,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   allLabel: {
     flex: 1,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
   },
   activeDot: {
     width: 6,

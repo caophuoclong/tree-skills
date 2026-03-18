@@ -34,7 +34,7 @@ export default function NeoBrutalDemoScreen() {
           style={styles.card}
           contentStyle={styles.content}
         >
-          <AppText style={{ color: colors.textPrimary, fontWeight: "700" }}>
+          <AppText style={{ color: colors.textPrimary, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" }}>
             Static Card
           </AppText>
           <AppText style={{ color: colors.textSecondary, marginTop: 4 }}>
@@ -53,7 +53,7 @@ export default function NeoBrutalDemoScreen() {
           style={styles.card}
           contentStyle={styles.content}
         >
-          <AppText style={{ color: colors.textPrimary, fontWeight: "700" }}>
+          <AppText style={{ color: colors.textPrimary, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" }}>
             Tap Me
           </AppText>
           <AppText style={{ color: colors.textSecondary, marginTop: 4 }}>
@@ -159,7 +159,7 @@ export default function NeoBrutalDemoScreen() {
         >
           {/* Inner colored box should NOT have shadow from parent */}
           <View style={[styles.innerBox, { backgroundColor: colors.career }]}>
-            <AppText style={{ color: "#fff", fontWeight: "700" }}>
+            <AppText style={{ color: "#fff", fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" }}>
               Inner child
             </AppText>
           </View>
@@ -169,7 +169,7 @@ export default function NeoBrutalDemoScreen() {
               { backgroundColor: colors.finance, marginTop: 8 },
             ]}
           >
-            <AppText style={{ color: "#fff", fontWeight: "700" }}>
+            <AppText style={{ color: "#fff", fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" }}>
               No shadow bleed ✓
             </AppText>
           </View>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginTop: 8,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   pillText: {
     color: "#000",
-    fontWeight: "700",
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
     fontSize: 13,
   },
   ctaContent: {

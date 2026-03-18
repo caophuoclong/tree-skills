@@ -187,7 +187,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   unlockText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
     color: colors.finance,
   },
   button: {

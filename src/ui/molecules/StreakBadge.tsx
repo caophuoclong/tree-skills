@@ -85,6 +85,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   fire: { fontSize: 16 },
   fireLg: { fontSize: 28 },
-  count: { fontWeight: '700' },
+  count: { fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
   shield: { fontSize: 12, marginLeft: 2 },
 });

@@ -174,5 +174,5 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
   },
   branchLabel: { textAlign: 'center' },
-  questCount: { fontWeight: '700', fontSize: 28 },
+  questCount: { fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', fontSize: 28 },
 });

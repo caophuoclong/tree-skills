@@ -106,7 +106,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  valueText: { fontWeight: '600' },
+  valueText: { fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   warningRow: {
     flexDirection: 'row',
     alignItems: 'center',

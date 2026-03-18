@@ -127,7 +127,7 @@ export default function SkillBuilderGoalScreen() {
           {/* Hero caption */}
           <Text style={[styles.caption, { color: colors.textSecondary }]}>
             Nhập mục tiêu của bạn — AI sẽ phân tích và tạo ra lộ trình{" "}
-            <Text style={{ color: colors.brandPrimary, fontWeight: "700" }}>
+            <Text style={{ color: colors.brandPrimary, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" }}>
               cá nhân hoá
             </Text>{" "}
             gồm các kỹ năng cụ thể.
@@ -305,7 +305,7 @@ export default function SkillBuilderGoalScreen() {
             />
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               Các kỹ năng được tạo ra sẽ nằm trong{" "}
-              <Text style={{ color: colors.textPrimary, fontWeight: "600" }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600" }}>
                 đúng danh mục kỹ năng sống
               </Text>{" "}
               của bạn và phản ánh vào hồ sơ phát triển bản thân.
@@ -359,7 +359,7 @@ const createStyles = (colors: IColors, focused: boolean) =>
       borderWidth: 1,
     },
     chipEmoji: { fontSize: 12 },
-    chipLabel: { fontSize: 11, fontWeight: "700" },
+    chipLabel: { fontSize: 11, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
 
     inputBox: {
       borderRadius: 12,
@@ -381,7 +381,7 @@ const createStyles = (colors: IColors, focused: boolean) =>
       fontSize: 12,
       lineHeight: 24,
       minHeight: 56,
-      fontWeight: "500",
+      fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500",
     },
     inputFooter: {
       flexDirection: "row",
@@ -423,7 +423,7 @@ const createStyles = (colors: IColors, focused: boolean) =>
       marginBottom: 16,
     },
     divLine: { flex: 1, height: 1 },
-    divText: { fontSize: 11, fontWeight: "600", letterSpacing: 0.5 },
+    divText: { fontSize: 11, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", letterSpacing: 0.5 },
 
     suggestGrid: {
       flexDirection: "row",
@@ -446,7 +446,7 @@ const createStyles = (colors: IColors, focused: boolean) =>
     suggestEmoji: { fontSize: 16 },
     suggestLabel: {
       fontSize: 12,
-      fontWeight: "500",
+      fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500",
       flex: 1,
       flexWrap: "wrap",
     },

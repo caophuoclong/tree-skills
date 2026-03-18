@@ -17,7 +17,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { getComboMultiplier } from "@/src/business-logic/hooks/useXPEngine";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
-import { Emoji, NeoBrutalBox } from "@/src/ui/atoms";
+import { Emoji, NeoBrutalBox, NeoBrutalAccent } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 
 // ─── Branch helpers ───────────────────────────────────────────────────────────
@@ -123,41 +123,32 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
         {/* Top row */}
         <View style={styles.questCardTop}>
           <View style={styles.questCardTopLeft}>
-            {/* Branch chip — solid fill, neobrutalism */}
-            <View
-              style={[
-                styles.branchChip,
-                {
-                  backgroundColor: branchColor,
-                  shadowColor: branchColor,
-                  shadowOffset: { width: 2, height: 2 },
-                  shadowOpacity: 0.7,
-                  shadowRadius: 0,
-                },
-              ]}
+            {/* Branch chip — NeoBrutalAccent */}
+            <NeoBrutalAccent
+              accentColor={branchColor}
+              strokeColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderRadius={4}
+              contentStyle={styles.branchChip}
             >
               <Text style={[styles.branchChipText, { color: "#0D0D0F" }]}>
                 {BRANCH_LABELS[quest.branch] ?? quest.branch}
               </Text>
-            </View>
-            {/* Difficulty badge */}
-
-            <View
-              style={[
-                styles.diffBadge,
-                {
-                  backgroundColor: diff.bg,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 2, height: 2 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 0,
-                },
-              ]}
+            </NeoBrutalAccent>
+            {/* Difficulty badge — NeoBrutalAccent */}
+            <NeoBrutalAccent
+              accentColor={diff.bg}
+              strokeColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderRadius={4}
+              contentStyle={styles.diffBadge}
             >
               <Text style={[styles.diffBadgeText, { color: diff.text }]}>
                 {diff.label}
               </Text>
-            </View>
+            </NeoBrutalAccent>
           </View>
 
           {isCompleted ? (
@@ -173,10 +164,6 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
                 {
                   borderColor: branchColor,
                   borderWidth: 2,
-                  shadowColor: branchColor,
-                  shadowOffset: { width: 2, height: 2 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 0,
                 },
               ]}
               onPress={triggerXPFlyUp}
@@ -192,20 +179,17 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
 
         {/* Bottom row: XP badge + duration */}
         <View style={styles.questCardBottom}>
-          {/* XP badge — neobrutalism: solid yellow, black text, hard shadow */}
-          <View
-            style={[
-              styles.xpBadge,
-              {
-                shadowColor: "#92400E",
-                shadowOffset: { width: 2, height: 2 },
-                shadowOpacity: 0.8,
-                shadowRadius: 0,
-              },
-            ]}
+          {/* XP badge — NeoBrutalAccent */}
+          <NeoBrutalAccent
+            accentColor="#FBBF24"
+            strokeColor="#92400E"
+            shadowOffsetX={2}
+            shadowOffsetY={2}
+            borderRadius={4}
+            contentStyle={styles.xpBadge}
           >
             <Text style={styles.xpBadgeText}>+{quest.xp_reward} XP</Text>
-          </View>
+          </NeoBrutalAccent>
           <Text style={styles.durationText}>⏱ {quest.duration_min} phút</Text>
         </View>
       </NeoBrutalBox>
@@ -268,28 +252,32 @@ export default function QuestsScreen() {
               ]}
             />
           </View>
-          <View style={styles.completePill}>
+          <NeoBrutalAccent
+            accentColor={`${colors.brandPrimary}22`}
+            strokeColor={colors.brandPrimary}
+            borderWidth={1}
+            shadowOffsetX={2}
+            shadowOffsetY={2}
+            borderRadius={9999}
+            contentStyle={styles.completePill}
+          >
             <Text style={styles.completePillText}>
               XONG {completedCount}/{totalCount}
             </Text>
-          </View>
+          </NeoBrutalAccent>
         </View>
 
         {/* ── Combo Banner ───────────────────────────────────── */}
         {comboActive && (
-          <View
-            style={[
-              styles.comboBanner,
-              {
-                borderColor: combo >= 5 ? colors.softskills : colors.career,
-                // Neobrutalism hard offset shadow
-                shadowColor: "#000",
-                shadowOffset: { width: 4, height: 4 },
-                shadowOpacity: 0.9,
-                shadowRadius: 0,
-                elevation: 6,
-              },
-            ]}
+          <NeoBrutalBox
+            borderColor={combo >= 5 ? colors.softskills : colors.career}
+            backgroundColor="#1A1A2E"
+            shadowColor="#000"
+            shadowOffsetX={4}
+            shadowOffsetY={4}
+            borderWidth={2}
+            borderRadius={8}
+            contentStyle={styles.comboBanner}
           >
             <Emoji size={22}>
               {combo >= 5 ? "🔥🔥🔥" : combo >= 4 ? "🔥🔥" : "🔥"}
@@ -322,7 +310,7 @@ export default function QuestsScreen() {
                 x{multiplier.toFixed(2)}
               </Text>
             </View>
-          </View>
+          </NeoBrutalBox>
         )}
 
         {/* ── Quest Cards ────────────────────────────────────── */}
@@ -461,7 +449,7 @@ const createStyles = (colors: IColors) =>
     staminaText: {
       fontSize: 11,
       color: colors.finance,
-      fontWeight: "600",
+      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
       minWidth: 30,
     },
 
@@ -490,16 +478,12 @@ const createStyles = (colors: IColors) =>
       borderRadius: 2,
     },
     completePill: {
-      backgroundColor: "rgba(124,106,247,0.15)",
-      borderWidth: 1,
-      borderColor: colors.brandPrimary,
-      borderRadius: 9999,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
     completePillText: {
       fontSize: 10,
-      fontWeight: "700",
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
       color: colors.brandPrimary,
     },
 
@@ -508,12 +492,8 @@ const createStyles = (colors: IColors) =>
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      backgroundColor: "#1A1A2E",
-      borderRadius: 8,
-      borderWidth: 2,
       paddingHorizontal: 14,
       paddingVertical: 12,
-      marginBottom: 16,
     },
     comboFire: {
       fontSize: 22,
@@ -530,7 +510,7 @@ const createStyles = (colors: IColors) =>
     },
     comboValue: {
       fontSize: 13,
-      fontWeight: "700",
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
       color: "#FFFFFF",
     },
     comboMultiplierPill: {
@@ -583,7 +563,6 @@ const createStyles = (colors: IColors) =>
     branchChip: {
       paddingHorizontal: 7,
       paddingVertical: 3,
-      borderRadius: 4,
     },
     branchChipText: {
       fontSize: 9,
@@ -595,7 +574,6 @@ const createStyles = (colors: IColors) =>
     diffBadge: {
       paddingHorizontal: 7,
       paddingVertical: 3,
-      borderRadius: 4,
     },
     diffBadgeText: {
       fontSize: 9,
@@ -606,7 +584,7 @@ const createStyles = (colors: IColors) =>
     durationText: {
       fontSize: 11,
       color: colors.textMuted,
-      fontWeight: "600",
+      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
     },
     checkbox: {
       width: 22,
@@ -615,7 +593,7 @@ const createStyles = (colors: IColors) =>
     },
     questTitle: {
       fontSize: 16,
-      fontWeight: "700",
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
       color: colors.textPrimary,
       marginTop: 10,
       lineHeight: 22,
@@ -623,12 +601,10 @@ const createStyles = (colors: IColors) =>
     questTitleDone: {
       textDecorationLine: "line-through",
       color: colors.textSecondary,
-      fontWeight: "500",
+      fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500",
     },
     // Neobrutalism XP badge — solid yellow, hard shadow
     xpBadge: {
-      backgroundColor: "#FBBF24",
-      borderRadius: 4,
       paddingHorizontal: 10,
       paddingVertical: 4,
       alignSelf: "flex-start",
@@ -671,7 +647,7 @@ const createStyles = (colors: IColors) =>
     },
     challengesTitle: {
       fontSize: 18,
-      fontWeight: "700",
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
       color: colors.textPrimary,
     },
     challengeCard: {
@@ -719,7 +695,7 @@ const createStyles = (colors: IColors) =>
     },
     challengeProgressLabel: {
       fontSize: 11,
-      fontWeight: "600",
+      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
       color: colors.textSecondary,
     },
     challengeRewards: {
@@ -729,7 +705,7 @@ const createStyles = (colors: IColors) =>
     },
     challengeRewardText: {
       fontSize: 11,
-      fontWeight: "700",
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
       color: colors.softskills,
     },
     challengeProgressBarTrack: {

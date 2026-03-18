@@ -407,6 +407,7 @@ function NodeCircle({
             styles.nodeLabel,
             {
               color: isInProgress ? colors.textPrimary : colors.textSecondary,
+              fontFamily: isInProgress ? 'SpaceGrotesk-Bold' : 'SpaceGrotesk-Medium',
               fontWeight: isInProgress ? "700" : "500",
             },
             isAtLeft || isAtRight
@@ -602,7 +603,7 @@ export default function TreeScreen() {
                 paddingVertical: 6,
               }}
             >
-              <Text style={{ fontSize: 12, fontWeight: "700", color: "#fff" }}>
+              <Text style={{ fontSize: 12, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", color: "#fff" }}>
                 ✦ Tất cả
               </Text>
             </NeoBrutalAccent>
@@ -623,7 +624,7 @@ export default function TreeScreen() {
               <Text
                 style={{
                   fontSize: 12,
-                  fontWeight: "700",
+                  fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
                   color: colors.textSecondary,
                 }}
               >
@@ -654,7 +655,7 @@ export default function TreeScreen() {
                 }}
               >
                 <Text
-                  style={{ fontSize: 12, fontWeight: "700", color: "#fff" }}
+                  style={{ fontSize: 12, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", color: "#fff" }}
                   numberOfLines={1}
                 >
                   🎯 {tree.goal}
@@ -682,7 +683,7 @@ export default function TreeScreen() {
                 <Text
                   style={{
                     fontSize: 12,
-                    fontWeight: "700",
+                    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
                     color: colors.textSecondary,
                   }}
                   numberOfLines={1}
@@ -714,7 +715,7 @@ export default function TreeScreen() {
             <Text
               style={{
                 fontSize: 13,
-                fontWeight: "700",
+                fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
                 color: colors.textPrimary,
               }}
             >
@@ -766,7 +767,7 @@ export default function TreeScreen() {
                         ? col
                         : colors.textMuted,
                   },
-                  !goalFilterActive && active && { fontWeight: "700" },
+                  !goalFilterActive && active && { fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
                 ]}
               >
                 {b.label}
@@ -1056,7 +1057,7 @@ export default function TreeScreen() {
                 <Text
                   style={{
                     fontSize: 15,
-                    fontWeight: "700",
+                    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
                     color: colors.textMuted,
                   }}
                 >
@@ -1082,7 +1083,7 @@ export default function TreeScreen() {
                 }}
               >
                 <Text
-                  style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}
+                  style={{ fontSize: 15, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", color: "#fff" }}
                 >
                   Bắt đầu ngay →
                 </Text>
@@ -1282,7 +1283,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  goalPillText: { fontSize: 12, fontWeight: "700" },
+  goalPillText: { fontSize: 12, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
 
   tabsScroll: { marginTop: 8, flexGrow: 0, flexShrink: 0, maxHeight: 38 },
   tabsRow: {
@@ -1299,11 +1300,11 @@ const styles = StyleSheet.create({
   tabSep: { width: 1, height: 20, alignSelf: "center", marginHorizontal: 4 },
   tabText: { fontSize: 13 },
 
-  stripName: { fontSize: 13, fontWeight: "700" },
+  stripName: { fontSize: 13, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
   stripCount: { fontSize: 11, marginTop: 1 },
   track: { width: 80, height: 5, borderRadius: 3, overflow: "hidden" },
   fill: { height: 5, borderRadius: 3 },
-  pct: { fontSize: 13, fontWeight: "700", minWidth: 34, textAlign: "right" },
+  pct: { fontSize: 13, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", minWidth: 34, textAlign: "right" },
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -1314,7 +1315,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginLeft: 4,
   },
-  filterChipText: { fontSize: 10, fontWeight: "700" },
+  filterChipText: { fontSize: 10, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
   filterDot: { width: 5, height: 5, borderRadius: 2.5 },
 
   // Node
@@ -1360,13 +1361,13 @@ const styles = StyleSheet.create({
   },
   bannerText: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
     letterSpacing: 1.8,
     textTransform: "uppercase",
   },
 
   // Today quest
-  questText: { flex: 1, fontSize: 13, fontWeight: "600", color: "#fff" },
+  questText: { flex: 1, fontSize: 13, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", color: "#fff" },
 
   // Modal
   overlay: {
@@ -1396,10 +1397,10 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 14,
   },
-  sheetTitle: { fontSize: 18, fontWeight: "700" },
+  sheetTitle: { fontSize: 18, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
   sheetSub: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
     marginTop: 2,
     letterSpacing: 0.5,
   },
@@ -1407,12 +1408,12 @@ const styles = StyleSheet.create({
   sheetStats: { flexDirection: "row", gap: 28, marginBottom: 24 },
   statLabel: {
     fontSize: 9,
-    fontWeight: "700",
+    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
-  statValue: { fontSize: 16, fontWeight: "700", marginTop: 3 },
-  sheetBtnText: { fontSize: 15, fontWeight: "700" },
+  statValue: { fontSize: 16, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", marginTop: 3 },
+  sheetBtnText: { fontSize: 15, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
 
   // Goal badge on custom nodes
   goalBadge: {
@@ -1444,7 +1445,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  goalBranchLabel: { fontSize: 13, fontWeight: "700", flex: 1 },
+  goalBranchLabel: { fontSize: 13, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", flex: 1 },
   goalBranchCount: { fontSize: 11 },
   goalBranchBtn: {
     paddingHorizontal: 10,
@@ -1452,7 +1453,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
   },
-  goalBranchBtnText: { fontSize: 11, fontWeight: "700" },
+  goalBranchBtnText: { fontSize: 11, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
   goalClusterRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -1463,6 +1464,6 @@ const styles = StyleSheet.create({
     borderTopColor: "rgba(255,255,255,0.06)",
   },
   goalClusterEmoji: { fontSize: 16, marginTop: 1 },
-  goalClusterTitle: { fontSize: 13, fontWeight: "600" },
+  goalClusterTitle: { fontSize: 13, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600" },
   goalClusterSub: { fontSize: 10, marginTop: 2, lineHeight: 14 },
 });

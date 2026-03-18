@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__StitchMCP__get_project",
+      "mcp__obsidian__search-vault",
+      "mcp__StitchMCP__get_screen",
+      "WebFetch(domain:contribution.usercontent.google.com)",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(rm /Users/phuoclong/Code/Personal/life-skills/.git/index.lock)",
+      "Bash(git -C /Users/phuoclong/Code/Personal/life-skills add src/ui/atoms/Text.tsx src/ui/atoms/Button.tsx src/ui/atoms/Avatar.tsx src/ui/atoms/Badge.tsx src/ui/atoms/ProgressBar.tsx src/ui/atoms/Checkbox.tsx src/ui/atoms/GlassView.tsx src/ui/atoms/Icon.tsx src/ui/atoms/index.ts)",
+      "Bash(git -C:*)",
+      "Bash(echo 'export * from \"\"./assessment-questions\"\";:*)",
+      "Bash(echo 'export * from \"\"./userStore\"\";:*)",
+      "Bash(ls app/\\\\\\(auth\\\\\\)/)",
+      "Bash(ls /Users/phuoclong/Code/Personal/life-skills/app/\\\\\\(auth\\\\\\)/)",
+      "Bash(cat /Users/phuoclong/Code/Personal/life-skills/app/\\\\\\(tabs\\\\\\)/index.tsx)",
+      "Bash(mkdir -p /tmp/stitch-designs)",
+      "Read(//tmp/**)",
+      "Bash(curl -s \"https://lh3.googleusercontent.com/aida/ADBb0uihEZg4hmP21FSazzg6-QTqf26I2nFsHQ64gcStpv-wK23zjN5FVumM_duV6C0BqJQBxRpSwzdDM3f5ofVSeVM9GwMC_-GTVbYurxaZ8fPaI9ythetgZ_-p7e0pNEhz5muvLxd1xXX2HHWgbNXINBMQitQyAXZDEp_ExUzjOiGb0a7RyVaWdKbnmFG6dWBw3YattuRNI9mfGbLQ5Wglwk8i7IzXYwqG_oyNcZhfDbucXhS9ozqX3BtRcg\" -o home.png)",
+      "Bash(curl -s \"https://lh3.googleusercontent.com/aida/ADBb0ujpihDLZWhv7uVhiCeagEE6VlJuyFSqUNlK1h6-UHUdkxYlVeqxoejixhnz9F6-AYNqZ4Et24thXrNjBFPmX86h0iUfu1xhe4V6h7iopcrpUQ7KXvDcZh_gOPabNEr-AYZOpoLfNGVq_4jB7fPxXXoNIj4Ih2NV_x1HF4EKZZ89EFJTilIsNCHUQ77k-7SYrkRj3pwJU8vjQcT4cjJZenBiyZjYpqI_aLz5bcWPAv8-5ku_-0ZXNIXTyYM\" -o quests.png)",
+      "Bash(curl -s \"https://lh3.googleusercontent.com/aida/ADBb0ugQxn0uMxRT8FapPilme3zGodlSNiVQDs1La1QvD4OYdkQL52oMshSh4xCiEgpzVUJdVCbMkr8ALYxaJRiFajPc9IVL57dAKx29Pv6jMCl-gPRkM1AWCG2jpNVBp-8fWEeIluJfZLSI4ihHRwCQWvAukRBH_ByRvBNYh-v9jLIGrOQQKLBvh3pFyslV2hktCpUFa6LtnIv0kKKCF_qp6ZekBNbN_YA-jpycuOc3SEnoTDOkBTgDbLnQrww\" -o quest-detail.png)",
+      "Bash(curl -s \"https://lh3.googleusercontent.com/aida/ADBb0ui9ZcQL6IyCiilLOSMlb2p3D3hnYeut7ZyXeJELKaC6aHwealE6ukN3IGRxmGxe216YLLn3k4Qehl1N2a6jZJaQZoPDsyObEjUB-rkonaG85gBiRAWe3jRK7kpsq6jgW-pRmWLpYAa1VyA8ceVl1jyODt9_w8ZwFVV3f-6Ll5m6c4vawQm6bKqr7uZDYwmLTgi2EHYg1e2-cIsYv4oRnUDebpYIhFlW2NoL5tXseAsZ0-vtc0Js9hFCZCc\" -o profile.png)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(rm -f /Users/phuoclong/Code/Personal/life-skills/.git/index.lock)",
+      "Bash(lsof -i :8081 -sTCP:LISTEN)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''expo'''',{}\\).get\\(''''fonts'''',[]\\), indent=2\\)\\)\")",
+      "Bash(grep -r \"useFonts\\\\|loadAsync\\\\|Font.load\" /Users/phuoclong/Code/Personal/life-skills/app /Users/phuoclong/Code/Personal/life-skills/src --include=*.ts --include=*.tsx)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); expo=d.get\\(''''expo'''',{}\\); print\\(''''plugins:'''', json.dumps\\(expo.get\\(''''plugins'''',[]\\), indent=2\\)\\); print\\(''''fonts:'''', expo.get\\(''''fonts''''\\)\\)\")",
+      "Bash(find /Users/phuoclong/Code/Personal/life-skills/assets -name *.ttf -o -name *.otf)",
+      "Bash(grep -r \"expo-font\\\\|loadFonts\\\\|withExpoFonts\" /Users/phuoclong/Code/Personal/life-skills/package.json /Users/phuoclong/Code/Personal/life-skills/app.json /Users/phuoclong/Code/Personal/life-skills/app.config.*)",
+      "Bash(node -e \"const f = require\\(''@expo-google-fonts/inter''\\); console.log\\(Object.keys\\(f\\).filter\\(k => k.includes\\(''Regular''\\) || k.includes\\(''SemiBold''\\) || k.includes\\(''Bold''\\) || k.includes\\(''ExtraBold''\\)\\).slice\\(0,10\\)\\)\")"
+    ]
+  }
+}

@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   // Theme picker
   themeRow: { flexDirection: 'row', gap: 10 },
   themeOptionContent: { alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, gap: 6 },
-  themeLabel: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  themeLabel: { fontSize: 10, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', textAlign: 'center' },
   activeDot: { width: 6, height: 6, borderRadius: 3, marginTop: 2 },
 
   // Nav row
@@ -286,11 +286,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  navLabel: { flex: 1, fontSize: 14, fontWeight: '600' },
+  navLabel: { flex: 1, fontSize: 14, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   toggleText: { fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
 
   // Version
   versionContent: { alignItems: 'center', paddingVertical: 14 },
-  versionText: { fontSize: 11, fontWeight: '600' },
+  versionText: { fontSize: 11, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   versionNum: { fontSize: 12, fontWeight: '800', marginTop: 2 },
 });

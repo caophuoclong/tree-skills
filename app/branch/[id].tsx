@@ -1,38 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-} from 'react-native';
+import { getInitialNodes } from "@/src/business-logic/data/skill-tree-nodes";
+import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
+import type { Branch, NodeStatus, SkillNode } from "@/src/business-logic/types";
+import { NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
+import { SkillTreeBranch } from "@/src/ui/organisms/SkillTreeBranch";
+import { useTheme } from "@/src/ui/tokens";
+import { Radius, Spacing } from "@/src/ui/tokens/spacing";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
-} from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { AppText } from '@/src/ui/atoms/Text';
-import { SkillTreeBranch } from '@/src/ui/organisms/SkillTreeBranch';
-import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
-import { getInitialNodes } from '@/src/business-logic/data/skill-tree-nodes';
-import { useTheme } from '@/src/ui/tokens';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
-import type { Branch, SkillNode, NodeStatus } from '@/src/business-logic/types';
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BRANCH_LABELS: Record<Branch, string> = {
-  career: 'Sự nghiệp',
-  finance: 'Tài chính',
-  softskills: 'Kỹ năng mềm',
-  wellbeing: 'Sức khoẻ',
+  career: "Sự nghiệp",
+  finance: "Tài chính",
+  softskills: "Kỹ năng mềm",
+  wellbeing: "Sức khoẻ",
 };
 
 const STATUS_LABELS: Record<NodeStatus, string> = {
-  locked: 'Đã khóa',
-  in_progress: 'Đang học',
-  completed: 'Hoàn thành',
+  locked: "Đã khóa",
+  in_progress: "Đang học",
+  completed: "Hoàn thành",
 };
 
 const getStatusColors = (colors: any): Record<NodeStatus, string> => ({
@@ -65,7 +59,7 @@ export default function BranchScreen() {
     }
   }, []);
 
-  const branch = (id as Branch) ?? 'career';
+  const branch = (id as Branch) ?? "career";
   const branchColor = BranchColors[branch] ?? colors.brandPrimary;
   const branchLabel = BRANCH_LABELS[branch] ?? branch;
 
@@ -95,23 +89,38 @@ export default function BranchScreen() {
   const closeModal = () => setSelectedNode(null);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+        <NeoBrutalBox
+          borderColor={colors.glassBorder}
+          backgroundColor={colors.bgElevated}
+          shadowColor="#000"
+          shadowOffsetX={2}
+          shadowOffsetY={2}
+          borderWidth={1.5}
+          borderRadius={14}
           onPress={() => router.back()}
-          activeOpacity={0.7}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          contentStyle={{
+            width: 36,
+            height: 36,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+        </NeoBrutalBox>
 
         <View style={styles.headerCenter}>
           <View style={[styles.branchDot, { backgroundColor: branchColor }]} />
-          <AppText variant="bodyLG" style={[styles.headerTitle, { color: branchColor }]}>
+          <Text
+            style={[
+              styles.headerTitle,
+              { color: branchColor, fontSize: 16, fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700" },
+            ]}
+          >
             {branchLabel}
-          </AppText>
+          </Text>
         </View>
 
         {/* Spacer to balance the back button */}
@@ -132,14 +141,37 @@ export default function BranchScreen() {
           onRequestClose={closeModal}
         >
           <Pressable style={styles.modalOverlay} onPress={closeModal}>
-            <Pressable style={styles.modalSheet} onPress={() => {}}>
+            <Pressable
+              style={[styles.modalSheet, { borderColor: branchColor }]}
+              onPress={() => {}}
+            >
+              {/* NB accent strip */}
+              <View
+                style={[
+                  styles.sheetAccentStrip,
+                  { backgroundColor: branchColor },
+                ]}
+              />
+              {/* Drag handle */}
+              <View style={styles.sheetHandle} />
+
               {/* Status badge */}
               <View style={styles.modalStatusRow}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: `${STATUS_COLORS[selectedNode.status]}20` },
-                  ]}
+                <NeoBrutalBox
+                  borderColor={`${STATUS_COLORS[selectedNode.status]}60`}
+                  backgroundColor={`${STATUS_COLORS[selectedNode.status]}18`}
+                  shadowColor={STATUS_COLORS[selectedNode.status]}
+                  shadowOffsetX={2}
+                  shadowOffsetY={2}
+                  borderWidth={1.5}
+                  borderRadius={9999}
+                  contentStyle={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                  }}
                 >
                   <View
                     style={[
@@ -147,64 +179,124 @@ export default function BranchScreen() {
                       { backgroundColor: STATUS_COLORS[selectedNode.status] },
                     ]}
                   />
-                  <AppText
-                    variant="caption"
-                    style={{ color: STATUS_COLORS[selectedNode.status] }}
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+                      color: STATUS_COLORS[selectedNode.status],
+                    }}
                   >
                     {STATUS_LABELS[selectedNode.status]}
-                  </AppText>
-                </View>
+                  </Text>
+                </NeoBrutalBox>
               </View>
 
               {/* Node title */}
-              <AppText variant="bodyLG" style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                 {selectedNode.title}
-              </AppText>
+              </Text>
 
               {/* Description */}
-              <AppText variant="body" color={colors.textSecondary} style={styles.modalDesc}>
+              <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
                 {selectedNode.description}
-              </AppText>
+              </Text>
 
               {/* Stats row */}
-              <View style={styles.modalStats}>
+              <NeoBrutalBox
+                borderColor={`${branchColor}40`}
+                backgroundColor={colors.bgElevated}
+                shadowColor={branchColor}
+                shadowOffsetX={3}
+                shadowOffsetY={3}
+                borderWidth={1.5}
+                borderRadius={12}
+                contentStyle={styles.modalStats}
+              >
                 <View style={styles.statItem}>
-                  <Ionicons name="flash" size={14} color={colors.brandGlow} />
-                  <AppText variant="caption" color={colors.textSecondary}>
+                  <Ionicons
+                    name="flash"
+                    size={14}
+                    color={colors.brandPrimary}
+                  />
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
                     {selectedNode.xp_required} XP cần thiết
-                  </AppText>
+                  </Text>
                 </View>
-
-                <View style={styles.statDivider} />
-
+                <View
+                  style={[
+                    styles.statDivider,
+                    { backgroundColor: colors.glassBorder },
+                  ]}
+                />
                 <View style={styles.statItem}>
                   <Ionicons name="list" size={14} color={branchColor} />
-                  <AppText variant="caption" color={colors.textSecondary}>
-                    {selectedNode.quests_completed}/{selectedNode.quests_total} nhiệm vụ
-                  </AppText>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                    {selectedNode.quests_completed}/{selectedNode.quests_total}{" "}
+                    nhiệm vụ
+                  </Text>
                 </View>
-              </View>
+              </NeoBrutalBox>
 
               {/* Locked message */}
-              {selectedNode.status === 'locked' && (
-                <View style={styles.lockedBanner}>
-                  <Ionicons name="lock-closed" size={14} color={colors.textMuted} />
-                  <AppText variant="caption" color={colors.textMuted}>
+              {selectedNode.status === "locked" && (
+                <NeoBrutalBox
+                  borderColor={`${colors.textMuted}40`}
+                  backgroundColor={colors.bgElevated}
+                  shadowColor="#000"
+                  shadowOffsetX={2}
+                  shadowOffsetY={2}
+                  borderWidth={1.5}
+                  borderRadius={10}
+                  contentStyle={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    padding: 12,
+                  }}
+                >
+                  <Ionicons
+                    name="lock-closed"
+                    size={14}
+                    color={colors.textMuted}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: colors.textMuted,
+                      flex: 1,
+                      lineHeight: 18,
+                    }}
+                  >
                     Chưa mở khóa — hoàn thành các nút trước để tiếp tục
-                  </AppText>
-                </View>
+                  </Text>
+                </NeoBrutalBox>
               )}
 
               {/* Close button */}
-              <TouchableOpacity
-                style={[styles.closeButton, { borderColor: branchColor }]}
+              <NeoBrutalAccent
+                accentColor={`${branchColor}18`}
+                strokeColor={branchColor}
+                shadowOffsetX={3}
+                shadowOffsetY={3}
+                borderWidth={2}
+                borderRadius={14}
                 onPress={closeModal}
-                activeOpacity={0.8}
+                contentStyle={{
+                  height: 48,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <AppText variant="body" style={{ color: branchColor, fontWeight: '600' }}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+                    color: branchColor,
+                  }}
+                >
                   Đóng
-                </AppText>
-              </TouchableOpacity>
+                </Text>
+              </NeoBrutalAccent>
             </Pressable>
           </Pressable>
         </Modal>
@@ -213,121 +305,117 @@ export default function BranchScreen() {
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgBase,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.screenPadding,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.md,
-    backgroundColor: colors.bgSurface,
-  },
-  backButtonPlaceholder: {
-    width: 36,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-  },
-  branchDot: {
-    width: 10,
-    height: 10,
-    borderRadius: Radius.full,
-  },
-  headerTitle: {
-    fontWeight: '700',
-  },
-  treeWrapper: {
-    flex: 1,
-  },
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgBase,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: Spacing.screenPadding,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.glassBorder,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: Radius.md,
+      backgroundColor: colors.bgSurface,
+    },
+    backButtonPlaceholder: {
+      width: 36,
+    },
+    headerCenter: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: Spacing.sm,
+    },
+    branchDot: {
+      width: 10,
+      height: 10,
+      borderRadius: Radius.full,
+    },
+    headerTitle: {
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+    },
+    treeWrapper: {
+      flex: 1,
+    },
 
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: colors.bgElevated,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    gap: Spacing.md,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  modalStatusRow: {
-    flexDirection: 'row',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.full,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: Radius.full,
-  },
-  modalTitle: {
-    color: colors.textPrimary,
-    fontWeight: '700',
-  },
-  modalDesc: {
-    lineHeight: 22,
-  },
-  modalStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgSurface,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    gap: Spacing.md,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    flex: 1,
-  },
-  statDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: colors.glassBorder,
-  },
-  lockedBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    backgroundColor: `${colors.textMuted}15`,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-  },
-  closeButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    marginTop: Spacing.xs,
-  },
-});
+    // Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "flex-end",
+    },
+    modalSheet: {
+      backgroundColor: colors.bgElevated,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.xl,
+      gap: Spacing.md,
+      borderWidth: 2,
+      overflow: "hidden",
+    },
+    sheetAccentStrip: {
+      height: 4,
+      marginHorizontal: -Spacing.lg,
+      marginBottom: 0,
+    },
+    sheetHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: "rgba(255,255,255,0.14)",
+      alignSelf: "center",
+      marginTop: 12,
+    },
+    modalStatusRow: {
+      flexDirection: "row",
+    },
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: Radius.full,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+    },
+    modalDesc: {
+      lineHeight: 22,
+    },
+    modalStats: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: Spacing.md,
+      gap: Spacing.md,
+    },
+    statItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.xs,
+      flex: 1,
+    },
+    statDivider: {
+      width: 1,
+      height: 20,
+    },
+    // lockedBanner now rendered as NeoBrutalBox inline
+    closeButton: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.md,
+      borderRadius: Radius.lg,
+      borderWidth: 1,
+      marginTop: Spacing.xs,
+    },
+  });

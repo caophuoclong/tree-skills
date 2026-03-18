@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   tabPillContent: { paddingHorizontal: 16, paddingVertical: 6 },
-  tabPillText: { fontSize: 13, fontWeight: '700' },
+  tabPillText: { fontSize: 13, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
 
   // Scroll
   scrollContent: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 40 },
@@ -393,11 +393,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   userAvatarText: { fontSize: 14, fontWeight: '800', color: '#fff' },
-  userInfoName: { fontSize: 15, fontWeight: '700' },
+  userInfoName: { fontSize: 15, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700' },
   userInfoSub: { fontSize: 11, marginTop: 2 },
-  userRankGap: { fontSize: 10, fontWeight: '600', marginTop: 3 },
+  userRankGap: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600', marginTop: 3 },
   userXP: { fontSize: 16, fontWeight: '900', textAlign: 'right', lineHeight: 20 },
-  userXPLabel: { fontSize: 10, fontWeight: '600' },
+  userXPLabel: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   userProgressWrap: { paddingHorizontal: 18, paddingBottom: 14 },
 
   // Section label
@@ -425,10 +425,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 2,
   },
-  podiumAvatarText: { fontSize: 12, fontWeight: '700', color: '#fff' },
-  podiumName: { fontSize: 11, fontWeight: '700', marginTop: 2 },
+  podiumAvatarText: { fontSize: 12, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', color: '#fff' },
+  podiumName: { fontSize: 11, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', marginTop: 2 },
   podiumXP: { fontSize: 13, fontWeight: '900' },
-  podiumXPLabel: { fontSize: 9, fontWeight: '600', marginTop: -2 },
+  podiumXPLabel: { fontSize: 9, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600', marginTop: -2 },
 
   // List rows
   listRow: {
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
   },
-  rankNum: { width: 22, fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  rankNum: { width: 22, fontSize: 13, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', textAlign: 'center' },
   listAvatar: {
     width: 34,
     height: 34,
@@ -446,8 +446,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  listAvatarText: { fontSize: 12, fontWeight: '700', color: '#fff' },
-  listName: { fontSize: 14, fontWeight: '600' },
+  listAvatarText: { fontSize: 12, fontFamily: 'SpaceGrotesk-Bold', fontWeight: '700', color: '#fff' },
+  listName: { fontSize: 14, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600' },
   listStreak: { fontSize: 11, marginTop: 1 },
   listXP: { fontSize: 14, fontWeight: '800' },
 

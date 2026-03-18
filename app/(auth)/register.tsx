@@ -224,6 +224,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
   },
   link: {
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
   },
 });

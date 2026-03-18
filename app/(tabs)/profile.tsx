@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   levelBadge: { position: "absolute", bottom: -4, right: -8 },
   levelBadgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
   userName: { fontSize: 22, fontWeight: "800", marginBottom: 4 },
-  userSubtitle: { fontSize: 12, fontWeight: "600", marginTop: 2 },
+  userSubtitle: { fontSize: 12, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", marginTop: 2 },
 
   // Premium banner
   premiumContent: {
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   premiumStar: { fontSize: 16 },
   premiumTitle: { fontSize: 12, fontWeight: "900", flex: 1, letterSpacing: 0.5 },
-  premiumRenew: { fontSize: 10, fontWeight: "600" },
+  premiumRenew: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600" },
 
   // Streak
   streakContent: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 20 },
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     width: 6,
   },
   streakTitle: { fontSize: 18, fontWeight: "900", letterSpacing: 0.5 },
-  streakBest: { fontSize: 10, fontWeight: "600", marginTop: 6 },
+  streakBest: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", marginTop: 6 },
 
   // Stats
   statsRow: {
@@ -434,14 +434,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   milestoneTitle: { fontSize: 11, fontWeight: "900", textAlign: "center", marginBottom: 5, letterSpacing: 0.2 },
-  milestoneDesc: { fontSize: 9, fontWeight: "500", textAlign: "center", lineHeight: 12 },
+  milestoneDesc: { fontSize: 9, fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500", textAlign: "center", lineHeight: 12 },
 
   // Branch progress card
   branchCard: { padding: 18, gap: 14 },
   branchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   branchEmoji: { fontSize: 16, width: 24, textAlign: "center" },
   branchLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2 },
-  branchLabel: { fontSize: 13, fontWeight: "600" },
+  branchLabel: { fontSize: 13, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600" },
   branchPercent: { fontSize: 12, fontWeight: "800" },
   branchDivider: { height: StyleSheet.hairlineWidth },
 
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
   },
-  navText: { fontSize: 14, fontWeight: "600", flex: 1 },
+  navText: { fontSize: 14, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", flex: 1 },
 
   // Section title
   sectionTitle: {
