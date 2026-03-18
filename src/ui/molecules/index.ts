@@ -16,3 +16,5 @@ export { StaminaBar } from './StaminaBar';
 export { StreakBadge } from './StreakBadge';
 export { BranchProgressRow } from './BranchProgressRow';
 export { XPProgressBar } from './XPProgressBar';
+export { SkillTreeHeader } from './SkillTreeHeader';
+export { BranchLegend } from './BranchLegend';
