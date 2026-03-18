@@ -126,6 +126,8 @@ function App() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="oauth/consent" options={{ animation: "none" }} />
+        <Stack.Screen name="oauth/update-password" />
         <Stack.Screen name="branch/[id]" />
         <Stack.Screen name="quest/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="leaderboard" />
