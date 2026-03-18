@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Branch } from '@/src/business-logic/types';
 import { useTheme } from '@/src/ui/tokens';
+import { useUserStore } from '@/src/business-logic/stores/userStore';
 
 interface Branch_Item {
   id: Branch;
@@ -44,12 +45,37 @@ export function SkillTreeHeader({
   goalFilterActive = false,
 }: SkillTreeHeaderProps) {
   const { colors } = useTheme();
+  const { dailyStats } = useUserStore();
+  const wellbeingPulse = useRef(new Animated.Value(1)).current;
+
   const colorMap: Record<Branch, string> = {
     career: colors.career,
     finance: colors.finance,
     softskills: colors.softskills,
     wellbeing: colors.wellbeing,
   };
+
+  // Trigger pulse animation when no wellbeing quests completed today
+  useEffect(() => {
+    if (dailyStats.wellbeing_quests_today === 0) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(wellbeingPulse, {
+            toValue: 0.4,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(wellbeingPulse, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      wellbeingPulse.setValue(1);
+    }
+  }, [dailyStats.wellbeing_quests_today]);
 
   return (
     <ScrollView
@@ -61,43 +87,54 @@ export function SkillTreeHeader({
       {branches.map((b) => {
         const active = activeBranch === b.id;
         const col = colorMap[b.id];
+        const isWellbeingWithNoDailyQuests =
+          b.id === 'wellbeing' && dailyStats.wellbeing_quests_today === 0;
+
         return (
-          <TouchableOpacity
-            key={b.id}
-            activeOpacity={0.8}
-            onPress={() => onBranchChange(b.id)}
-            style={[
-              styles.tab,
-              !goalFilterActive && active
-                ? {
-                    backgroundColor: `${col}1E`,
-                    borderColor: col,
-                    borderWidth: 1.5,
-                  }
-                : { borderColor: 'transparent', borderWidth: 1.5 },
-              goalFilterActive && { opacity: 0.38 },
-            ]}
+          <Animated.View
+            key={`wellbeing-animated-${b.id}`}
+            style={
+              isWellbeingWithNoDailyQuests
+                ? { opacity: wellbeingPulse }
+                : undefined
+            }
           >
-            <Text
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => onBranchChange(b.id)}
               style={[
-                styles.tabText,
-                {
-                  color: goalFilterActive
-                    ? col
-                    : active
-                      ? col
-                      : colors.textMuted,
-                },
-                !goalFilterActive &&
-                  active && {
-                    fontFamily: 'SpaceGrotesk-Bold',
-                    fontWeight: '700',
-                  },
+                styles.tab,
+                !goalFilterActive && active
+                  ? {
+                      backgroundColor: `${col}1E`,
+                      borderColor: col,
+                      borderWidth: 1.5,
+                    }
+                  : { borderColor: 'transparent', borderWidth: 1.5 },
+                goalFilterActive && { opacity: 0.38 },
               ]}
             >
-              {b.label}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.tabText,
+                  {
+                    color: goalFilterActive
+                      ? col
+                      : active
+                        ? col
+                        : colors.textMuted,
+                  },
+                  !goalFilterActive &&
+                    active && {
+                      fontFamily: 'SpaceGrotesk-Bold',
+                      fontWeight: '700',
+                    },
+                ]}
+              >
+                {b.label}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
         );
       })}
 

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -17,9 +17,11 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { getComboMultiplier } from "@/src/business-logic/hooks/useXPEngine";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { useChallengeStore } from "@/src/business-logic/stores/challengeStore";
+import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import type { Quest } from "@/src/business-logic/types";
 import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
 import { ChallengeCard, ComboBar } from "@/src/ui/molecules";
+import { WellbeingWarningBanner } from "@/src/ui/organisms/WellbeingWarningBanner";
 import { IColors, useTheme } from "@/src/ui/tokens";
 
 const BRANCH_LABELS: Record<string, string> = {
@@ -170,10 +172,24 @@ export default function QuestsScreen() {
   const { stamina } = useStaminaSystem();
   const { dailyStats } = useUserStore();
   const { challenges } = useChallengeStore();
+  const { dailyQuests } = useQuestStore();
   const lastQuestTimestamp = useRef<number>(0);
+  const [wellbeingDismissedDate, setWellbeingDismissedDate] = useState<string | null>(null);
 
   const combo = dailyStats.session_combo;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const today = new Date().toISOString().split('T')[0];
+
+  // Show banner if no wellbeing quests completed today AND 3+ quests completed today
+  const showWellbeingBanner =
+    dailyStats.wellbeing_quests_today === 0 &&
+    dailyStats.quests_completed_today >= 3 &&
+    wellbeingDismissedDate !== today;
+
+  // Find a random uncompleted wellbeing quest to suggest
+  const wellbeingQuest = dailyQuests.find(
+    (q) => q.branch === 'wellbeing' && !q.completed_at
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -232,6 +248,15 @@ export default function QuestsScreen() {
             </Text>
           </NeoBrutalAccent>
         </View>
+
+        {showWellbeingBanner && (
+          <WellbeingWarningBanner
+            onDismiss={() => setWellbeingDismissedDate(today)}
+            onCTA={() =>
+              wellbeingQuest && router.push(`/quest/${wellbeingQuest.quest_id}` as any)
+            }
+          />
+        )}
 
         <View style={styles.questList}>
           {quests.length === 0 ? (
