@@ -457,7 +457,6 @@ export default function TreeScreen() {
   const { nodes, activeBranch, setNodes, setActiveBranch } =
     useSkillTreeStore();
   const { dailyQuests } = useQuestStore();
-  const [treeTab, setTreeTab] = React.useState<"default" | "custom">("default");
   const [showOnlyCustom, setShowOnlyCustom] = React.useState(false);
   const [goalSheetId, setGoalSheetId] = React.useState<string | null>(null);
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(
@@ -471,7 +470,6 @@ export default function TreeScreen() {
 
   useEffect(() => {
     if (nodes.length === 0) setNodes(getDemoNodes());
-    // Seed custom store with demo goals so goal filter pills are visible on first launch
     initWithDemoData(getDemoCustomData());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -583,78 +581,8 @@ export default function TreeScreen() {
           />
         </NeoBrutalBox>
       </View>
-
-      {/* Default/Custom tree tab switcher */}
-      <View style={styles.treePillsContainer}>
-        <TouchableOpacity
-          style={[
-            styles.treePill,
-            {
-              backgroundColor:
-                treeTab === "default" ? colors.brandPrimary : "transparent",
-              borderColor:
-                treeTab === "default" ? colors.textPrimary : colors.textMuted,
-              borderWidth: treeTab === "default" ? 2 : 1.5,
-            },
-          ]}
-          onPress={() => setTreeTab("default")}
-        >
-          <Text
-            style={[
-              styles.treePillText,
-              {
-                color: treeTab === "default" ? "#fff" : colors.textMuted,
-                fontFamily: "SpaceGrotesk-SemiBold",
-              },
-            ]}
-          >
-            Default
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.treePill,
-            {
-              backgroundColor:
-                treeTab === "custom" ? colors.brandPrimary : "transparent",
-              borderColor:
-                treeTab === "custom" ? colors.textPrimary : colors.textMuted,
-              borderWidth: treeTab === "custom" ? 2 : 1.5,
-            },
-          ]}
-          onPress={() => setTreeTab("custom")}
-        >
-          <Text
-            style={[
-              styles.treePillText,
-              {
-                color: treeTab === "custom" ? "#fff" : colors.textMuted,
-                fontFamily: "SpaceGrotesk-SemiBold",
-              },
-            ]}
-          >
-            Custom ✨
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Custom tree tab content — empty state or custom goals */}
-      {treeTab === "custom" &&
-        (customTrees.length === 0 ? (
-          <View style={styles.emptyCustom}>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No custom skill trees yet
-            </Text>
-            <TouchableOpacity onPress={() => router.push("/skill-builder")}>
-              <Text style={[styles.emptyLink, { color: colors.brandPrimary }]}>
-                Create your first skill tree →
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null)}
-
-      {/* Goal filter pills — only renders when user has created at least one goal tree and on default tab */}
-      {treeTab === "default" && customTrees.length > 0 && (
+      {/* Goal filter pills — only renders when user has created at least one goal tree */}
+      {customTrees.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -811,19 +739,16 @@ export default function TreeScreen() {
           </NeoBrutalAccent>
         </ScrollView>
       )}
-
-      {/* Branch tabs — only on default tree tab */}
-      {treeTab === "default" && (
-        <SkillTreeHeader
-          activeBranch={activeBranch}
-          onBranchChange={(branch) => {
-            setActiveBranch(branch);
-            setSelectedGoalId(null);
-          }}
-          branches={BRANCHES}
-          goalFilterActive={goalFilterActive}
-        />
-      )}
+      {/* Branch tabs */}
+      <SkillTreeHeader
+        activeBranch={activeBranch}
+        onBranchChange={(branch) => {
+          setActiveBranch(branch);
+          setSelectedGoalId(null);
+        }}
+        branches={BRANCHES}
+        goalFilterActive={goalFilterActive}
+      />
 
       {/* Progress strip */}
       <NeoBrutalBox
@@ -924,7 +849,6 @@ export default function TreeScreen() {
           </TouchableOpacity>
         )}
       </NeoBrutalBox>
-
       {/* ── Winding path canvas ── */}
       <ScrollView
         style={{ flex: 1 }}
@@ -1001,7 +925,6 @@ export default function TreeScreen() {
           </NeoBrutalAccent>
         )}
       </ScrollView>
-
       {/* ── Goal Overview Sheet ── */}
       <Modal
         visible={!!goalSheetId}
@@ -1185,39 +1108,6 @@ const styles = StyleSheet.create({
   },
   hTitle: { fontSize: 24, fontWeight: "800" },
   hSub: { fontSize: 12, marginTop: 2 },
-
-  // Tree tab switcher (Default/Custom)
-  treePillsContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  treePill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  treePillText: {
-    fontSize: 13,
-  },
-  emptyCustom: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  emptyText: {
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  emptyLink: {
-    fontSize: 13,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-  },
 
   // Goal filter pills
   goalPillsScroll: { marginTop: 12, flexGrow: 0, flexShrink: 0, maxHeight: 32 },
