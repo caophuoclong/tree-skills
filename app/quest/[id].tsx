@@ -298,7 +298,7 @@ export default function QuestDetailScreen() {
               </Text>
             </NeoBrutalBox>
             <NeoBrutalAccent
-              accentColor="rgba(251,191,36,0.15)"
+              accentColor={colors.bgBase}
               strokeColor="#FBBF24"
               borderWidth={1}
               shadowOffsetX={2}

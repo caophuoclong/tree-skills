@@ -574,6 +574,7 @@ export default function TreeScreen() {
             alignItems: "center",
             justifyContent: "center",
           }}
+          onPress={() => router.push("/notifications")}
         >
           <Ionicons
             name="notifications-outline"

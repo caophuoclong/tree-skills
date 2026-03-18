@@ -14,11 +14,10 @@ import {
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   Animated,
   Easing,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -242,7 +241,6 @@ export default function HomeScreen() {
   const { streak } = useGrowthStreak();
   const { stamina } = useStaminaSystem();
   const { nodes, setNodes } = useSkillTreeStore();
-  const [notifVisible, setNotifVisible] = React.useState(false);
   const branchProgress = useBranchProgress();
 
   // Seed demo progress data so rings display realistic values immediately
@@ -275,34 +273,6 @@ export default function HomeScreen() {
   const wellbeingPct =
     branchProgress.find((b) => b.branch === "wellbeing")?.percent ?? 0;
 
-  // Mock notifications
-  const notifications = [
-    {
-      id: 1,
-      title: "Chuỗi mới!",
-      body: "Bạn đã đạt chuỗi 3 ngày liên tiếp. Tiếp tục phát huy nhé!",
-      time: "2h trước",
-      icon: "flame",
-      color: colors.warning,
-    },
-    {
-      id: 2,
-      title: "Nhiệm vụ mới",
-      body: "3 nhiệm vụ Sự nghiệp đã được làm mới.",
-      time: "5h trước",
-      icon: "flash",
-      color: colors.career,
-    },
-    {
-      id: 3,
-      title: "Nhắc nhở",
-      body: "Đừng quên check-in tâm trạng hôm nay.",
-      time: "1 ngày trước",
-      icon: "happy",
-      color: colors.wellbeing,
-    },
-  ];
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView
@@ -332,7 +302,7 @@ export default function HomeScreen() {
               shadowOffsetY={2}
               borderWidth={1.5}
               borderRadius={18}
-              onPress={() => setNotifVisible(true)}
+              onPress={() => router.push("/notifications")}
               contentStyle={{
                 width: 36,
                 height: 36,
@@ -666,92 +636,6 @@ export default function HomeScreen() {
           </Pressable>
         )}
       </ScrollView>
-
-      {/* ── Notification Center Modal (E7) ───────────────── */}
-      <Modal
-        visible={notifVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setNotifVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setNotifVisible(false)}
-        >
-          <View style={styles.notifContent}>
-            {/* NB accent strip at top */}
-            <View
-              style={[
-                styles.notifAccentStrip,
-                { backgroundColor: colors.brandPrimary },
-              ]}
-            />
-            {/* Drag handle */}
-            <View style={styles.notifHandle} />
-
-            <View style={styles.notifHeader}>
-              <Text style={styles.notifHeaderTitle}>✦ Thông báo</Text>
-              <NeoBrutalBox
-                borderColor={colors.glassBorder}
-                backgroundColor={colors.bgElevated}
-                shadowColor="#000"
-                shadowOffsetX={2}
-                shadowOffsetY={2}
-                borderWidth={1.5}
-                borderRadius={14}
-                onPress={() => setNotifVisible(false)}
-                contentStyle={{
-                  width: 32,
-                  height: 32,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="close" size={16} color={colors.textSecondary} />
-              </NeoBrutalBox>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {notifications.map((notif) => (
-                <View
-                  key={notif.id}
-                  style={[
-                    styles.notifItem,
-                    { borderBottomColor: colors.glassBorder },
-                  ]}
-                >
-                  <NeoBrutalBox
-                    borderColor={`${notif.color}60`}
-                    backgroundColor={`${notif.color}18`}
-                    shadowColor={notif.color}
-                    shadowOffsetX={2}
-                    shadowOffsetY={2}
-                    borderWidth={1.5}
-                    borderRadius={12}
-                    contentStyle={{
-                      width: 40,
-                      height: 40,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons
-                      name={notif.icon as any}
-                      size={18}
-                      color={notif.color}
-                    />
-                  </NeoBrutalBox>
-                  <View style={styles.notifText}>
-                    <Text style={styles.notifTitle}>{notif.title}</Text>
-                    <Text style={styles.notifBody}>{notif.body}</Text>
-                    <Text style={styles.notifTime}>{notif.time}</Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -1144,73 +1028,5 @@ const createStyles = (colors: IColors) =>
     // Bottom
     bottomSpacer: {
       height: 100,
-    },
-    // Modal / Notifications
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      justifyContent: "flex-end",
-    },
-    notifContent: {
-      backgroundColor: colors.bgSurface,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      paddingHorizontal: 24,
-      paddingBottom: 24,
-      maxHeight: "80%",
-      borderWidth: 2,
-      borderColor: colors.brandPrimary,
-      overflow: "hidden",
-    },
-    notifAccentStrip: {
-      height: 4,
-      marginHorizontal: -24,
-      marginBottom: 0,
-    },
-    notifHandle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: "rgba(255,255,255,0.14)",
-      alignSelf: "center",
-      marginTop: 12,
-      marginBottom: 20,
-    },
-    notifHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 20,
-    },
-    notifHeaderTitle: {
-      fontSize: 20,
-      fontWeight: "800",
-      color: colors.textPrimary,
-    },
-    notifItem: {
-      flexDirection: "row",
-      gap: 16,
-      paddingVertical: 14,
-      borderBottomWidth: 1,
-    },
-    notifText: {
-      flex: 1,
-      gap: 4,
-    },
-    notifTitle: {
-      fontSize: 15,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: colors.textPrimary,
-    },
-    notifBody: {
-      fontSize: 13,
-      color: colors.textSecondary,
-      lineHeight: 18,
-    },
-    notifTime: {
-      fontSize: 11,
-      color: colors.textMuted,
-      marginTop: 2,
     },
   });

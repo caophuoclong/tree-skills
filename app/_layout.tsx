@@ -1,24 +1,24 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import {
   SpaceGrotesk_300Light,
   SpaceGrotesk_400Regular,
   SpaceGrotesk_500Medium,
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
-} from '@expo-google-fonts/space-grotesk';
+} from "@expo-google-fonts/space-grotesk";
 import {
   SpaceMono_400Regular,
   SpaceMono_700Bold,
-} from '@expo-google-fonts/space-mono';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-import { Text, View } from 'react-native';
+} from "@expo-google-fonts/space-mono";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { Text, View } from "react-native";
+import "react-native-reanimated";
 
-import { queryClient } from '@/src/business-logic/api/query-client';
-import { LevelUpModal, LoginBonusModal } from '@/src/ui/molecules';
-import { useTheme } from '@/src/ui/tokens';
+import { queryClient } from "@/src/business-logic/api/query-client";
+import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
+import { useTheme } from "@/src/ui/tokens";
 
 // ─── Global font defaults ────────────────────────────────────────────────────
 // Patch every React Native Text so Space Grotesk is the base font.
@@ -36,23 +36,23 @@ import { useTheme } from '@/src/ui/tokens';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (Text as any).defaultProps = (Text as any).defaultProps ?? {};
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(Text as any).defaultProps.style = { fontFamily: 'SpaceGrotesk-Regular' };
+(Text as any).defaultProps.style = { fontFamily: "SpaceGrotesk-Regular" };
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 export default function RootLayout() {
   const { isDark, colors } = useTheme();
 
   const [fontsLoaded] = useFonts({
-    'SpaceGrotesk-Light':    SpaceGrotesk_300Light,
-    'SpaceGrotesk-Regular':  SpaceGrotesk_400Regular,
-    'SpaceGrotesk-Medium':   SpaceGrotesk_500Medium,
-    'SpaceGrotesk-SemiBold': SpaceGrotesk_600SemiBold,
-    'SpaceGrotesk-Bold':     SpaceGrotesk_700Bold,
-    'SpaceMono-Regular':     SpaceMono_400Regular,
-    'SpaceMono-Bold':        SpaceMono_700Bold,
+    "SpaceGrotesk-Light": SpaceGrotesk_300Light,
+    "SpaceGrotesk-Regular": SpaceGrotesk_400Regular,
+    "SpaceGrotesk-Medium": SpaceGrotesk_500Medium,
+    "SpaceGrotesk-SemiBold": SpaceGrotesk_600SemiBold,
+    "SpaceGrotesk-Bold": SpaceGrotesk_700Bold,
+    "SpaceMono-Regular": SpaceMono_400Regular,
+    "SpaceMono-Bold": SpaceMono_700Bold,
   });
 
   // Hold render until fonts are loaded to prevent flash of unstyled text
@@ -66,13 +66,23 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="branch/[id]" />
-        <Stack.Screen name="quest/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="quest/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="leaderboard" />
         <Stack.Screen name="wellbeing" />
-        <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="skill-builder" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="settings" options={{ presentation: "modal" }} />
+        <Stack.Screen
+          name="skill-builder"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
+        <Stack.Screen
+          name="notifications"
+          options={{ presentation: "modal", animation: "slide_from_left" }}
+        />
       </Stack>
-      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.bgBase} />
+      <StatusBar
+        style={isDark ? "light" : "dark"}
+        backgroundColor={colors.bgBase}
+      />
       <LevelUpModal />
       <LoginBonusModal />
     </QueryClientProvider>

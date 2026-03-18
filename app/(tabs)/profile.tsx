@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  Alert,
+  Animated,
+  Easing,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
@@ -14,7 +22,7 @@ import {
   NeoBrutalThemed,
   ProgressBar,
 } from "@/src/ui/atoms";
-import { useTheme } from "@/src/ui/tokens";
+import { IColors, useTheme } from "@/src/ui/tokens";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,6 +57,8 @@ interface BranchRowProps {
 
 function BranchProgressRow({ label, percent, color, emoji }: BranchRowProps) {
   const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.branchRow}>
       <Text style={styles.branchEmoji}>{emoji}</Text>
@@ -72,6 +82,8 @@ export default function ProfileScreen() {
   const user = useUserStore((s) => s.user);
   const logout = useUserStore((s) => s.logout);
   const nodes = useSkillTreeStore((s) => s.nodes);
+  const premiumShimmer = useRef(new Animated.Value(-1)).current;
+  const styles = createStyles(colors);
 
   const name = user?.name ?? "Alex Kim";
   const level = user?.level ?? 4;
@@ -179,6 +191,25 @@ export default function ProfileScreen() {
     ]);
   };
 
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(premiumShimmer, {
+        toValue: 2,
+        duration: 2300,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+
+    return () => loop.stop();
+  }, [premiumShimmer]);
+
+  const premiumShimmerTranslateX = premiumShimmer.interpolate({
+    inputRange: [-1, 2],
+    outputRange: [-140, 260],
+  });
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.bgBase }]}
@@ -254,6 +285,18 @@ export default function ProfileScreen() {
           contentStyle={styles.premiumContent}
           onPress={() => {}}
         >
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.premiumShimmer,
+              {
+                transform: [
+                  { translateX: premiumShimmerTranslateX },
+                  { skewX: "-18deg" },
+                ],
+              },
+            ]}
+          />
           <Text style={[styles.premiumStar, { color: colors.brandPrimary }]}>
             ✦
           </Text>
@@ -538,166 +581,176 @@ export default function ProfileScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
+const createStyles = (colors: IColors) =>
+  StyleSheet.create({
+    container: { flex: 1 },
+    scroll: { flex: 1 },
+    scrollContent: { paddingBottom: 40 },
 
-  // Avatar
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: 28,
-    paddingHorizontal: 20,
-  },
-  avatarContainer: { position: "relative", marginBottom: 14 },
-  avatarInitials: { fontSize: 26, fontWeight: "900" },
-  levelBadge: { position: "absolute", bottom: -4, right: -8 },
-  levelBadgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
-  userName: { fontSize: 22, fontWeight: "800", marginBottom: 4 },
-  userSubtitle: {
-    fontSize: 12,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-    marginTop: 2,
-  },
+    // Avatar
+    avatarSection: {
+      alignItems: "center",
+      paddingVertical: 28,
+      paddingHorizontal: 20,
+    },
+    avatarContainer: { position: "relative", marginBottom: 14 },
+    avatarInitials: { fontSize: 26, fontWeight: "900" },
+    levelBadge: { position: "absolute", bottom: -4, right: -8 },
+    levelBadgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
+    userName: { fontSize: 22, fontWeight: "800", marginBottom: 4 },
+    userSubtitle: {
+      fontSize: 12,
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
+      marginTop: 2,
+    },
 
-  // Premium banner
-  premiumContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 8,
-  },
-  premiumStar: { fontSize: 16 },
-  premiumTitle: {
-    fontSize: 12,
-    fontWeight: "900",
-    flex: 1,
-    letterSpacing: 0.5,
-  },
-  premiumRenew: {
-    fontSize: 10,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-  },
+    // Premium banner
+    premiumContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      gap: 8,
+      position: "relative",
+      overflow: "hidden",
+    },
+    premiumShimmer: {
+      position: "absolute",
+      top: -8,
+      bottom: -8,
+      width: 72,
+      backgroundColor: `${colors.brandPrimary}22`,
+    },
+    premiumStar: { fontSize: 16 },
+    premiumTitle: {
+      fontSize: 12,
+      fontWeight: "900",
+      flex: 1,
+      letterSpacing: 0.5,
+    },
+    premiumRenew: {
+      fontSize: 10,
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
+    },
 
-  // Streak
-  streakContent: {
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  accentBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 6,
-  },
-  streakTitle: { fontSize: 18, fontWeight: "900", letterSpacing: 0.5 },
-  streakBest: {
-    fontSize: 10,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-    marginTop: 6,
-  },
+    // Streak
+    streakContent: {
+      alignItems: "center",
+      paddingVertical: 20,
+      paddingHorizontal: 20,
+    },
+    accentBar: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 6,
+    },
+    streakTitle: { fontSize: 18, fontWeight: "900", letterSpacing: 0.5 },
+    streakBest: {
+      fontSize: 10,
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
+      marginTop: 6,
+    },
 
-  // Stats
-  statsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginHorizontal: 20,
-    marginTop: 16,
-  },
-  statContent: {
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-  },
-  statValue: { fontSize: 18, fontWeight: "900" },
-  statLabel: {
-    fontSize: 8,
-    fontWeight: "800",
-    textAlign: "center",
-    marginTop: 5,
-    lineHeight: 11,
-    letterSpacing: 0.3,
-  },
+    // Stats
+    statsRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginHorizontal: 20,
+      marginTop: 16,
+    },
+    statContent: {
+      alignItems: "center",
+      paddingVertical: 14,
+      paddingHorizontal: 8,
+    },
+    statValue: { fontSize: 18, fontWeight: "900" },
+    statLabel: {
+      fontSize: 8,
+      fontWeight: "800",
+      textAlign: "center",
+      marginTop: 5,
+      lineHeight: 11,
+      letterSpacing: 0.3,
+    },
 
-  // Milestones
-  milestoneSection: { marginTop: 32 },
-  milestoneList: {
-    paddingLeft: 20,
-    paddingRight: 10,
-    gap: 14,
-    flexDirection: "row",
-    paddingBottom: 8,
-  },
-  milestoneContent: { alignItems: "center", padding: 16 },
-  milestoneIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  milestoneTitle: {
-    fontSize: 11,
-    fontWeight: "900",
-    textAlign: "center",
-    marginBottom: 5,
-    letterSpacing: 0.2,
-  },
-  milestoneDesc: {
-    fontSize: 9,
-    fontFamily: "SpaceGrotesk-Medium",
-    fontWeight: "500",
-    textAlign: "center",
-    lineHeight: 12,
-  },
+    // Milestones
+    milestoneSection: { marginTop: 32 },
+    milestoneList: {
+      paddingLeft: 20,
+      paddingRight: 10,
+      gap: 14,
+      flexDirection: "row",
+      paddingBottom: 8,
+    },
+    milestoneContent: { alignItems: "center", padding: 16 },
+    milestoneIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+    },
+    milestoneTitle: {
+      fontSize: 11,
+      fontWeight: "900",
+      textAlign: "center",
+      marginBottom: 5,
+      letterSpacing: 0.2,
+    },
+    milestoneDesc: {
+      fontSize: 9,
+      fontFamily: "SpaceGrotesk-Medium",
+      fontWeight: "500",
+      textAlign: "center",
+      lineHeight: 12,
+    },
 
-  // Branch progress card
-  branchCard: { padding: 18, gap: 14 },
-  branchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  branchEmoji: { fontSize: 16, width: 24, textAlign: "center" },
-  branchLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 2,
-  },
-  branchLabel: {
-    fontSize: 13,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-  },
-  branchPercent: { fontSize: 12, fontWeight: "800" },
-  branchDivider: { height: StyleSheet.hairlineWidth },
+    // Branch progress card
+    branchCard: { padding: 18, gap: 14 },
+    branchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+    branchEmoji: { fontSize: 16, width: 24, textAlign: "center" },
+    branchLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 2,
+    },
+    branchLabel: {
+      fontSize: 13,
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
+    },
+    branchPercent: { fontSize: 12, fontWeight: "800" },
+    branchDivider: { height: StyleSheet.hairlineWidth },
 
-  // Navigation rows
-  navSection: { marginHorizontal: 20, marginTop: 24, gap: 10 },
-  navContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
-  },
-  navText: {
-    fontSize: 14,
-    fontFamily: "SpaceGrotesk-SemiBold",
-    fontWeight: "600",
-    flex: 1,
-  },
+    // Navigation rows
+    navSection: { marginHorizontal: 20, marginTop: 24, gap: 10 },
+    navContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      gap: 12,
+    },
+    navText: {
+      fontSize: 14,
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
+      flex: 1,
+    },
 
-  // Section title
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "900",
-    marginBottom: 14,
-    letterSpacing: 1.2,
-    paddingHorizontal: 20,
-  },
-});
+    // Section title
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: "900",
+      marginBottom: 14,
+      letterSpacing: 1.2,
+      paddingHorizontal: 20,
+    },
+  });
