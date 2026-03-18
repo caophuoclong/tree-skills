@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
 import {
   Animated,
@@ -19,17 +19,8 @@ import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { useChallengeStore } from "@/src/business-logic/stores/challengeStore";
 import type { Quest } from "@/src/business-logic/types";
 import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
-import { ChallengeCard } from "@/src/ui/molecules";
+import { ChallengeCard, ComboBar } from "@/src/ui/molecules";
 import { IColors, useTheme } from "@/src/ui/tokens";
-
-// ─── Branch helpers ───────────────────────────────────────────────────────────
-
-const getBranchColors = (colors: any): Record<string, string> => ({
-  career: colors.career,
-  finance: colors.finance,
-  softskills: colors.softskills,
-  wellbeing: colors.wellbeing,
-});
 
 const BRANCH_LABELS: Record<string, string> = {
   career: "SỰ NGHIỆP",
@@ -38,7 +29,6 @@ const BRANCH_LABELS: Record<string, string> = {
   wellbeing: "SỨC KHỎE",
 };
 
-// Neobrutalism difficulty config
 const DIFFICULTY_CONFIG: Record<
   string,
   { label: string; bg: string; text: string }
@@ -48,8 +38,6 @@ const DIFFICULTY_CONFIG: Record<
   hard: { label: "KHÓ", bg: "#F472B6", text: "#1F0914" },
 };
 
-// ─── Quest Card ───────────────────────────────────────────────────────────────
-
 interface QuestItemProps {
   quest: Quest;
   onComplete: (id: string) => void;
@@ -58,12 +46,9 @@ interface QuestItemProps {
 function QuestItem({ quest, onComplete }: QuestItemProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const BRANCH_COLORS = useMemo(() => getBranchColors(colors), [colors]);
-  const branchColor = BRANCH_COLORS[quest.branch] ?? colors.brandPrimary;
+  const branchColor = colors[quest.branch as keyof typeof colors] ?? colors.brandPrimary;
   const isCompleted = quest.completed_at !== null;
   const diff = DIFFICULTY_CONFIG[quest.difficulty] ?? DIFFICULTY_CONFIG.easy;
-
-  // XP fly-up animation
   const xpFlyY = useRef(new Animated.Value(0)).current;
   const xpFlyOpacity = useRef(new Animated.Value(0)).current;
 
@@ -91,7 +76,6 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
 
   return (
     <View style={{ position: "relative" }}>
-      {/* XP fly-up label */}
       <Animated.Text
         style={{
           position: "absolute",
@@ -114,18 +98,12 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
         shadowOffsetY={4}
         contentStyle={{ padding: 12 }}
         onPress={() => router.push(`/quest/${quest.quest_id}`)}
-        style={{
-          opacity: isCompleted ? 0.55 : 1,
-        }}
+        style={{ opacity: isCompleted ? 0.55 : 1 }}
       >
-        <View
-          style={[styles.accentBar, { backgroundColor: branchColor, width: 5 }]}
-        />
+        <View style={[styles.accentBar, { backgroundColor: branchColor, width: 5 }]} />
 
-        {/* Top row */}
         <View style={styles.questCardTop}>
           <View style={styles.questCardTopLeft}>
-            {/* Branch chip — NeoBrutalAccent */}
             <NeoBrutalAccent
               accentColor={branchColor}
               strokeColor="#000"
@@ -138,7 +116,6 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
                 {BRANCH_LABELS[quest.branch] ?? quest.branch}
               </Text>
             </NeoBrutalAccent>
-            {/* Difficulty badge — NeoBrutalAccent */}
             <NeoBrutalAccent
               accentColor={diff.bg}
               strokeColor="#000"
@@ -154,34 +131,21 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
           </View>
 
           {isCompleted ? (
-            <Ionicons
-              name="checkmark-circle"
-              size={22}
-              color={colors.finance}
-            />
+            <Ionicons name="checkmark-circle" size={22} color={colors.finance} />
           ) : (
             <TouchableOpacity
-              style={[
-                styles.checkbox,
-                {
-                  borderColor: branchColor,
-                  borderWidth: 2,
-                },
-              ]}
+              style={[styles.checkbox, { borderColor: branchColor, borderWidth: 2 }]}
               onPress={triggerXPFlyUp}
               hitSlop={8}
             />
           )}
         </View>
 
-        {/* Title */}
         <Text style={[styles.questTitle, isCompleted && styles.questTitleDone]}>
           {quest.title}
         </Text>
 
-        {/* Bottom row: XP badge + duration */}
         <View style={styles.questCardBottom}>
-          {/* XP badge — NeoBrutalAccent */}
           <NeoBrutalAccent
             accentColor="#FBBF24"
             strokeColor="#92400E"
@@ -199,29 +163,34 @@ function QuestItem({ quest, onComplete }: QuestItemProps) {
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function QuestsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { quests, completedCount, totalCount, completeQuest } =
-    useQuestManager();
+  const { quests, completedCount, totalCount, completeQuest } = useQuestManager();
   const { stamina } = useStaminaSystem();
   const { dailyStats } = useUserStore();
   const { challenges } = useChallengeStore();
+  const lastQuestTimestamp = useRef<number>(0);
+
   const combo = dailyStats.session_combo;
-  const multiplier = getComboMultiplier(combo);
-  const comboActive = combo >= 3;
+  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Date.now() - lastQuestTimestamp.current > 30 * 60 * 1000) {
+        const userStore = useUserStore.getState();
+        userStore.resetDailyStats?.();
+      }
+    }, [])
+  );
 
   const handleComplete = useCallback(
     (questId: string) => {
       completeQuest(questId);
+      lastQuestTimestamp.current = Date.now();
     },
-    [completeQuest],
+    [completeQuest]
   );
-
-  const progressPercent =
-    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -230,30 +199,24 @@ export default function QuestsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ─────────────────────────────────────────── */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Nhiệm vụ hôm nay</Text>
-          <View style={styles.staminaRow}>
-            <Emoji size={13}>⚡</Emoji>
-            <View style={styles.staminaBarTrack}>
-              <View
-                style={[styles.staminaBarFill, { width: `${stamina}%` as any }]}
-              />
+          <View style={styles.headerRight}>
+            <ComboBar combo={combo} />
+            <View style={styles.staminaRow}>
+              <Emoji size={13}>⚡</Emoji>
+              <View style={styles.staminaBarTrack}>
+                <View style={[styles.staminaBarFill, { width: `${stamina}%` as any }]} />
+              </View>
+              <Text style={styles.staminaText}>{stamina}%</Text>
             </View>
-            <Text style={styles.staminaText}>{stamina}%</Text>
           </View>
         </View>
 
-        {/* ── Progress row ───────────────────────────────────── */}
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>Tiến độ hoàn thành</Text>
           <View style={styles.progressBarTrack}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${progressPercent}%` as any },
-              ]}
-            />
+            <View style={[styles.progressBarFill, { width: `${progressPercent}%` as any }]} />
           </View>
           <NeoBrutalAccent
             accentColor={`${colors.bgBase}`}
@@ -270,53 +233,6 @@ export default function QuestsScreen() {
           </NeoBrutalAccent>
         </View>
 
-        {/* ── Combo Banner ───────────────────────────────────── */}
-        {comboActive && (
-          <NeoBrutalBox
-            borderColor={combo >= 5 ? colors.softskills : colors.career}
-            backgroundColor="#1A1A2E"
-            shadowColor="#000"
-            shadowOffsetX={4}
-            shadowOffsetY={4}
-            borderWidth={2}
-            borderRadius={8}
-            contentStyle={styles.comboBanner}
-          >
-            <Emoji size={22}>
-              {combo >= 5 ? "🔥🔥🔥" : combo >= 4 ? "🔥🔥" : "🔥"}
-            </Emoji>
-            <View style={styles.comboTextGroup}>
-              <Text style={styles.comboLabel}>COMBO ĐANG HOẠT ĐỘNG</Text>
-              <Text style={styles.comboValue}>
-                {combo} quest liên tiếp · XP x{multiplier.toFixed(2)}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.comboMultiplierPill,
-                {
-                  backgroundColor:
-                    combo >= 5
-                      ? `${colors.softskills}25`
-                      : `${colors.career}25`,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.comboMultiplierText,
-                  {
-                    color: combo >= 5 ? colors.softskills : colors.career,
-                  },
-                ]}
-              >
-                x{multiplier.toFixed(2)}
-              </Text>
-            </View>
-          </NeoBrutalBox>
-        )}
-
-        {/* ── Quest Cards ────────────────────────────────────── */}
         <View style={styles.questList}>
           {quests.length === 0 ? (
             <View style={styles.emptyState}>
@@ -336,21 +252,8 @@ export default function QuestsScreen() {
           )}
         </View>
 
-        {/* ── Weekly Challenges ──────────────────────────────── */}
         <View style={{ marginBottom: 20 }}>
-          <Text
-            style={[
-              {
-                fontSize: 16,
-                marginBottom: 10,
-                marginHorizontal: 20,
-                fontFamily: "SpaceGrotesk-Bold",
-                color: colors.textPrimary,
-              },
-            ]}
-          >
-            🏆 Weekly Challenges
-          </Text>
+          <Text style={styles.challengesTitle}>🏆 Weekly Challenges</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -386,15 +289,20 @@ const createStyles = (colors: IColors) =>
 
     // Header
     header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      flexDirection: "column",
+      gap: 8,
       marginBottom: 12,
     },
     headerTitle: {
       fontSize: 28,
       fontWeight: "800",
       color: colors.textPrimary,
+    },
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
     },
     staminaRow: {
       flexDirection: "row",
@@ -459,42 +367,6 @@ const createStyles = (colors: IColors) =>
       color: colors.brandPrimary,
     },
 
-    // Combo Banner — neobrutalism: solid bg + hard offset shadow
-    comboBanner: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-    },
-    comboFire: {
-      fontSize: 22,
-    },
-    comboTextGroup: {
-      flex: 1,
-      gap: 2,
-    },
-    comboLabel: {
-      fontSize: 9,
-      fontWeight: "800",
-      color: "rgba(255,255,255,0.5)",
-      letterSpacing: 1.5,
-    },
-    comboValue: {
-      fontSize: 13,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: "#FFFFFF",
-    },
-    comboMultiplierPill: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 10,
-    },
-    comboMultiplierText: {
-      fontSize: 16,
-      fontWeight: "800",
-    },
 
     // Quest List
     questList: {
@@ -608,95 +480,13 @@ const createStyles = (colors: IColors) =>
       paddingHorizontal: 20,
     },
 
-    // Active Challenges
-    challengesSection: {
-      marginTop: 28,
-    },
-    challengesHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 12,
-    },
-    challengesTrophyEmoji: {
-      fontSize: 20,
-    },
+    // Challenges
     challengesTitle: {
-      fontSize: 18,
+      fontSize: 16,
+      marginBottom: 10,
+      marginHorizontal: 20,
       fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
       color: colors.textPrimary,
-    },
-    challengeCard: {
-      overflow: "hidden",
-    },
-    challengeCardMain: {
-      marginBottom: 16,
-    },
-    challengeTag: {
-      backgroundColor: "rgba(244,114,182,0.1)",
-      alignSelf: "flex-start",
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      marginBottom: 8,
-    },
-    challengeTagText: {
-      fontSize: 9,
-      fontWeight: "800",
-      color: colors.wellbeing,
-      letterSpacing: 1.5,
-    },
-    challengeTitle: {
-      fontSize: 20,
-      fontWeight: "800",
-      color: colors.textPrimary,
-      marginBottom: 6,
-    },
-    challengeStats: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    challengeSubtitle: {
-      fontSize: 12,
-      color: colors.textMuted,
-    },
-    challengeProgressWrapper: {
-      gap: 8,
-    },
-    challengeProgressHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    challengeProgressLabel: {
-      fontSize: 11,
-      fontFamily: "SpaceGrotesk-SemiBold",
-      fontWeight: "600",
-      color: colors.textSecondary,
-    },
-    challengeRewards: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    challengeRewardText: {
-      fontSize: 11,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: colors.softskills,
-    },
-    challengeProgressBarTrack: {
-      height: 6,
-      backgroundColor: colors.bgElevated,
-      borderRadius: 3,
-      overflow: "hidden",
-    },
-    challengeProgressBarFill: {
-      height: 6,
-      backgroundColor: colors.brandPrimary,
-      borderRadius: 3,
     },
 
     // Bottom

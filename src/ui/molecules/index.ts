@@ -1,6 +1,8 @@
 export { BentoCard } from './BentoCard';
+export { BranchFilterPill } from './BranchFilterPill';
 export { BranchHeroCard } from './BranchHeroCard';
 export { ChallengeCard } from './ChallengeCard';
+export { ComboBar } from './ComboBar';
 export { LoginBonusModal } from './LoginBonusModal';
 export { LevelUpModal } from './LevelUpModal';
 export { MoodWidget } from './MoodWidget';
