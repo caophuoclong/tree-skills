@@ -12,8 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Button } from '@/src/ui/atoms/Button';
-import { useUserStore } from '@/src/business-logic/stores/userStore';
-import { userService } from '@/src/business-logic/api/services/userService';
+import { useSignIn } from '@/src/business-logic/auth';
 import { useTheme } from '@/src/ui/tokens';
 
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
@@ -24,20 +23,13 @@ export default function LoginScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const setUser = useUserStore((s) => s.setUser);
+  const { signIn, isLoading: signingIn, error: signInError } = useSignIn();
 
   const handleLogin = async () => {
     if (!email || !password) return;
-    setLoading(true);
-    try {
-      // In production: POST /auth/login first, then fetch user
-      // For now: simulate auth then fetch mock user from network layer
-      const user = await userService.getMe();
-      setUser(user);
+    const success = await signIn(email, password);
+    if (success) {
       router.replace('/(tabs)');
-    } finally {
-      setLoading(false);
     }
   };
 
