@@ -17,8 +17,8 @@ import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
 
 import { queryClient } from "@/src/business-logic/api/query-client";
-import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
 import { useEffect } from "react";
@@ -72,32 +72,34 @@ export default function RootLayout() {
         checkDailyLogin();
 
         // ── E7: Generate notifications ───────────────────────────────────────
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-        const lastLoginDate = user?.last_login_date?.split('T')[0];
+        const today = new Date().toISOString().split("T")[0];
+        const yesterday = new Date(Date.now() - 86400000)
+          .toISOString()
+          .split("T")[0];
+        const lastLoginDate = user?.last_login_at?.split("T")[0];
 
         // Streak reminder: if streak exists and last login was yesterday
         if (user?.streak && user.streak > 0 && lastLoginDate === yesterday) {
           addNotification({
-            type: 'streak',
-            title: '🔥 Keep your streak!',
+            type: "streak",
+            title: "🔥 Keep your streak!",
             body: `Don't break your ${user.streak}-day streak! Complete a quest today.`,
-            targetRoute: '/(tabs)/quests',
+            targetRoute: "/(tabs)/quests",
           });
         }
 
         // Quest suggestion: if no quests completed yet today
         // (This would need dailyStats from userStore if available)
         // For now, we'll just add it once per session
-        const lastSuggestion = sessionStorage?.getItem?.('lastQuestSuggestion');
+        const lastSuggestion = sessionStorage?.getItem?.("lastQuestSuggestion");
         if (!lastSuggestion || lastSuggestion !== today) {
           addNotification({
-            type: 'suggestion',
-            title: '💡 Start your day',
-            body: 'Try a 5-min quest to kick off your learning session.',
-            targetRoute: '/(tabs)/quests',
+            type: "suggestion",
+            title: "💡 Start your day",
+            body: "Try a 5-min quest to kick off your learning session.",
+            targetRoute: "/(tabs)/quests",
           });
-          sessionStorage?.setItem?.('lastQuestSuggestion', today);
+          sessionStorage?.setItem?.("lastQuestSuggestion", today);
         }
       }
     });
@@ -127,6 +129,13 @@ export default function RootLayout() {
         <Stack.Screen
           name="notifications"
           options={{ presentation: "modal", animation: "slide_from_left" }}
+        />
+        <Stack.Screen
+          name="node-detail"
+          options={{
+            presentation: "modal",
+            animation: "slide_from_bottom",
+          }}
         />
       </Stack>
       <StatusBar

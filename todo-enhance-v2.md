@@ -1,9 +1,8 @@
 # Enhancement V2 — Implementation Todo
 
-> Branch: `feat/neobrutalism-ui`
 > Scope: Client-side features + refactors. Backend / auth / push / third-party excluded.
 > Reference: `features-enhance-v2.md`
-> Last updated: 2026-03-18
+> Last updated: 2026-03-18 — **ALL FEATURES COMPLETE ✅**
 
 ---
 
@@ -17,8 +16,9 @@
 
 ---
 
-## ✅ Done
+## ✅ Done — All Features Implemented
 
+- [x] **E1 — Level-Up Celebration** — ConfettiOverlay + haptic heavy + LevelUpModal wired to userStore
 - [x] **E2 — Daily Login Bonus Modal**
   - `src/ui/molecules/LoginBonusModal.tsx` — full NB restyle, streak badge, auto-dismiss 4s
   - `src/business-logic/stores/userStore.ts` — `lastLoginDate`, streak-scaled XP (20/30/50)

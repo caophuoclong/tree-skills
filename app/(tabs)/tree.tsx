@@ -25,9 +25,9 @@ import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import type { Branch, SkillNode } from "@/src/business-logic/types";
 import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
-import { useTheme } from "@/src/ui/tokens";
-import { SkillNodeSheet } from "@/src/ui/organisms/SkillNodeSheet";
 import { SkillTreeHeader } from "@/src/ui/molecules/SkillTreeHeader";
+
+import { useTheme } from "@/src/ui/tokens";
 
 // ─── Layout constants ──────────────────────────────────────────────────────────
 const { width: SW } = Dimensions.get("window");
@@ -457,8 +457,7 @@ export default function TreeScreen() {
   const { nodes, activeBranch, setNodes, setActiveBranch } =
     useSkillTreeStore();
   const { dailyQuests } = useQuestStore();
-  const [selectedNode, setSelectedNode] = React.useState<SkillNode | null>(null);
-  const [treeTab, setTreeTab] = React.useState<'default' | 'custom'>('default');
+  const [treeTab, setTreeTab] = React.useState<"default" | "custom">("default");
   const [showOnlyCustom, setShowOnlyCustom] = React.useState(false);
   const [goalSheetId, setGoalSheetId] = React.useState<string | null>(null);
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(
@@ -543,7 +542,7 @@ export default function TreeScreen() {
     dailyQuests.find((q) => !q.completed_at) ?? dailyQuests[0] ?? null;
 
   const handlePress = useCallback((n: SkillNode) => {
-    setSelectedNode(n);
+    router.push(`/node-detail?node_id=${n.node_id}`);
   }, []);
 
   return (
@@ -591,19 +590,21 @@ export default function TreeScreen() {
           style={[
             styles.treePill,
             {
-              backgroundColor: treeTab === 'default' ? colors.brandPrimary : 'transparent',
-              borderColor: treeTab === 'default' ? colors.textPrimary : colors.textMuted,
-              borderWidth: treeTab === 'default' ? 2 : 1.5,
+              backgroundColor:
+                treeTab === "default" ? colors.brandPrimary : "transparent",
+              borderColor:
+                treeTab === "default" ? colors.textPrimary : colors.textMuted,
+              borderWidth: treeTab === "default" ? 2 : 1.5,
             },
           ]}
-          onPress={() => setTreeTab('default')}
+          onPress={() => setTreeTab("default")}
         >
           <Text
             style={[
               styles.treePillText,
               {
-                color: treeTab === 'default' ? '#fff' : colors.textMuted,
-                fontFamily: 'SpaceGrotesk-SemiBold',
+                color: treeTab === "default" ? "#fff" : colors.textMuted,
+                fontFamily: "SpaceGrotesk-SemiBold",
               },
             ]}
           >
@@ -614,19 +615,21 @@ export default function TreeScreen() {
           style={[
             styles.treePill,
             {
-              backgroundColor: treeTab === 'custom' ? colors.brandPrimary : 'transparent',
-              borderColor: treeTab === 'custom' ? colors.textPrimary : colors.textMuted,
-              borderWidth: treeTab === 'custom' ? 2 : 1.5,
+              backgroundColor:
+                treeTab === "custom" ? colors.brandPrimary : "transparent",
+              borderColor:
+                treeTab === "custom" ? colors.textPrimary : colors.textMuted,
+              borderWidth: treeTab === "custom" ? 2 : 1.5,
             },
           ]}
-          onPress={() => setTreeTab('custom')}
+          onPress={() => setTreeTab("custom")}
         >
           <Text
             style={[
               styles.treePillText,
               {
-                color: treeTab === 'custom' ? '#fff' : colors.textMuted,
-                fontFamily: 'SpaceGrotesk-SemiBold',
+                color: treeTab === "custom" ? "#fff" : colors.textMuted,
+                fontFamily: "SpaceGrotesk-SemiBold",
               },
             ]}
           >
@@ -636,23 +639,22 @@ export default function TreeScreen() {
       </View>
 
       {/* Custom tree tab content — empty state or custom goals */}
-      {treeTab === 'custom' && (
-        customTrees.length === 0 ? (
+      {treeTab === "custom" &&
+        (customTrees.length === 0 ? (
           <View style={styles.emptyCustom}>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               No custom skill trees yet
             </Text>
-            <TouchableOpacity onPress={() => router.push('/skill-builder')}>
+            <TouchableOpacity onPress={() => router.push("/skill-builder")}>
               <Text style={[styles.emptyLink, { color: colors.brandPrimary }]}>
                 Create your first skill tree →
               </Text>
             </TouchableOpacity>
           </View>
-        ) : null
-      )}
+        ) : null)}
 
       {/* Goal filter pills — only renders when user has created at least one goal tree and on default tab */}
-      {treeTab === 'default' && customTrees.length > 0 && (
+      {treeTab === "default" && customTrees.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -811,7 +813,7 @@ export default function TreeScreen() {
       )}
 
       {/* Branch tabs — only on default tree tab */}
-      {treeTab === 'default' && (
+      {treeTab === "default" && (
         <SkillTreeHeader
           activeBranch={activeBranch}
           onBranchChange={(branch) => {
@@ -1000,18 +1002,14 @@ export default function TreeScreen() {
         )}
       </ScrollView>
 
-      {/* Skill Node Sheet (E3) */}
-      <SkillNodeSheet
-        node={selectedNode}
-        onClose={() => setSelectedNode(null)}
-      />
-
       {/* ── Goal Overview Sheet ── */}
       <Modal
         visible={!!goalSheetId}
-        transparent
+        // transparent
         animationType="slide"
         onRequestClose={() => setGoalSheetId(null)}
+        statusBarTranslucent={true}
+        navigationBarTranslucent={true}
       >
         <Pressable style={styles.overlay} onPress={() => setGoalSheetId(null)}>
           {(() => {
