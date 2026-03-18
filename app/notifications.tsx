@@ -1,193 +1,127 @@
-import { NeoBrutalBox } from "@/src/ui/atoms";
-import { IColors, useTheme } from "@/src/ui/tokens";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useTheme } from '@/src/ui/tokens';
+import { useNotificationStore, AppNotification } from '@/src/business-logic/stores/notificationStore';
 
-type NotificationItem = {
-  id: number;
-  title: string;
-  body: string;
-  time: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
+const NOTIF_ICONS: Record<string, string> = {
+  milestone: '🏆',
+  streak: '🔥',
+  levelup: '⭐',
+  suggestion: '💡',
 };
+
+function relativeTime(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
 export default function NotificationsScreen() {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const router = useRouter();
+  const { notifications, markRead, markAllRead } = useNotificationStore();
 
-  const notifications: NotificationItem[] = [
-    {
-      id: 1,
-      title: "Chuỗi mới!",
-      body: "Bạn đã đạt chuỗi 3 ngày liên tiếp. Tiếp tục phát huy nhé!",
-      time: "2h trước",
-      icon: "flame",
-      color: colors.warning,
-    },
-    {
-      id: 2,
-      title: "Nhiệm vụ mới",
-      body: "3 nhiệm vụ Sự nghiệp đã được làm mới.",
-      time: "5h trước",
-      icon: "flash",
-      color: colors.career,
-    },
-    {
-      id: 3,
-      title: "Nhắc nhở",
-      body: "Đừng quên check-in tâm trạng hôm nay.",
-      time: "1 ngày trước",
-      icon: "happy",
-      color: colors.wellbeing,
-    },
-  ];
+  const handlePress = useCallback((notif: AppNotification) => {
+    markRead(notif.id);
+    if (notif.targetRoute) router.push(notif.targetRoute as any);
+  }, [markRead, router]);
+
+  const unread = notifications.filter(n => !n.read).length;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <View style={[styles.header, { borderBottomColor: colors.glassBorder }]}>
-        <NeoBrutalBox
-          borderColor={colors.glassBorder}
-          backgroundColor={colors.bgElevated}
-          shadowColor="#000"
-          shadowOffsetX={2}
-          shadowOffsetY={2}
-          borderWidth={1.5}
-          borderRadius={18}
-          onPress={() => router.back()}
-          contentStyle={styles.backBtnContent}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={20}
-            color={colors.textSecondary}
-          />
-        </NeoBrutalBox>
-
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-          Cài đặt
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.textPrimary }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={[styles.backText, { color: colors.textPrimary, fontFamily: 'SpaceGrotesk-Bold' }]}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, fontFamily: 'SpaceGrotesk-Bold' }]}>
+          Notifications
         </Text>
-        <View style={{ width: 40 }} />
+        {unread > 0 && (
+          <TouchableOpacity onPress={markAllRead}>
+            <Text style={[styles.markAllText, { color: colors.brandPrimary, fontFamily: 'SpaceGrotesk-SemiBold' }]}>
+              Mark all read
+            </Text>
+          </TouchableOpacity>
+        )}
+        {unread === 0 && <View style={{ width: 80 }} />}
       </View>
 
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {notifications.map((notif) => (
-          <View
-            key={notif.id}
-            style={[
-              styles.notifItem,
-              { borderBottomColor: colors.glassBorder },
-            ]}
-          >
-            <NeoBrutalBox
-              borderColor={`${notif.color}60`}
-              backgroundColor={`${notif.color}20`}
-              shadowColor={colors.bgBase}
-              shadowOffsetX={3}
-              shadowOffsetY={3}
-              borderWidth={1.5}
-              borderRadius={12}
-              contentStyle={styles.notifIconContent}
-              style={{ height: 50 }}
-            >
-              <Ionicons name={notif.icon} size={18} color={notif.color} />
-            </NeoBrutalBox>
-
-            <View style={styles.notifText}>
-              <Text style={styles.notifTitle}>{notif.title}</Text>
-              <Text style={styles.notifBody}>{notif.body}</Text>
-              <Text style={styles.notifTime}>{notif.time}</Text>
+      {notifications.length === 0 ? (
+        // Empty state
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyWrapper}>
+            <View style={[styles.emptyShadow, { backgroundColor: colors.textPrimary }]} />
+            <View style={[styles.emptyCard, { backgroundColor: colors.bgSurface, borderColor: colors.textPrimary }]}>
+              <Text style={styles.emptyEmoji}>🎉</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary, fontFamily: 'SpaceGrotesk-Bold' }]}>
+                You're all caught up!
+              </Text>
+              <Text style={[styles.emptySub, { color: colors.textSecondary, fontFamily: 'SpaceGrotesk-Regular' }]}>
+                No new notifications right now.
+              </Text>
             </View>
           </View>
-        ))}
-      </ScrollView>
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          keyExtractor={(n) => n.id}
+          contentContainerStyle={{ padding: 16, gap: 10 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handlePress(item)} activeOpacity={0.85}>
+              <View style={[styles.notifItem, { backgroundColor: item.read ? colors.bgSurface : colors.bgElevated, borderColor: colors.textPrimary }]}>
+                {/* Unread accent bar */}
+                {!item.read && <View style={[styles.unreadBar, { backgroundColor: colors.brandPrimary }]} />}
+                <View style={styles.notifContent}>
+                  <View style={styles.notifRow}>
+                    <Text style={styles.notifIcon}>{NOTIF_ICONS[item.type] ?? '🔔'}</Text>
+                    <Text style={[styles.notifTitle, { color: colors.textPrimary, fontFamily: 'SpaceGrotesk-Bold' }]}>
+                      {item.title}
+                    </Text>
+                    <Text style={[styles.notifTime, { color: colors.textMuted, fontFamily: 'SpaceGrotesk-Regular' }]}>
+                      {relativeTime(item.createdAt)}
+                    </Text>
+                  </View>
+                  <Text style={[styles.notifBody, { color: colors.textSecondary, fontFamily: 'SpaceGrotesk-Regular' }]}>
+                    {item.body}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: IColors) =>
-  StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: colors.bgSurface,
-    },
-    headerWrap: {
-      borderBottomWidth: 1,
-      borderBottomColor: colors.glassBorder,
-    },
-    notifAccentStrip: {
-      height: 4,
-    },
-    header: {
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 14,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: "800",
-      color: colors.textPrimary,
-    },
-    closeButtonContent: {
-      width: 32,
-      height: 32,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    list: {
-      flex: 1,
-    },
-    listContent: {
-      paddingHorizontal: 20,
-      paddingTop: 6,
-      paddingBottom: 24,
-    },
-    notifItem: {
-      flexDirection: "row",
-      gap: 16,
-      paddingVertical: 14,
-      borderBottomWidth: 1,
-    },
-    notifIconContent: {
-      width: 40,
-      height: 40,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    notifText: {
-      flex: 1,
-      gap: 4,
-    },
-    notifTitle: {
-      fontSize: 15,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: colors.textPrimary,
-    },
-    notifBody: {
-      fontSize: 13,
-      color: colors.textSecondary,
-      lineHeight: 18,
-    },
-    notifTime: {
-      fontSize: 11,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
-    backBtnContent: {
-      width: 36,
-      height: 36,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-  });
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 2 },
+  backBtn: { width: 80 },
+  backText: { fontSize: 15 },
+  headerTitle: { fontSize: 18 },
+  markAllText: { fontSize: 13 },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+  emptyWrapper: { position: 'relative' },
+  emptyShadow: { position: 'absolute', top: 5, left: 5, right: -5, bottom: -5, borderRadius: 16 },
+  emptyCard: { padding: 32, borderRadius: 16, borderWidth: 2, alignItems: 'center', gap: 8 },
+  emptyEmoji: { fontSize: 48, marginBottom: 4 },
+  emptyTitle: { fontSize: 20, textAlign: 'center' },
+  emptySub: { fontSize: 14, textAlign: 'center' },
+  notifItem: { borderWidth: 2, borderRadius: 12, flexDirection: 'row', overflow: 'hidden' },
+  unreadBar: { width: 4 },
+  notifContent: { flex: 1, padding: 12, gap: 4 },
+  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  notifIcon: { fontSize: 18 },
+  notifTitle: { flex: 1, fontSize: 14 },
+  notifTime: { fontSize: 11 },
+  notifBody: { fontSize: 13, lineHeight: 18 },
+});
