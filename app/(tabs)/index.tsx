@@ -5,7 +5,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
-import { Emoji, NeoBrutalAccent, NeoBrutalCard } from "@/src/ui/atoms";
+import { Emoji, NeoBrutalAccent, NeoBrutalBox, NeoBrutalCard } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -23,7 +23,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Shadow } from "react-native-shadow-2";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -73,24 +72,18 @@ function ProgressRing({ percent, color, label }: ProgressRingProps) {
 
   return (
     <View style={styles.ringWrapper}>
-      <Shadow
-        distance={2}
-        startColor="#00000099"
-        offset={[2, 2]}
-        style={{ borderRadius: 24 }}
+      <NeoBrutalBox
+        borderColor={color}
+        backgroundColor={`${color}15`}
+        shadowColor={color}
+        shadowOffsetX={3}
+        shadowOffsetY={3}
+        borderWidth={2}
+        borderRadius={24}
+        contentStyle={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
       >
-        <View
-          style={[
-            styles.ring,
-            {
-              borderColor: color,
-              backgroundColor: `${color}15`,
-            },
-          ]}
-        >
-          <Text style={[styles.ringPercent, { color }]}>{percent}%</Text>
-        </View>
-      </Shadow>
+        <Text style={[styles.ringPercent, { color }]}>{percent}%</Text>
+      </NeoBrutalBox>
       <Text style={styles.ringLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -264,30 +257,42 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.headerIcons}>
-            <TouchableOpacity
-              style={styles.iconBtn}
+            <NeoBrutalBox
+              borderColor={colors.glassBorder}
+              backgroundColor={colors.bgElevated}
+              shadowColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderWidth={1.5}
+              borderRadius={18}
               onPress={() => setNotifVisible(true)}
-              activeOpacity={0.7}
+              contentStyle={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
             >
               <Ionicons
                 name="notifications-outline"
                 size={22}
                 color={colors.textSecondary}
               />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconBtn}
+            </NeoBrutalBox>
+            <NeoBrutalBox
+              borderColor={colors.glassBorder}
+              backgroundColor={colors.bgElevated}
+              shadowColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderWidth={1.5}
+              borderRadius={18}
               onPress={() =>
                 Alert.alert("Cài đặt", "Tính năng đang được phát triển.")
               }
-              activeOpacity={0.7}
+              contentStyle={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
             >
               <Ionicons
                 name="settings-outline"
                 size={22}
                 color={colors.textSecondary}
               />
-            </TouchableOpacity>
+            </NeoBrutalBox>
           </View>
         </View>
 
@@ -452,16 +457,17 @@ export default function HomeScreen() {
                 />
                 <View style={styles.xpHeaderRow}>
                   <Text style={styles.card2Label}>EXPERIENCE</Text>
-                  <Shadow
-                    distance={2}
-                    startColor="#00000099"
-                    offset={[2, 2]}
-                    style={{ borderRadius: 4 }}
+                  <NeoBrutalAccent
+                    accentColor={colors.brandPrimary}
+                    strokeColor="rgba(0,0,0,0.7)"
+                    shadowOffsetX={2}
+                    shadowOffsetY={2}
+                    borderWidth={1.5}
+                    borderRadius={4}
+                    contentStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
                   >
-                    <View style={styles.levelPill}>
-                      <Text style={styles.levelPillText}>LVL {level}</Text>
-                    </View>
-                  </Shadow>
+                    <Text style={styles.levelPillText}>LVL {level}</Text>
+                  </NeoBrutalAccent>
                 </View>
                 <Text style={styles.xpValue}>
                   {currentXP.toLocaleString()} / {targetXP.toLocaleString()} XP
@@ -515,14 +521,18 @@ export default function HomeScreen() {
           </View>
 
           {quests.slice(0, 3).map((quest) => (
-            <NeoBrutalAccent
-              accentColor={colors.bgBase}
+            <NeoBrutalBox
               key={quest.quest_id}
-              style={{ marginVertical: 6 }}
-              contentStyle={{
-                padding: 4,
-              }}
+              borderColor={colors.glassBorder}
+              backgroundColor={colors.bgSurface}
+              shadowColor="#000"
+              shadowOffsetX={2}
+              shadowOffsetY={2}
+              borderWidth={1}
+              borderRadius={12}
+              style={{ marginBottom: 8 }}
               onPress={() => router.push(`/quest/${quest.quest_id}`)}
+              contentStyle={{ padding: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
             >
               <View style={styles.miniQuestContent}>
                 <View
@@ -543,7 +553,7 @@ export default function HomeScreen() {
                   +{quest.xp_reward} XP
                 </Text>
               </View>
-            </NeoBrutalAccent>
+            </NeoBrutalBox>
           ))}
         </View>
 
@@ -688,12 +698,6 @@ const createStyles = (colors: IColors) =>
       flexDirection: "row",
       gap: 4,
     },
-    iconBtn: {
-      width: 36,
-      height: 36,
-      alignItems: "center",
-      justifyContent: "center",
-    },
 
     // Section
     section: {
@@ -754,14 +758,6 @@ const createStyles = (colors: IColors) =>
       alignItems: "center",
       width: "42%",
       marginBottom: 8,
-    },
-    ring: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      borderWidth: 2,
-      alignItems: "center",
-      justifyContent: "center",
     },
     ringPercent: {
       fontSize: 11,
@@ -892,13 +888,6 @@ const createStyles = (colors: IColors) =>
       justifyContent: "space-between",
       marginBottom: 2,
     },
-    // Neobrutalism level pill — sharp corners, shadow via Shadow component
-    levelPill: {
-      backgroundColor: colors.brandPrimary,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 4,
-    },
     levelPillText: {
       fontSize: 10,
       fontWeight: "900",
@@ -987,17 +976,6 @@ const createStyles = (colors: IColors) =>
       fontWeight: "600",
       color: colors.brandPrimary,
       marginBottom: 8,
-    },
-    miniQuestCard: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: colors.bgSurface,
-      padding: 12,
-      borderRadius: 12,
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: colors.glassBorder,
     },
     miniQuestContent: {
       flexDirection: "row",

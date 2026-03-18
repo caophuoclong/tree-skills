@@ -10,9 +10,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Text } from 'react-native';
 
-import { AppText } from '@/src/ui/atoms/Text';
-import { GlassView } from '@/src/ui/atoms/GlassView';
+import { NeoBrutalBox, NeoBrutalAccent, NeoBrutalThemed } from '@/src/ui/atoms';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 
@@ -52,15 +52,22 @@ export default function WellbeingScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+        <NeoBrutalBox
+          borderColor={colors.glassBorder}
+          backgroundColor={colors.bgElevated}
+          shadowColor="#000"
+          shadowOffsetX={2}
+          shadowOffsetY={2}
+          borderWidth={1.5}
+          borderRadius={18}
           onPress={() => router.back()}
+          contentStyle={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
         >
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </Pressable>
-        <AppText variant="title" color={colors.textPrimary} style={styles.headerTitle}>
+        </NeoBrutalBox>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           Sức khoẻ Tinh Thần
-        </AppText>
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -70,27 +77,46 @@ export default function WellbeingScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
-        <View style={styles.heroCard}>
-          <AppText style={styles.heroEmoji}>💚</AppText>
-          <AppText variant="displayLG" color={colors.textPrimary} style={styles.heroTitle}>
+        <NeoBrutalBox
+          borderColor="#7C6AF760"
+          backgroundColor="rgba(124,106,247,0.12)"
+          shadowColor="#7C6AF7"
+          shadowOffsetX={5}
+          shadowOffsetY={5}
+          borderWidth={2}
+          borderRadius={16}
+          style={{ marginBottom: 0 }}
+          contentStyle={{ padding: 24, alignItems: 'center', gap: 8 }}
+        >
+          <Text style={styles.heroEmoji}>💚</Text>
+          <Text style={[styles.heroTitle, { color: colors.textPrimary, fontSize: 28, fontWeight: '800' }]}>
             Bạn không đơn độc
-          </AppText>
-          <AppText variant="body" color={colors.textSecondary} style={styles.heroSubtitle}>
+          </Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary, fontSize: 14 }]}>
             Sức khoẻ tinh thần quan trọng như sức khoẻ thể chất
-          </AppText>
-        </View>
+          </Text>
+        </NeoBrutalBox>
 
         {/* Hotline Card */}
-        <GlassView style={styles.hotlineCard}>
+        <NeoBrutalBox
+          borderColor={`${colors.success}60`}
+          backgroundColor={colors.bgSurface}
+          shadowColor={colors.success}
+          shadowOffsetX={5}
+          shadowOffsetY={5}
+          borderWidth={2}
+          borderRadius={16}
+          contentStyle={{ padding: 20, gap: 16 }}
+        >
           <View style={styles.hotlineTop}>
-            <AppText style={styles.hotlineEmoji}>📞</AppText>
+            <Text style={styles.hotlineEmoji}>📞</Text>
             <View style={styles.hotlineInfo}>
-              <AppText variant="body" color={colors.textPrimary} style={styles.hotlineHeading}>
+              <Text style={[styles.hotlineHeading, { color: colors.textPrimary, fontSize: 14, fontWeight: '700' }]}>
                 Đường dây hỗ trợ tâm lý 24/7
-              </AppText>
-              <AppText variant="micro" color={colors.textMuted}>
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: 12 }}>
                 Miễn phí · Bảo mật · Luôn sẵn sàng
-              </AppText>
+              </Text>
             </View>
           </View>
 
@@ -98,90 +124,122 @@ export default function WellbeingScreen() {
             style={({ pressed }) => [styles.phoneNumberWrap, pressed && styles.phoneNumberPressed]}
             onPress={handleCopyHotline}
           >
-            <AppText variant="displayLG" color={colors.success} style={styles.phoneNumber}>
+            <Text style={[styles.phoneNumber, { color: colors.success, fontSize: 28, fontWeight: '800' }]}>
               {HOTLINE}
-            </AppText>
+            </Text>
             <View style={styles.copyHint}>
               <Ionicons name="copy-outline" size={14} color={colors.textMuted} />
-              <AppText variant="micro" color={colors.textMuted}>
+              <Text style={{ color: colors.textMuted, fontSize: 12 }}>
                 Nhấn để sao chép
-              </AppText>
+              </Text>
             </View>
           </Pressable>
 
-          <Pressable
-            style={({ pressed }) => [styles.callBtn, pressed && styles.callBtnPressed]}
+          <NeoBrutalAccent
+            accentColor={colors.success}
+            strokeColor="rgba(0,0,0,0.5)"
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={2}
+            borderRadius={12}
             onPress={handleCallHotline}
+            contentStyle={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 }}
           >
             <Ionicons name="call" size={16} color="#FFFFFF" />
-            <AppText variant="body" color="#FFFFFF" style={styles.callBtnText}>
+            <Text style={[styles.callBtnText, { color: '#FFFFFF', fontSize: 14, fontWeight: '700' }]}>
               Gọi ngay
-            </AppText>
-          </Pressable>
-        </GlassView>
+            </Text>
+          </NeoBrutalAccent>
+        </NeoBrutalBox>
 
         {/* Self-care Tips */}
         <View style={styles.section}>
-          <AppText variant="title" color={colors.textPrimary} style={styles.sectionTitle}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
             Chăm sóc bản thân
-          </AppText>
+          </Text>
           <View style={styles.tipsGrid}>
             {SELF_CARE_TIPS.map((tip) => (
-              <GlassView key={tip.title} style={styles.tipCard}>
-                <AppText style={styles.tipEmoji}>{tip.emoji}</AppText>
-                <AppText variant="body" color={colors.textPrimary} style={styles.tipTitle}>
+              <NeoBrutalBox
+                key={tip.title}
+                borderColor={colors.glassBorder}
+                backgroundColor={colors.bgSurface}
+                shadowColor="#000"
+                shadowOffsetX={3}
+                shadowOffsetY={3}
+                borderWidth={1.5}
+                borderRadius={12}
+                style={{ width: '47%' }}
+                contentStyle={{ padding: 14, gap: 6 }}
+              >
+                <Text style={styles.tipEmoji}>{tip.emoji}</Text>
+                <Text style={[styles.tipTitle, { color: colors.textPrimary, fontSize: 14, fontWeight: '700' }]}>
                   {tip.title}
-                </AppText>
-                <AppText variant="micro" color={colors.textMuted} style={styles.tipDesc}>
+                </Text>
+                <Text style={[styles.tipDesc, { color: colors.textMuted, fontSize: 12 }]}>
                   {tip.description}
-                </AppText>
-              </GlassView>
+                </Text>
+              </NeoBrutalBox>
             ))}
           </View>
         </View>
 
         {/* Crisis Resources */}
-        <GlassView style={styles.crisisCard}>
-          <AppText variant="title" color={colors.textPrimary} style={styles.sectionTitle}>
+        <NeoBrutalBox
+          borderColor={colors.danger + '40'}
+          backgroundColor={colors.bgSurface}
+          shadowColor={colors.danger}
+          shadowOffsetX={4}
+          shadowOffsetY={4}
+          borderWidth={2}
+          borderRadius={16}
+          contentStyle={{ padding: 20, gap: 12 }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
             Khi cần giúp đỡ khẩn cấp
-          </AppText>
+          </Text>
           {CRISIS_RESOURCES.map((resource) => (
             <Pressable
               key={resource.label}
               style={({ pressed }) => [styles.crisisRow, pressed && styles.crisisRowPressed]}
               onPress={resource.number ? () => handleCallCrisis(resource.number!) : undefined}
             >
-              <AppText style={styles.crisisEmoji}>{resource.emoji}</AppText>
+              <Text style={styles.crisisEmoji}>{resource.emoji}</Text>
               <View style={styles.crisisInfo}>
-                <AppText variant="body" color={colors.textPrimary} style={styles.crisisLabel}>
+                <Text style={[styles.crisisLabel, { color: colors.textPrimary, fontWeight: '600', fontSize: 14 }]}>
                   {resource.label}
-                </AppText>
-                <AppText variant="micro" color={colors.textMuted}>
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: 12 }}>
                   {resource.sublabel}
-                </AppText>
+                </Text>
               </View>
               {resource.number && (
                 <Ionicons name="call-outline" size={18} color={colors.success} />
               )}
             </Pressable>
           ))}
-        </GlassView>
+        </NeoBrutalBox>
 
         {/* Disclaimer */}
-        <AppText variant="micro" color={colors.textMuted} style={styles.disclaimer}>
+        <Text style={[styles.disclaimer, { color: colors.textMuted, fontSize: 12 }]}>
           Ứng dụng này không thay thế cho tư vấn chuyên nghiệp. Nếu bạn đang trong tình trạng khủng hoảng, hãy tìm kiếm sự giúp đỡ ngay lập tức.
-        </AppText>
+        </Text>
 
         {/* Wellbeing Quests CTA */}
-        <Pressable
-          style={({ pressed }) => [styles.ctaBtn, pressed && styles.ctaBtnPressed]}
+        <NeoBrutalAccent
+          accentColor={colors.wellbeing}
+          strokeColor="rgba(0,0,0,0.5)"
+          shadowOffsetX={4}
+          shadowOffsetY={4}
+          borderWidth={2}
+          borderRadius={12}
           onPress={() => router.push('/(tabs)/quests')}
+          contentStyle={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 }}
         >
           <Ionicons name="leaf-outline" size={18} color="#FFFFFF" />
-          <AppText variant="body" color="#FFFFFF" style={styles.ctaBtnText}>
+          <Text style={[styles.ctaBtnText, { color: '#FFFFFF', fontSize: 14, fontWeight: '700' }]}>
             Khám phá nhiệm vụ Sức khoẻ
-          </AppText>
-        </Pressable>
+          </Text>
+        </NeoBrutalAccent>
       </ScrollView>
     </SafeAreaView>
   );
@@ -200,21 +258,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backBtnPressed: {
-    opacity: 0.6,
-    backgroundColor: colors.glassBg,
-  },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontWeight: '700',
+    fontSize: 18,
   },
   headerSpacer: {
     width: 40,
@@ -229,26 +277,11 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
 
   // Hero
-  heroCard: {
-    backgroundColor: 'rgba(124, 106, 247, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(124, 106, 247, 0.25)',
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
   heroEmoji: { fontSize: 48, textAlign: 'center' },
-  heroTitle: { fontWeight: '800', textAlign: 'center' },
+  heroTitle: { textAlign: 'center' },
   heroSubtitle: { textAlign: 'center', lineHeight: 22 },
 
   // Hotline Card
-  hotlineCard: {
-    padding: Spacing.lg,
-    borderColor: `${colors.success}40`,
-    borderWidth: 1.5,
-    gap: Spacing.md,
-  },
   hotlineTop: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -256,56 +289,30 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   hotlineEmoji: { fontSize: 28 },
   hotlineInfo: { flex: 1, gap: 2 },
-  hotlineHeading: { fontWeight: '700' },
   phoneNumberWrap: {
     alignItems: 'center',
     gap: 4,
     paddingVertical: Spacing.sm,
   },
   phoneNumberPressed: { opacity: 0.7 },
-  phoneNumber: {
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
   copyHint: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  callBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    backgroundColor: colors.success,
-    borderRadius: Radius.md,
-    paddingVertical: Spacing.md,
-  },
-  callBtnPressed: { opacity: 0.8 },
   callBtnText: { fontWeight: '700' },
 
   // Self-care section
   section: { gap: Spacing.md },
-  sectionTitle: { fontWeight: '700' },
   tipsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.sm,
   },
-  tipCard: {
-    width: '47%',
-    padding: Spacing.md,
-    gap: Spacing.xs,
-  },
   tipEmoji: { fontSize: 28 },
-  tipTitle: { fontWeight: '700' },
   tipDesc: { lineHeight: 16 },
 
   // Crisis Resources
-  crisisCard: {
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
   crisisRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -315,7 +322,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   crisisRowPressed: { opacity: 0.6 },
   crisisEmoji: { fontSize: 24, width: 32, textAlign: 'center' },
   crisisInfo: { flex: 1, gap: 2 },
-  crisisLabel: { fontWeight: '600' },
 
   // Disclaimer
   disclaimer: {
@@ -325,16 +331,5 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
 
   // CTA Button
-  ctaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: colors.wellbeing,
-    borderRadius: Radius.md,
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  ctaBtnPressed: { opacity: 0.8 },
   ctaBtnText: { fontWeight: '700' },
 });
