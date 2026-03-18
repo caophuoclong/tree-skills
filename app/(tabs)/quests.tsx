@@ -1,22 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useMemo } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from "expo-router";
+import { useEffect, useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useEffect } from 'react';
-import { useQuestsScreen } from '@/src/hooks/useQuestsScreen';
-import { useChallengeStore } from '@/src/business-logic/stores/challengeStore';
-import { useChallenges } from '@/src/business-logic/hooks/useChallenges';
-import { Emoji, NeoBrutalAccent } from '@/src/ui/atoms';
-import { ChallengeCard, ComboBar, QuestItem } from '@/src/ui/molecules';
-import { WellbeingWarningBanner } from '@/src/ui/organisms/WellbeingWarningBanner';
-import { IColors, useTheme } from '@/src/ui/tokens';
+import { useChallenges } from "@/src/business-logic/hooks/useChallenges";
+import { useChallengeStore } from "@/src/business-logic/stores/challengeStore";
+import { useQuestsScreen } from "@/src/hooks/useQuestsScreen";
+import { Emoji, NeoBrutalAccent } from "@/src/ui/atoms";
+import { ChallengeCard, ComboBar } from "@/src/ui/molecules";
+import { QuestItem } from "@/src/ui/molecules/QuestItemComponent";
+import { WellbeingWarningBanner } from "@/src/ui/organisms/WellbeingWarningBanner";
+import { IColors, useTheme } from "@/src/ui/tokens";
 
 export default function QuestsScreen() {
   const { colors } = useTheme();
@@ -47,7 +41,7 @@ export default function QuestsScreen() {
   const challenges = storeoChallenges;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -60,7 +54,12 @@ export default function QuestsScreen() {
             <View style={styles.staminaRow}>
               <Emoji size={13}>⚡</Emoji>
               <View style={styles.staminaBarTrack}>
-                <View style={[styles.staminaBarFill, { width: `${stamina}%` as any }]} />
+                <View
+                  style={[
+                    styles.staminaBarFill,
+                    { width: `${stamina}%` as any },
+                  ]}
+                />
               </View>
               <Text style={styles.staminaText}>{stamina}%</Text>
             </View>
@@ -70,7 +69,12 @@ export default function QuestsScreen() {
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>Tiến độ hoàn thành</Text>
           <View style={styles.progressBarTrack}>
-            <View style={[styles.progressBarFill, { width: `${progressPercent}%` as any }]} />
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${progressPercent}%` as any },
+              ]}
+            />
           </View>
           <NeoBrutalAccent
             accentColor={`${colors.bgBase}`}
@@ -91,7 +95,8 @@ export default function QuestsScreen() {
           <WellbeingWarningBanner
             onDismiss={() => setWellbeingDismissedDate(today)}
             onCTA={() =>
-              wellbeingQuest && router.push(`/quest/${wellbeingQuest.quest_id}` as any)
+              wellbeingQuest &&
+              router.push(`/quest/${wellbeingQuest.quest_id}` as any)
             }
           />
         )}
@@ -149,24 +154,24 @@ const createStyles = (colors: IColors) =>
     },
 
     header: {
-      flexDirection: 'column',
+      flexDirection: "column",
       gap: 8,
       marginBottom: 12,
     },
     headerTitle: {
       fontSize: 28,
-      fontWeight: '800',
+      fontWeight: "800",
       color: colors.textPrimary,
     },
     headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       gap: 12,
     },
     staminaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
     },
     staminaBarTrack: {
@@ -174,7 +179,7 @@ const createStyles = (colors: IColors) =>
       height: 4,
       backgroundColor: colors.bgElevated,
       borderRadius: 2,
-      overflow: 'hidden',
+      overflow: "hidden",
     },
     staminaBarFill: {
       height: 4,
@@ -184,14 +189,14 @@ const createStyles = (colors: IColors) =>
     staminaText: {
       fontSize: 11,
       color: colors.finance,
-      fontFamily: 'SpaceGrotesk-SemiBold',
-      fontWeight: '600',
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       minWidth: 30,
     },
 
     progressRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 10,
       marginBottom: 20,
     },
@@ -205,7 +210,7 @@ const createStyles = (colors: IColors) =>
       height: 4,
       backgroundColor: colors.bgElevated,
       borderRadius: 2,
-      overflow: 'hidden',
+      overflow: "hidden",
     },
     progressBarFill: {
       height: 4,
@@ -218,8 +223,8 @@ const createStyles = (colors: IColors) =>
     },
     completePillText: {
       fontSize: 10,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700',
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.brandPrimary,
     },
 
@@ -228,14 +233,14 @@ const createStyles = (colors: IColors) =>
     },
 
     emptyState: {
-      alignItems: 'center',
+      alignItems: "center",
       paddingVertical: 40,
       gap: 8,
     },
     emptyText: {
       fontSize: 14,
       color: colors.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
       paddingHorizontal: 20,
     },
 
@@ -243,7 +248,7 @@ const createStyles = (colors: IColors) =>
       fontSize: 16,
       marginBottom: 10,
       marginHorizontal: 20,
-      fontFamily: 'SpaceGrotesk-Bold',
+      fontFamily: "SpaceGrotesk-Bold",
       color: colors.textPrimary,
     },
 

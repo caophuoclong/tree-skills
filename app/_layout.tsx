@@ -22,7 +22,7 @@ import { useNotificationStore } from "@/src/business-logic/stores/notificationSt
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 
 // Enable network mocks in development
 if (__DEV__) {
@@ -50,16 +50,6 @@ if (__DEV__) {
 export const unstable_settings = {
   anchor: "(tabs)",
 };
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-}
 
 function App() {
   const { isDark, colors } = useTheme();
@@ -132,7 +122,7 @@ function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <Fragment>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
@@ -163,6 +153,14 @@ function App() {
       />
       <LevelUpModal />
       <LoginBonusModal />
+    </Fragment>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <App />
     </QueryClientProvider>
   );
 }
