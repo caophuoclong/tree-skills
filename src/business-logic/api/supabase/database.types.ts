@@ -14,6 +14,56 @@ export type Database = {
   };
   public: {
     Tables: {
+      assessment_options: {
+        Row: {
+          branch: Database["public"]["Enums"]["branch_type"];
+          id: string;
+          question_id: number;
+          sort_order: number;
+          text: string;
+        };
+        Insert: {
+          branch: Database["public"]["Enums"]["branch_type"];
+          id: string;
+          question_id: number;
+          sort_order?: number;
+          text: string;
+        };
+        Update: {
+          branch?: Database["public"]["Enums"]["branch_type"];
+          id?: string;
+          question_id?: number;
+          sort_order?: number;
+          text?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assessment_options_question_id_fkey";
+            columns: ["question_id"];
+            isOneToOne: false;
+            referencedRelation: "assessment_questions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assessment_questions: {
+        Row: {
+          id: number;
+          question: string;
+          sort_order: number;
+        };
+        Insert: {
+          id?: number;
+          question: string;
+          sort_order?: number;
+        };
+        Update: {
+          id?: number;
+          question?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
       challenges: {
         Row: {
           branch: Database["public"]["Enums"]["branch_type"];
@@ -553,20 +603,3 @@ export const Constants = {
     },
   },
 } as const;
-
-// ─── Convenience row type aliases ─────────────────────────────────────────────
-export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-export type QuestRow = Database["public"]["Tables"]["quests"]["Row"];
-export type UserQuestRow = Database["public"]["Tables"]["user_quests"]["Row"];
-export type SkillNodeRow = Database["public"]["Tables"]["skill_nodes"]["Row"];
-export type UserSkillNodeRow =
-  Database["public"]["Tables"]["user_skill_nodes"]["Row"];
-export type ChallengeRow = Database["public"]["Tables"]["challenges"]["Row"];
-export type UserChallengeRow =
-  Database["public"]["Tables"]["user_challenges"]["Row"];
-export type RoadmapMilestoneRow =
-  Database["public"]["Tables"]["roadmap_milestones"]["Row"];
-export type CustomGoalTreeRow =
-  Database["public"]["Tables"]["custom_goal_trees"]["Row"];
-export type NotificationRow =
-  Database["public"]["Tables"]["notifications"]["Row"];
