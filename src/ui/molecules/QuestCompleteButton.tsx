@@ -11,8 +11,6 @@ interface QuestCompleteButtonProps {
   isCompleted: boolean;
   sessionCombo: number;
   onComplete: () => void;
-  isGated?: boolean; // quest locked due to low stamina
-  staminaStatus?: 'ok' | 'warning' | 'debuff' | 'gate';
 }
 
 export function QuestCompleteButton({
@@ -21,8 +19,6 @@ export function QuestCompleteButton({
   isCompleted,
   sessionCombo,
   onComplete,
-  isGated = false,
-  staminaStatus = 'ok',
 }: QuestCompleteButtonProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -39,7 +35,7 @@ export function QuestCompleteButton({
   const bgColorAnim = useRef(new Animated.Value(0)).current; // 0=primary, 1=success
 
   const handlePress = useCallback(() => {
-    if (btnState !== 'idle' || isGated) return;
+    if (btnState !== 'idle') return;
     setBtnState('animating');
 
     // 1. Scale bounce
@@ -97,43 +93,12 @@ export function QuestCompleteButton({
 
     // 6. Trigger actual completion
     onComplete();
-  }, [btnState, scaleAnim, xpFlyY, xpFlyOpacity, bgColorAnim, sessionCombo, onComplete, isGated]);
+  }, [btnState, scaleAnim, xpFlyY, xpFlyOpacity, bgColorAnim, sessionCombo, onComplete]);
 
   const bgColor = bgColorAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [colors.brandPrimary, colors.finance], // finance = success/green color
   });
-
-  // Gated state (stamina = 0, career/finance quest)
-  if (isGated) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.wrapper}>
-          <View
-            style={[
-              styles.shadow,
-              { backgroundColor: colors.danger },
-            ]}
-          />
-          <View
-            style={[
-              styles.btn,
-              { backgroundColor: colors.danger, borderColor: colors.textPrimary },
-            ]}
-          >
-            <View style={styles.btnTouchable}>
-              <Text style={[styles.btnText, { fontFamily: 'SpaceGrotesk-Bold' }]}>
-                ⚡ Năng Lượng Cạn Kiệt
-              </Text>
-              <Text style={[styles.gatedSubtitle, { fontFamily: 'SpaceGrotesk-Regular' }]}>
-                Hoàn thành Wellbeing quest để hồi phục
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  }
 
   // Completed state
   if (btnState === 'done' || isCompleted) {
@@ -176,24 +141,6 @@ export function QuestCompleteButton({
       >
         +{xpReward} XP
       </Animated.Text>
-
-      {/* Stamina badge for warning/debuff */}
-      {(staminaStatus === 'warning' || staminaStatus === 'debuff') && (
-        <View
-          style={[
-            styles.staminaBadge,
-            {
-              backgroundColor:
-                staminaStatus === 'debuff' ? colors.danger : colors.warning,
-              borderColor: colors.textPrimary,
-            },
-          ]}
-        >
-          <Text style={[styles.staminaBadgeText, { fontFamily: 'SpaceGrotesk-Bold' }]}>
-            XP {staminaStatus === 'debuff' ? '-50%' : '-25%'}
-          </Text>
-        </View>
-      )}
 
       {/* Combo toast */}
       {showComboToast && (
@@ -278,31 +225,12 @@ const createStyles = (colors: any) =>
       fontSize: 17,
       color: '#fff',
     },
-    gatedSubtitle: {
-      fontSize: 12,
-      color: '#fff',
-      marginTop: 4,
-      opacity: 0.9,
-    },
     xpFlyLabel: {
       fontSize: 22,
       position: 'absolute',
       top: -30,
       alignSelf: 'center',
       zIndex: 10,
-    },
-    staminaBadge: {
-      borderWidth: 2,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      position: 'absolute',
-      top: -50,
-      alignSelf: 'center',
-    },
-    staminaBadgeText: {
-      fontSize: 12,
-      color: '#fff',
     },
     comboToast: {
       borderWidth: 2,
