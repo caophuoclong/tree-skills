@@ -55,6 +55,14 @@ export type OnboardingAnswer = {
   selected_branch: Branch;
 };
 
+// ─── Weekly Activity ──────────────────────────────────────────────────────
+
+export interface WeeklyDay {
+  date: string; // YYYY-MM-DD
+  questsCompleted: number;
+  xpEarned: number;
+}
+
 // ─── Custom Skill Tree Builder ─────────────────────────────────────────────────
 
 /** A user-defined goal tree generated with AI assistance */

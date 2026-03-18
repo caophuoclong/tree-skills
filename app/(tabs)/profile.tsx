@@ -22,6 +22,12 @@ import {
   NeoBrutalThemed,
   ProgressBar,
 } from "@/src/ui/atoms";
+import {
+  BranchProgressList,
+  ProfileHeader,
+  ProfileStatsRow,
+  WeeklyChart,
+} from "@/src/ui/molecules";
 import { IColors, useTheme } from "@/src/ui/tokens";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,41 +52,13 @@ function getBranchPercent(
   );
 }
 
-// ─── Branch progress row ──────────────────────────────────────────────────────
-
-interface BranchRowProps {
-  label: string;
-  percent: number;
-  color: string;
-  emoji: string;
-}
-
-function BranchProgressRow({ label, percent, color, emoji }: BranchRowProps) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <View style={styles.branchRow}>
-      <Text style={styles.branchEmoji}>{emoji}</Text>
-      <View style={{ flex: 1, gap: 5 }}>
-        <View style={styles.branchLabelRow}>
-          <Text style={[styles.branchLabel, { color: colors.textPrimary }]}>
-            {label}
-          </Text>
-          <Text style={[styles.branchPercent, { color }]}>{percent}%</Text>
-        </View>
-        <ProgressBar value={percent} color={color} variant="thick" animated />
-      </View>
-    </View>
-  );
-}
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
   const user = useUserStore((s) => s.user);
   const logout = useUserStore((s) => s.logout);
+  const weeklyActivity = useUserStore((s) => s.weeklyActivity);
   const nodes = useSkillTreeStore((s) => s.nodes);
   const premiumShimmer = useRef(new Animated.Value(-1)).current;
   const styles = createStyles(colors);
@@ -221,58 +199,12 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Avatar header ─────────────────────────────────────────────────── */}
-        <View style={styles.avatarSection}>
-          {/* Avatar circle — NeoBrutalBox as circle */}
-          <View style={styles.avatarContainer}>
-            <NeoBrutalBox
-              borderRadius={44}
-              borderColor={colors.brandPrimary}
-              backgroundColor={colors.bgSurface}
-              shadowColor="#000"
-              shadowOffsetX={4}
-              shadowOffsetY={4}
-              borderWidth={3}
-              contentStyle={{
-                width: 88,
-                height: 88,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={[styles.avatarInitials, { color: colors.textPrimary }]}
-              >
-                {initials}
-              </Text>
-            </NeoBrutalBox>
-
-            {/* Level badge — absolute overlay */}
-            <NeoBrutalBox
-              borderRadius={20}
-              borderColor={colors.brandPrimary}
-              backgroundColor={colors.bgSurface}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={2}
-              style={styles.levelBadge}
-              contentStyle={{ paddingHorizontal: 8, paddingVertical: 3 }}
-            >
-              <Text
-                style={[styles.levelBadgeText, { color: colors.brandPrimary }]}
-              >
-                LVL {level}
-              </Text>
-            </NeoBrutalBox>
-          </View>
-
-          <Text style={[styles.userName, { color: colors.textPrimary }]}>
-            {name}
-          </Text>
-          <Text style={[styles.userSubtitle, { color: colors.textSecondary }]}>
-            Level {level} · {currentXP.toLocaleString()} XP
-          </Text>
-        </View>
+        <ProfileHeader
+          name={name}
+          level={level}
+          totalXP={currentXP}
+          initials={initials}
+        />
 
         {/* ── Premium banner ────────────────────────────────────────────────── */}
         <NeoBrutalBox
@@ -334,26 +266,7 @@ export default function ProfileScreen() {
         </NeoBrutalBox>
 
         {/* ── Stats row ─────────────────────────────────────────────────────── */}
-        <View style={styles.statsRow}>
-          {STATS.map((stat, i) => (
-            <NeoBrutalThemed
-              key={i}
-              shadowOffsetX={3}
-              shadowOffsetY={3}
-              borderWidth={2}
-              borderRadius={12}
-              style={{ flex: 1 }}
-              contentStyle={styles.statContent}
-            >
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                {stat.value}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-                {stat.label}
-              </Text>
-            </NeoBrutalThemed>
-          ))}
-        </View>
+        <ProfileStatsRow stats={STATS} />
 
         {/* ── Milestone Badges ──────────────────────────────────────────────── */}
         <View style={styles.milestoneSection}>
@@ -435,62 +348,51 @@ export default function ProfileScreen() {
           </ScrollView>
         </View>
 
-        {/* ── Skill Branch Progress ─────────────────────────────────────────── */}
+        {/* ── Weekly Activity Chart ─────────────────────────────────────────── */}
         <View style={{ marginHorizontal: 20, marginTop: 24 }}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-            SKILL BRANCH PROGRESS
+            THIS WEEK
           </Text>
           <NeoBrutalThemed
             shadowOffsetX={4}
             shadowOffsetY={4}
             borderWidth={2}
             borderRadius={16}
-            contentStyle={styles.branchCard}
+            contentStyle={{ paddingVertical: 20, paddingHorizontal: 16 }}
           >
-            <BranchProgressRow
-              label="Sự nghiệp"
-              percent={careerPct}
-              color={colors.career}
-              emoji="💼"
-            />
-            <View
-              style={[
-                styles.branchDivider,
-                { backgroundColor: colors.glassBorder },
-              ]}
-            />
-            <BranchProgressRow
-              label="Tài chính"
-              percent={financePct}
-              color={colors.finance}
-              emoji="💰"
-            />
-            <View
-              style={[
-                styles.branchDivider,
-                { backgroundColor: colors.glassBorder },
-              ]}
-            />
-            <BranchProgressRow
-              label="Kỹ năng mềm"
-              percent={softPct}
-              color={colors.softskills}
-              emoji="💬"
-            />
-            <View
-              style={[
-                styles.branchDivider,
-                { backgroundColor: colors.glassBorder },
-              ]}
-            />
-            <BranchProgressRow
-              label="Sức khỏe"
-              percent={wellPct}
-              color={colors.wellbeing}
-              emoji="🧘"
-            />
+            <WeeklyChart data={weeklyActivity} />
           </NeoBrutalThemed>
         </View>
+
+        {/* ── Skill Branch Progress ─────────────────────────────────────────── */}
+        <BranchProgressList
+          branches={[
+            {
+              label: "Sự nghiệp",
+              percent: careerPct,
+              color: colors.career,
+              emoji: "💼",
+            },
+            {
+              label: "Tài chính",
+              percent: financePct,
+              color: colors.finance,
+              emoji: "💰",
+            },
+            {
+              label: "Kỹ năng mềm",
+              percent: softPct,
+              color: colors.softskills,
+              emoji: "💬",
+            },
+            {
+              label: "Sức khỏe",
+              percent: wellPct,
+              color: colors.wellbeing,
+              emoji: "🧘",
+            },
+          ]}
+        />
 
         {/* ── Navigation rows ───────────────────────────────────────────────── */}
         <View style={styles.navSection}>
@@ -587,24 +489,6 @@ const createStyles = (colors: IColors) =>
     scroll: { flex: 1 },
     scrollContent: { paddingBottom: 40 },
 
-    // Avatar
-    avatarSection: {
-      alignItems: "center",
-      paddingVertical: 28,
-      paddingHorizontal: 20,
-    },
-    avatarContainer: { position: "relative", marginBottom: 14 },
-    avatarInitials: { fontSize: 26, fontWeight: "900" },
-    levelBadge: { position: "absolute", bottom: -4, right: -8 },
-    levelBadgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
-    userName: { fontSize: 22, fontWeight: "800", marginBottom: 4 },
-    userSubtitle: {
-      fontSize: 12,
-      fontFamily: "SpaceGrotesk-SemiBold",
-      fontWeight: "600",
-      marginTop: 2,
-    },
-
     // Premium banner
     premiumContent: {
       flexDirection: "row",
@@ -656,28 +540,6 @@ const createStyles = (colors: IColors) =>
       marginTop: 6,
     },
 
-    // Stats
-    statsRow: {
-      flexDirection: "row",
-      gap: 10,
-      marginHorizontal: 20,
-      marginTop: 16,
-    },
-    statContent: {
-      alignItems: "center",
-      paddingVertical: 14,
-      paddingHorizontal: 8,
-    },
-    statValue: { fontSize: 18, fontWeight: "900" },
-    statLabel: {
-      fontSize: 8,
-      fontWeight: "800",
-      textAlign: "center",
-      marginTop: 5,
-      lineHeight: 11,
-      letterSpacing: 0.3,
-    },
-
     // Milestones
     milestoneSection: { marginTop: 32 },
     milestoneList: {
@@ -710,24 +572,6 @@ const createStyles = (colors: IColors) =>
       textAlign: "center",
       lineHeight: 12,
     },
-
-    // Branch progress card
-    branchCard: { padding: 18, gap: 14 },
-    branchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-    branchEmoji: { fontSize: 16, width: 24, textAlign: "center" },
-    branchLabelRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 2,
-    },
-    branchLabel: {
-      fontSize: 13,
-      fontFamily: "SpaceGrotesk-SemiBold",
-      fontWeight: "600",
-    },
-    branchPercent: { fontSize: 12, fontWeight: "800" },
-    branchDivider: { height: StyleSheet.hairlineWidth },
 
     // Navigation rows
     navSection: { marginHorizontal: 20, marginTop: 24, gap: 10 },

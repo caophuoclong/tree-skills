@@ -1,16 +1,18 @@
 import { create } from 'zustand';
-import type { UserProgress, DailyStats } from '../types';
+import type { UserProgress, DailyStats, WeeklyDay } from '../types';
 import type { LevelUpReward } from '../hooks/useXPEngine';
 
 interface UserStore {
   user: UserProgress | null;
   dailyStats: DailyStats;
+  weeklyActivity: WeeklyDay[];
   isAuthenticated: boolean;
   setUser: (user: UserProgress) => void;
   updateXP: (amount: number) => void;
   updateStamina: (value: number) => void;
   updateStreak: (streak: number) => void;
   incrementDailyQuestCount: (branch: string) => void;
+  recordActivity: (xp: number) => void;
   resetDailyStats: () => void;
   levelUpReward: LevelUpReward | null;
   setLevelUpReward: (reward: LevelUpReward | null) => void;
@@ -29,9 +31,18 @@ const DEFAULT_DAILY_STATS: DailyStats = {
   session_combo: 0,
 };
 
+function getLast7Days(): WeeklyDay[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return { date: d.toISOString().split('T')[0], questsCompleted: 0, xpEarned: 0 };
+  });
+}
+
 export const useUserStore = create<UserStore>((set) => ({
   user: null,
   dailyStats: DEFAULT_DAILY_STATS,
+  weeklyActivity: getLast7Days(),
   isAuthenticated: false,
   levelUpReward: null,
   lastLoginDate: null,
@@ -95,6 +106,21 @@ export const useUserStore = create<UserStore>((set) => ({
 
   setLoginBonusReward: (amount) => set({ loginBonusReward: amount }),
 
+  recordActivity: (xp) =>
+    set((state) => {
+      const today = new Date().toISOString().split('T')[0];
+      const activity = [...state.weeklyActivity];
+      const todayIdx = activity.findIndex((d) => d.date === today);
+      if (todayIdx >= 0) {
+        activity[todayIdx] = {
+          ...activity[todayIdx],
+          questsCompleted: activity[todayIdx].questsCompleted + 1,
+          xpEarned: activity[todayIdx].xpEarned + xp,
+        };
+      }
+      return { weeklyActivity: activity };
+    }),
+
   checkDailyLogin: () =>
     set((state) => {
       const today = new Date().toISOString().split('T')[0];
@@ -120,5 +146,5 @@ export const useUserStore = create<UserStore>((set) => ({
       };
     }),
 
-  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, levelUpReward: null, loginBonusReward: null, lastLoginDate: null }),
+  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, weeklyActivity: getLast7Days(), levelUpReward: null, loginBonusReward: null, lastLoginDate: null }),
 }));
