@@ -1,4 +1,3 @@
-import { getInitialNodes } from "@/src/business-logic/data/skill-tree-nodes";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import type { Branch, SkillNode } from "@/src/business-logic/types";
 import { BranchHeroCard, NodeDetailModal } from "@/src/ui/molecules";
@@ -41,7 +40,7 @@ export default function BranchScreen() {
   // Init nodes if needed
   useEffect(() => {
     if (nodes.length === 0) {
-      setNodes(getInitialNodes());
+      // Nodes already populated by useSkillTree hook — no fallback needed
     }
   }, []);
 

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { CHALLENGE_LIBRARY } from '../data/challenge-library';
 import type { Challenge } from '../data/challenge-library';
 import type { Branch } from '../types';
 
@@ -17,7 +16,7 @@ interface ChallengeStore {
 }
 
 export const useChallengeStore = create<ChallengeStore>((set, get) => ({
-  challenges: CHALLENGE_LIBRARY,
+  challenges: [],
   activeChallenges: [],
   progress: {},
 

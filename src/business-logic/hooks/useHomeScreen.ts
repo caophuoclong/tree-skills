@@ -16,7 +16,6 @@ import { useStaminaSystem } from "./useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
-import { getDemoNodes } from "@/src/business-logic/data/skill-tree-nodes";
 import type { Branch, MoodScore } from "@/src/business-logic/types";
 import * as Haptics from "expo-haptics";
 
@@ -45,13 +44,8 @@ export function useHomeScreen() {
   const [toastStreak, setToastStreak] = useState(0);
   const prevStreak = useRef(streak ?? 0);
 
-  // Init demo nodes
-  useEffect(() => {
-    if (nodes.length === 0) {
-      setNodes(getDemoNodes());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Nodes are populated by useSkillTree (via skillTreeStore.setNodes after API fetch)
+  // No local fallback needed — loading state shown until nodes arrive
 
   // Handle streak milestone toast + haptics
   useEffect(() => {
