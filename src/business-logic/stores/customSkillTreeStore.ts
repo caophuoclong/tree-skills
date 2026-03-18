@@ -301,6 +301,8 @@ interface CustomSkillTreeStore {
   setDraft: (tree: CustomGoalTree) => void;
   discardDraft: () => void;
   confirmDraft: (onConfirmed: (nodeIds: string[], goal: CustomGoalTree) => void) => void;
+  /** Seed store with pre-built demo data (called once on app init) */
+  initWithDemoData: (data: { trees: CustomGoalTree[]; nodeGoalMap: Record<string, NodeGoalEntry> }) => void;
 
   // Cluster mutations
   addCluster: (cluster: CustomCluster) => void;
@@ -329,6 +331,13 @@ export const useCustomSkillTreeStore = create<CustomSkillTreeStore>((set) => ({
   setGenerating: (v) => set({ isGenerating: v }),
   setDraft: (tree) => set({ currentDraft: tree, isGenerating: false }),
   discardDraft: () => set({ currentDraft: null }),
+  initWithDemoData: (data) =>
+    set((state) =>
+      // Only seed if store is still empty (don't overwrite user's real data)
+      state.trees.length === 0
+        ? { trees: data.trees, nodeGoalMap: data.nodeGoalMap }
+        : state
+    ),
 
   confirmDraft: (onConfirmed) =>
     set((state) => {

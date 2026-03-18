@@ -16,9 +16,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 
-import { getDemoNodes } from "@/src/business-logic/data/skill-tree-nodes";
-import { useQuestStore } from "@/src/business-logic/stores/questStore";
+import {
+  getDemoCustomData,
+  getDemoNodes,
+} from "@/src/business-logic/data/skill-tree-nodes";
 import { useCustomSkillTreeStore } from "@/src/business-logic/stores/customSkillTreeStore";
+import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import type { Branch, SkillNode } from "@/src/business-logic/types";
 import { Emoji } from "@/src/ui/atoms";
@@ -231,11 +234,18 @@ interface NodeProps {
   branchColor: string;
   colors: any;
   onPress: (n: SkillNode) => void;
-  goalTitle?: string;   // if set, show a small goal origin badge
+  goalTitle?: string; // if set, show a small goal origin badge
   onGoalBadgePress?: () => void;
 }
 
-function NodeCircle({ placed, branchColor, colors, onPress, goalTitle, onGoalBadgePress }: NodeProps) {
+function NodeCircle({
+  placed,
+  branchColor,
+  colors,
+  onPress,
+  goalTitle,
+  onGoalBadgePress,
+}: NodeProps) {
   const { node, x, y } = placed;
   const isCompleted = node.status === "completed";
   const isInProgress = node.status === "in_progress";
@@ -453,10 +463,19 @@ export default function TreeScreen() {
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [showOnlyCustom, setShowOnlyCustom] = React.useState(false);
   const [goalSheetId, setGoalSheetId] = React.useState<string | null>(null);
-  const { nodeGoalMap, trees: customTrees } = useCustomSkillTreeStore();
+  const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(
+    null,
+  );
+  const {
+    nodeGoalMap,
+    trees: customTrees,
+    initWithDemoData,
+  } = useCustomSkillTreeStore();
 
   useEffect(() => {
     if (nodes.length === 0) setNodes(getDemoNodes());
+    // Seed custom store with demo goals so goal filter pills are visible on first launch
+    initWithDemoData(getDemoCustomData());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -489,23 +508,39 @@ export default function TreeScreen() {
     if (customCount <= 1) setShowOnlyCustom(false);
   }, [activeBranch, customCount]);
 
-  // Visible nodes — filtered or all
-  const visibleNodes = useMemo(
-    () =>
-      showOnlyCustom
-        ? branchNodes.filter((n) => n.node_id.startsWith("custom_"))
-        : branchNodes,
-    [branchNodes, showOnlyCustom],
-  );
+  // Goal filter: when a goal is selected, show ALL nodes for that goal
+  // regardless of which branch tab is active
+  const goalFilterActive = selectedGoalId !== null;
+
+  // Visible nodes — goal filter takes precedence over branch + custom filter
+  const visibleNodes = useMemo(() => {
+    if (goalFilterActive) {
+      return nodes.filter(
+        (n) => nodeGoalMap[n.node_id]?.goalId === selectedGoalId,
+      );
+    }
+    return showOnlyCustom
+      ? branchNodes.filter((n) => n.node_id.startsWith("custom_"))
+      : branchNodes;
+  }, [
+    nodes,
+    branchNodes,
+    selectedGoalId,
+    goalFilterActive,
+    showOnlyCustom,
+    nodeGoalMap,
+  ]);
 
   const { placed, banners, totalHeight } = useMemo(
     () => buildPath(visibleNodes),
     [visibleNodes],
   );
 
-  const done = branchNodes.filter((n) => n.status === "completed").length;
+  // When goal filter is active, progress counts across all goal nodes (not just this branch)
+  const countBase = goalFilterActive ? visibleNodes : branchNodes;
+  const done = countBase.filter((n) => n.status === "completed").length;
   const pct =
-    branchNodes.length > 0 ? Math.round((done / branchNodes.length) * 100) : 0;
+    countBase.length > 0 ? Math.round((done / countBase.length) * 100) : 0;
   const todayQ =
     dailyQuests.find((q) => !q.completed_at) ?? dailyQuests[0] ?? null;
 
@@ -540,6 +575,111 @@ export default function TreeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Goal filter pills — only renders when user has created at least one goal tree */}
+      {customTrees.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.goalPillsScroll}
+          contentContainerStyle={styles.goalPillsRow}
+        >
+          {/* "All" pill */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setSelectedGoalId(null)}
+            style={[
+              styles.goalPill,
+              !goalFilterActive
+                ? {
+                    backgroundColor: `${colors.brandPrimary}1E`,
+                    borderColor: `${colors.brandPrimary}55`,
+                  }
+                : {
+                    backgroundColor: colors.bgElevated,
+                    borderColor: colors.glassBorder,
+                  },
+            ]}
+          >
+            <Text
+              style={[
+                styles.goalPillText,
+                {
+                  color: !goalFilterActive
+                    ? colors.brandPrimary
+                    : colors.textMuted,
+                },
+              ]}
+            >
+              ✦ Tất cả
+            </Text>
+          </TouchableOpacity>
+
+          {/* One pill per saved goal tree */}
+          {customTrees.map((tree) => {
+            const active = selectedGoalId === tree.id;
+            return (
+              <TouchableOpacity
+                key={tree.id}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setSelectedGoalId(tree.id);
+                  setShowOnlyCustom(false);
+                }}
+                style={[
+                  styles.goalPill,
+                  active
+                    ? {
+                        backgroundColor: `${colors.brandPrimary}1E`,
+                        borderColor: `${colors.brandPrimary}55`,
+                      }
+                    : {
+                        backgroundColor: colors.bgElevated,
+                        borderColor: colors.glassBorder,
+                      },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.goalPillText,
+                    {
+                      color: active
+                        ? colors.brandPrimary
+                        : colors.textSecondary,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  🎯 {tree.goal}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+          {/* Tạo cây kỹ năng button — inline with tabs */}
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={() => router.push("/skill-builder")}
+            style={[
+              styles.tab,
+              styles.tabCreate,
+              {
+                backgroundColor: `${colors.brandPrimary}1C`,
+                borderColor: `${colors.brandPrimary}55`,
+              },
+            ]}
+          >
+            <Ionicons name="sparkles" size={12} color={colors.brandPrimary} />
+            <Text
+              style={[
+                styles.tabText,
+                { color: colors.brandPrimary, fontWeight: "700" },
+              ]}
+            >
+              Tạo mới
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
       {/* Branch tabs + Tạo button */}
       <ScrollView
         horizontal
@@ -554,19 +694,31 @@ export default function TreeScreen() {
             <TouchableOpacity
               key={b.id}
               activeOpacity={0.8}
-              onPress={() => setActiveBranch(b.id)}
+              onPress={() => {
+                setActiveBranch(b.id);
+                setSelectedGoalId(null);
+              }}
               style={[
                 styles.tab,
-                active
+                // When goal active: ALL tabs lose their highlight — no "active" state
+                !goalFilterActive && active
                   ? { backgroundColor: `${col}1E`, borderColor: `${col}55` }
                   : { borderColor: "transparent" },
+                // When goal active: all tabs equally dimmed, just color hints
+                goalFilterActive && { opacity: 0.38 },
               ]}
             >
               <Text
                 style={[
                   styles.tabText,
-                  { color: active ? col : colors.textMuted },
-                  active && { fontWeight: "700" },
+                  {
+                    color: goalFilterActive
+                      ? col
+                      : active
+                        ? col
+                        : colors.textMuted,
+                  },
+                  !goalFilterActive && active && { fontWeight: "700" },
                 ]}
               >
                 {b.label}
@@ -576,55 +728,71 @@ export default function TreeScreen() {
         })}
 
         {/* Separator */}
-        <View style={[styles.tabSep, { backgroundColor: colors.glassBorder }]} />
-
-        {/* Tạo cây kỹ năng button — inline with tabs */}
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={() => router.push("/skill-builder")}
-          style={[
-            styles.tab,
-            styles.tabCreate,
-            { backgroundColor: `${colors.brandPrimary}1C`, borderColor: `${colors.brandPrimary}55` },
-          ]}
-        >
-          <Ionicons name="sparkles" size={12} color={colors.brandPrimary} />
-          <Text style={[styles.tabText, { color: colors.brandPrimary, fontWeight: "700" }]}>
-            Tạo mới
-          </Text>
-        </TouchableOpacity>
+        <View
+          style={[styles.tabSep, { backgroundColor: colors.glassBorder }]}
+        />
       </ScrollView>
 
       {/* Progress strip */}
       <View style={[styles.strip, { backgroundColor: colors.bgSurface }]}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.stripName, { color: colors.textPrimary }]}>
-            {BRANCH_NAME[activeBranch]}
+          <Text
+            style={[styles.stripName, { color: colors.textPrimary }]}
+            numberOfLines={1}
+          >
+            {goalFilterActive
+              ? (customTrees.find((t) => t.id === selectedGoalId)?.goal ??
+                "Lộ trình")
+              : BRANCH_NAME[activeBranch]}
           </Text>
           <Text style={[styles.stripCount, { color: colors.textMuted }]}>
-            {done}/{branchNodes.length} hoàn tất
+            {done}/{countBase.length} hoàn tất
+            {goalFilterActive && (
+              <Text style={{ color: colors.brandPrimary }}>
+                {" "}
+                · Lọc theo lộ trình
+              </Text>
+            )}
           </Text>
         </View>
         <View style={[styles.track, { backgroundColor: colors.bgElevated }]}>
           <View
             style={[
               styles.fill,
-              { width: `${pct}%` as any, backgroundColor: branchColor },
+              {
+                width: `${pct}%` as any,
+                backgroundColor: goalFilterActive
+                  ? colors.brandPrimary
+                  : branchColor,
+              },
             ]}
           />
         </View>
-        <Text style={[styles.pct, { color: branchColor }]}>{pct}%</Text>
+        <Text
+          style={[
+            styles.pct,
+            { color: goalFilterActive ? colors.brandPrimary : branchColor },
+          ]}
+        >
+          {pct}%
+        </Text>
 
-        {/* Custom filter chip — only show when >1 custom node in this branch */}
-        {customCount > 1 && (
+        {/* Custom filter chip — only show when >1 custom node in this branch AND no goal filter active */}
+        {customCount > 1 && !goalFilterActive && (
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setShowOnlyCustom((v) => !v)}
             style={[
               styles.filterChip,
               showOnlyCustom
-                ? { backgroundColor: `${branchColor}28`, borderColor: `${branchColor}70` }
-                : { backgroundColor: colors.bgElevated, borderColor: colors.glassBorder },
+                ? {
+                    backgroundColor: `${branchColor}28`,
+                    borderColor: `${branchColor}70`,
+                  }
+                : {
+                    backgroundColor: colors.bgElevated,
+                    borderColor: colors.glassBorder,
+                  },
             ]}
           >
             <Ionicons
@@ -641,7 +809,9 @@ export default function TreeScreen() {
               Tự thêm
             </Text>
             {showOnlyCustom && (
-              <View style={[styles.filterDot, { backgroundColor: branchColor }]} />
+              <View
+                style={[styles.filterDot, { backgroundColor: branchColor }]}
+              />
             )}
           </TouchableOpacity>
         )}
@@ -655,34 +825,41 @@ export default function TreeScreen() {
       >
         <View style={{ width: SW, height: totalHeight }}>
           {/* SVG bezier paths — below nodes */}
+          {/* When goal filter active, use brandPrimary as unified connector color */}
           <SvgPaths
             placed={placed}
-            branchColor={branchColor}
+            branchColor={goalFilterActive ? colors.brandPrimary : branchColor}
             totalHeight={totalHeight}
           />
 
-          {/* Tier banners */}
+          {/* Tier banners — use brandPrimary when goal filter active (nodes span multiple branches) */}
           {banners.map((b) => (
             <TierBannerView
               key={`b${b.tier}`}
               banner={b}
-              branchColor={branchColor}
+              branchColor={goalFilterActive ? colors.brandPrimary : branchColor}
               colors={colors}
             />
           ))}
 
           {/* Nodes on top */}
+          {/* When goal filter active, each node uses its own branch color (nodes may span multiple branches) */}
           {placed.map((p) => {
             const goalEntry = nodeGoalMap[p.node.node_id];
+            const nodeColor = goalFilterActive
+              ? colorMap[p.node.branch]
+              : branchColor;
             return (
               <NodeCircle
                 key={p.node.node_id}
                 placed={p}
-                branchColor={branchColor}
+                branchColor={nodeColor}
                 colors={colors}
                 onPress={handlePress}
                 goalTitle={goalEntry?.goalTitle}
-                onGoalBadgePress={goalEntry ? () => setGoalSheetId(goalEntry.goalId) : undefined}
+                onGoalBadgePress={
+                  goalEntry ? () => setGoalSheetId(goalEntry.goalId) : undefined
+                }
               />
             );
           })}
@@ -826,60 +1003,142 @@ export default function TreeScreen() {
             if (!goalTree) return null;
 
             // Group clusters by branch
-            const branchGroups: Partial<Record<Branch, typeof goalTree.clusters>> = {};
+            const branchGroups: Partial<
+              Record<Branch, typeof goalTree.clusters>
+            > = {};
             for (const c of goalTree.clusters) {
               if (!branchGroups[c.branch]) branchGroups[c.branch] = [];
               branchGroups[c.branch]!.push(c);
             }
             const BRANCH_COLOR: Record<Branch, string> = {
-              career: '#7C6AF7', finance: '#22C55E', softskills: '#F59E0B', wellbeing: '#EC4899',
+              career: "#7C6AF7",
+              finance: "#22C55E",
+              softskills: "#F59E0B",
+              wellbeing: "#EC4899",
             };
             const BRANCH_LABEL: Record<Branch, string> = {
-              career: 'Sự nghiệp', finance: 'Tài chính', softskills: 'Kỹ năng mềm', wellbeing: 'Sức khỏe',
+              career: "Sự nghiệp",
+              finance: "Tài chính",
+              softskills: "Kỹ năng mềm",
+              wellbeing: "Sức khỏe",
             };
             const BRANCH_EMOJI_MAP: Record<Branch, string> = {
-              career: '💼', finance: '💰', softskills: '💬', wellbeing: '🧘',
+              career: "💼",
+              finance: "💰",
+              softskills: "💬",
+              wellbeing: "🧘",
             };
 
             return (
-              <View style={[styles.sheet, { backgroundColor: colors.bgSurface, borderColor: colors.glassBorder }]}>
+              <View
+                style={[
+                  styles.sheet,
+                  {
+                    backgroundColor: colors.bgSurface,
+                    borderColor: colors.glassBorder,
+                  },
+                ]}
+              >
                 <View style={styles.handle} />
-                <Text style={[styles.goalSheetTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+                <Text
+                  style={[styles.goalSheetTitle, { color: colors.textPrimary }]}
+                  numberOfLines={2}
+                >
                   🎯 {goalTree.goal}
                 </Text>
-                <Text style={[styles.goalSheetSub, { color: colors.textMuted }]}>
-                  Lộ trình này trải đều trên {Object.keys(branchGroups).length} danh mục
+                <Text
+                  style={[styles.goalSheetSub, { color: colors.textMuted }]}
+                >
+                  Lộ trình này trải đều trên {Object.keys(branchGroups).length}{" "}
+                  danh mục
                 </Text>
 
-                <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 16 }}>
-                  {(Object.entries(branchGroups) as [Branch, typeof goalTree.clusters][]).map(([branch, clusters]) => {
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  style={{ marginTop: 16 }}
+                >
+                  {(
+                    Object.entries(branchGroups) as [
+                      Branch,
+                      typeof goalTree.clusters,
+                    ][]
+                  ).map(([branch, clusters]) => {
                     const col = BRANCH_COLOR[branch];
-                    const totalSkills = clusters.reduce((s, c) => s + c.skills.length, 0);
+                    const totalSkills = clusters.reduce(
+                      (s, c) => s + c.skills.length,
+                      0,
+                    );
                     return (
-                      <View key={branch} style={[styles.goalBranchSection, { borderColor: `${col}30` }]}>
+                      <View
+                        key={branch}
+                        style={[
+                          styles.goalBranchSection,
+                          { borderColor: `${col}30` },
+                        ]}
+                      >
                         {/* Branch header */}
-                        <View style={[styles.goalBranchHeader, { backgroundColor: `${col}15` }]}>
-                          <Text style={{ fontSize: 16 }}>{BRANCH_EMOJI_MAP[branch]}</Text>
-                          <Text style={[styles.goalBranchLabel, { color: col }]}>{BRANCH_LABEL[branch]}</Text>
-                          <Text style={[styles.goalBranchCount, { color: colors.textMuted }]}>
+                        <View
+                          style={[
+                            styles.goalBranchHeader,
+                            { backgroundColor: `${col}15` },
+                          ]}
+                        >
+                          <Text style={{ fontSize: 16 }}>
+                            {BRANCH_EMOJI_MAP[branch]}
+                          </Text>
+                          <Text
+                            style={[styles.goalBranchLabel, { color: col }]}
+                          >
+                            {BRANCH_LABEL[branch]}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.goalBranchCount,
+                              { color: colors.textMuted },
+                            ]}
+                          >
                             {clusters.length} nhóm · {totalSkills} kỹ năng
                           </Text>
                           <TouchableOpacity
-                            onPress={() => { setGoalSheetId(null); setActiveBranch(branch); }}
-                            style={[styles.goalBranchBtn, { borderColor: `${col}60` }]}
+                            onPress={() => {
+                              setGoalSheetId(null);
+                              setActiveBranch(branch);
+                            }}
+                            style={[
+                              styles.goalBranchBtn,
+                              { borderColor: `${col}60` },
+                            ]}
                           >
-                            <Text style={[styles.goalBranchBtnText, { color: col }]}>Xem →</Text>
+                            <Text
+                              style={[styles.goalBranchBtnText, { color: col }]}
+                            >
+                              Xem →
+                            </Text>
                           </TouchableOpacity>
                         </View>
 
                         {/* Clusters in this branch */}
                         {clusters.map((cluster) => (
                           <View key={cluster.id} style={styles.goalClusterRow}>
-                            <Text style={styles.goalClusterEmoji}>{cluster.emoji}</Text>
+                            <Text style={styles.goalClusterEmoji}>
+                              {cluster.emoji}
+                            </Text>
                             <View style={{ flex: 1 }}>
-                              <Text style={[styles.goalClusterTitle, { color: colors.textPrimary }]}>{cluster.title}</Text>
-                              <Text style={[styles.goalClusterSub, { color: colors.textMuted }]}>
-                                {cluster.skills.map((s) => s.title).join(' · ')}
+                              <Text
+                                style={[
+                                  styles.goalClusterTitle,
+                                  { color: colors.textPrimary },
+                                ]}
+                              >
+                                {cluster.title}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.goalClusterSub,
+                                  { color: colors.textMuted },
+                                ]}
+                              >
+                                {cluster.skills.map((s) => s.title).join(" · ")}
                               </Text>
                             </View>
                           </View>
@@ -920,7 +1179,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  tabsScroll: { marginTop: 14, flexGrow: 0, flexShrink: 0, maxHeight: 38 },
+  // Goal filter pills
+  goalPillsScroll: { marginTop: 12, flexGrow: 0, flexShrink: 0, maxHeight: 32 },
+  goalPillsRow: {
+    paddingHorizontal: 20,
+    gap: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  goalPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 9999,
+    borderWidth: 1,
+    maxWidth: 180,
+  },
+  goalPillText: { fontSize: 12, fontWeight: "700" },
+
+  tabsScroll: { marginTop: 8, flexGrow: 0, flexShrink: 0, maxHeight: 38 },
   tabsRow: {
     paddingHorizontal: 20,
     gap: 8,
@@ -1107,7 +1383,12 @@ const styles = StyleSheet.create({
   // Goal overview sheet
   goalSheetTitle: { fontSize: 17, fontWeight: "800", lineHeight: 24 },
   goalSheetSub: { fontSize: 12, marginTop: 4 },
-  goalBranchSection: { borderWidth: 1, borderRadius: 12, marginBottom: 10, overflow: "hidden" },
+  goalBranchSection: {
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: 10,
+    overflow: "hidden",
+  },
   goalBranchHeader: {
     flexDirection: "row",
     alignItems: "center",
