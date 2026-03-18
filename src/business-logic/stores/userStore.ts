@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { UserProgress, DailyStats, WeeklyDay } from '../types';
+import type { UserProgress, DailyStats, WeeklyDay, StreakShield } from '../types';
 import type { LevelUpReward } from '../hooks/useXPEngine';
 
 interface UserStore {
@@ -7,6 +7,7 @@ interface UserStore {
   dailyStats: DailyStats;
   weeklyActivity: WeeklyDay[];
   isAuthenticated: boolean;
+  streakShield: StreakShield;
   setUser: (user: UserProgress) => void;
   updateXP: (amount: number) => void;
   updateStamina: (value: number) => void;
@@ -22,6 +23,8 @@ interface UserStore {
   /** ISO date string (YYYY-MM-DD) of last bonus claim — independent of user object */
   lastLoginDate: string | null;
   checkDailyLogin: () => void;
+  activateStreakShield: () => void;
+  isStreakProtectedToday: () => boolean;
 }
 
 const DEFAULT_DAILY_STATS: DailyStats = {
@@ -46,6 +49,7 @@ export const useUserStore = create<UserStore>((set) => ({
   isAuthenticated: false,
   levelUpReward: null,
   lastLoginDate: null,
+  streakShield: { activatedDate: null, shieldsRemaining: 2 },
 
   setUser: (user) => set({ user, isAuthenticated: true }),
   loginBonusReward: null,
@@ -146,5 +150,22 @@ export const useUserStore = create<UserStore>((set) => ({
       };
     }),
 
-  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, weeklyActivity: getLast7Days(), levelUpReward: null, loginBonusReward: null, lastLoginDate: null }),
+  activateStreakShield: () =>
+    set((state) => {
+      const today = new Date().toISOString().split('T')[0];
+      return {
+        streakShield: {
+          activatedDate: today,
+          shieldsRemaining: Math.max(0, state.streakShield.shieldsRemaining - 1),
+        },
+      };
+    }),
+
+  isStreakProtectedToday: (): boolean => {
+    const state = useUserStore.getState();
+    const today = new Date().toISOString().split('T')[0];
+    return state.streakShield.activatedDate === today;
+  },
+
+  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, weeklyActivity: getLast7Days(), levelUpReward: null, loginBonusReward: null, lastLoginDate: null, streakShield: { activatedDate: null, shieldsRemaining: 2 } }),
 }));

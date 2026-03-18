@@ -404,6 +404,32 @@ export default function ProfileScreen() {
             shadowOffsetY={3}
             borderWidth={1.5}
             borderRadius={14}
+            onPress={() => router.push("/roadmap")}
+            contentStyle={styles.navContent}
+          >
+            <Ionicons
+              name="map-outline"
+              size={20}
+              color={colors.textPrimary}
+            />
+            <Text style={[styles.navText, { color: colors.textPrimary }]}>
+              Lộ Trình Dài Hạn
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={colors.textMuted}
+            />
+          </NeoBrutalBox>
+
+          <NeoBrutalBox
+            borderColor={colors.glassBorder}
+            backgroundColor={colors.bgSurface}
+            shadowColor="#000"
+            shadowOffsetX={3}
+            shadowOffsetY={3}
+            borderWidth={1.5}
+            borderRadius={14}
             onPress={() => router.push("/settings")}
             contentStyle={styles.navContent}
           >
