@@ -32,6 +32,7 @@ interface HomeGridProps {
   branchProgress: SkillBranchProgress[];
   hasMoodToday: boolean;
   onMoodSelect?: (score: MoodScore) => void;
+  streakAtRisk?: boolean;
 }
 
 const getBranchColors = (colors: any): Record<string, string> => ({
@@ -52,6 +53,7 @@ export function HomeGrid({
   branchProgress,
   hasMoodToday,
   onMoodSelect,
+  streakAtRisk = false,
 }: HomeGridProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -84,7 +86,7 @@ export function HomeGrid({
 
         <BentoCard cols={1} style={styles.streakCard}>
           <AppText variant="micro" color={colors.textMuted}>Streak</AppText>
-          <StreakBadge count={streak} size="sm" />
+          <StreakBadge count={streak} size="sm" streakAtRisk={streakAtRisk} />
         </BentoCard>
       </View>
 

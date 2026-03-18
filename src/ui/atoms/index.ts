@@ -15,4 +15,5 @@ export {
 export type { NeoBrutalBoxProps, NeoBrutalAccentProps } from "./NeoBrutalBox";
 export { ProgressBar } from "./ProgressBar";
 export { AppText } from "./Text";
+export { StreakToast } from "./StreakToast";
 

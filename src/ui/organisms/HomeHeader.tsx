@@ -17,6 +17,7 @@ export interface HomeHeaderProps {
   unreadCount?: number;
   onNotifications: () => void;
   onSettings: () => void;
+  streakAtRisk?: boolean;
 }
 
 function getInitials(name: string): string {
@@ -34,6 +35,7 @@ export function HomeHeader({
   unreadCount = 0,
   onNotifications,
   onSettings,
+  streakAtRisk = false,
 }: HomeHeaderProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);

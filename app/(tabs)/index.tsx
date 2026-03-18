@@ -11,13 +11,14 @@ import {
   NeoBrutalAccent,
   NeoBrutalBox,
   NeoBrutalCard,
+  StreakToast,
 } from "@/src/ui/atoms";
 import { ProgressRing } from "@/src/ui/molecules/ProgressRing";
 import { XPShimmerBar } from "@/src/ui/molecules/XPShimmerBar";
 import { HomeHeader } from "@/src/ui/organisms/HomeHeader";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { router } from "expo-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -27,6 +28,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Haptics from 'expo-haptics';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +70,11 @@ export default function HomeScreen() {
   const branchProgress = useBranchProgress();
   const unreadCount = useNotificationStore(s => s.notifications.filter(n => !n.read).length);
 
+  // Streak toast state
+  const [showStreakToast, setShowStreakToast] = useState(false);
+  const [toastStreak, setToastStreak] = useState(0);
+  const prevStreak = useRef(streak ?? 0);
+
   // Seed demo progress data so rings display realistic values immediately
   useEffect(() => {
     if (nodes.length === 0) {
@@ -75,6 +82,31 @@ export default function HomeScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Handle streak milestone toast and haptic feedback
+  useEffect(() => {
+    const currentStreak = streak ?? 0;
+    if (currentStreak > prevStreak.current) {
+      // Haptic on streak increment
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Show milestone toast
+      if ([7, 14, 30].includes(currentStreak)) {
+        setToastStreak(currentStreak);
+        setShowStreakToast(true);
+      }
+    }
+    prevStreak.current = currentStreak;
+  }, [streak]);
+
+  // Detect if streak is at risk
+  const streakAtRisk = (() => {
+    if (!streak || streak === 0) return false;
+    const { lastLoginDate } = useUserStore.getState();
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const hour = new Date().getHours();
+    return lastLoginDate === yesterday && hour >= 20;
+  })();
 
   const name = user?.name ?? "Alex Kim";
   const level = user?.level ?? 4;
@@ -96,6 +128,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <StreakToast streak={toastStreak} visible={showStreakToast} onHide={() => setShowStreakToast(false)} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -108,6 +141,7 @@ export default function HomeScreen() {
           unreadCount={unreadCount}
           onNotifications={() => router.push("/notifications")}
           onSettings={() => router.push("/settings")}
+          streakAtRisk={streakAtRisk}
         />
 
         {/* ── LIFE SKILLS section ─────────────────────────────── */}
