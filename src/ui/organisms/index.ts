@@ -5,3 +5,4 @@ export { LevelUpModal } from './LevelUpModal';
 export { OnboardingStep } from './OnboardingStep';
 export { WellbeingWarningBanner } from './WellbeingWarningBanner';
 export { SkillNodeSheet } from './SkillNodeSheet';
+export { RoadmapHorizonSection } from './RoadmapHorizonSection';
