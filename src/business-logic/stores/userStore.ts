@@ -17,6 +17,8 @@ interface UserStore {
   logout: () => void;
   loginBonusReward: number | null;
   setLoginBonusReward: (amount: number | null) => void;
+  /** ISO date string (YYYY-MM-DD) of last bonus claim — independent of user object */
+  lastLoginDate: string | null;
   checkDailyLogin: () => void;
 }
 
@@ -32,6 +34,7 @@ export const useUserStore = create<UserStore>((set) => ({
   dailyStats: DEFAULT_DAILY_STATS,
   isAuthenticated: false,
   levelUpReward: null,
+  lastLoginDate: null,
 
   setUser: (user) => set({ user, isAuthenticated: true }),
   loginBonusReward: null,
@@ -94,20 +97,28 @@ export const useUserStore = create<UserStore>((set) => ({
 
   checkDailyLogin: () =>
     set((state) => {
-      if (!state.user) return state;
       const today = new Date().toISOString().split('T')[0];
-      const lastLogin = state.user.last_login_at?.split('T')[0];
 
-      if (lastLogin !== today) {
-        // Trigger bonus for first login of the day
-        return {
-          user: { ...state.user, last_login_at: today },
-          loginBonusReward: 20, // Example: +20 XP on first login
-          dailyStats: { ...state.dailyStats, session_combo: 0 },
-        };
-      }
-      return state;
+      // Already claimed today — skip
+      if (state.lastLoginDate === today) return state;
+
+      // Bonus XP scales with streak (more consecutive days = bigger reward)
+      const streak = state.user?.streak ?? 0;
+      const bonusXP =
+        streak >= 7  ? 50 :
+        streak >= 3  ? 30 :
+                       20;
+
+      return {
+        lastLoginDate: today,
+        loginBonusReward: bonusXP,
+        dailyStats: { ...state.dailyStats, session_combo: 0 },
+        // Mirror into user.last_login_at if user exists
+        ...(state.user
+          ? { user: { ...state.user, last_login_at: today } }
+          : {}),
+      };
     }),
 
-  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, levelUpReward: null, loginBonusReward: null }),
+  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, levelUpReward: null, loginBonusReward: null, lastLoginDate: null }),
 }));

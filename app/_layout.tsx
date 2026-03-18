@@ -13,12 +13,14 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Text, View } from "react-native";
+import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
 
 import { queryClient } from "@/src/business-logic/api/query-client";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
+import { useEffect } from "react";
 
 // ─── Global font defaults ────────────────────────────────────────────────────
 // Patch every React Native Text so Space Grotesk is the base font.
@@ -44,6 +46,7 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const { isDark, colors } = useTheme();
+  const checkDailyLogin = useUserStore((s) => s.checkDailyLogin);
 
   const [fontsLoaded] = useFonts({
     "SpaceGrotesk-Light": SpaceGrotesk_300Light,
@@ -54,6 +57,19 @@ export default function RootLayout() {
     "SpaceMono-Regular": SpaceMono_400Regular,
     "SpaceMono-Bold": SpaceMono_700Bold,
   });
+
+  // ── E2: Daily login bonus ──────────────────────────────────────────────────
+  // Fire once after fonts are ready, and again whenever the app foregrounds.
+  // checkDailyLogin is idempotent — only triggers reward when date changes.
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    checkDailyLogin();
+    const sub = AppState.addEventListener("change", (appState) => {
+      if (appState === "active") checkDailyLogin();
+    });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fontsLoaded]);
 
   // Hold render until fonts are loaded to prevent flash of unstyled text
   if (!fontsLoaded) {

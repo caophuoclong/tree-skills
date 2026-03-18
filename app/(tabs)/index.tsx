@@ -11,13 +11,13 @@ import {
   NeoBrutalBox,
   NeoBrutalCard,
 } from "@/src/ui/atoms";
+import { ProgressRing } from "@/src/ui/molecules/ProgressRing";
+import { XPShimmerBar } from "@/src/ui/molecules/XPShimmerBar";
+import { HomeHeader } from "@/src/ui/organisms/HomeHeader";
 import { IColors, useTheme } from "@/src/ui/tokens";
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import {
-  Animated,
-  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,18 +26,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle } from "react-native-svg";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0] ?? "")
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 function useBranchProgress() {
   const { nodes } = useSkillTreeStore();
@@ -61,173 +51,6 @@ const getBranchColors = (colors: any): Record<string, string> => ({
   softskills: colors.softskills,
   wellbeing: colors.wellbeing,
 });
-
-// ─── Progress Ring ────────────────────────────────────────────────────────────
-
-interface ProgressRingProps {
-  percent: number;
-  color: string;
-  label: string;
-}
-
-// ─── NB Circular Progress Ring ────────────────────────────────────────────────
-// DISC = outer circle diameter; SHADOW_OFF = hard-shadow pixel offset (NB style)
-// Arc starts from top (rotate -90°); strokeLinecap="butt" for NB flat/blocky feel
-const DISC = 62;
-const SHADOW_OFF = 4;
-const SVG_SIZE = DISC + SHADOW_OFF; // reserves space for shadow so it doesn't clip
-const CX = DISC / 2; // main disc center in SVG coords
-const CY = DISC / 2;
-const STROKE_W = 8;
-const BORDER_W = 2;
-const ARC_R = DISC / 2 - STROKE_W / 2 - BORDER_W;
-const CIRC = 2 * Math.PI * ARC_R;
-
-function ProgressRing({ percent, color, label }: ProgressRingProps) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const clamp = Math.min(100, Math.max(0, percent));
-  const dash = (clamp / 100) * CIRC;
-
-  return (
-    <View style={styles.ringWrapper}>
-      <View style={{ width: SVG_SIZE, height: SVG_SIZE }}>
-        <Svg width={SVG_SIZE} height={SVG_SIZE}>
-          {/* ① Hard-shadow disc — solid, offset by SHADOW_OFF (NB signature) */}
-          <Circle
-            cx={CX + SHADOW_OFF}
-            cy={CY + SHADOW_OFF}
-            r={DISC / 2}
-            fill={color}
-            opacity={0.4}
-          />
-          {/* ② Main disc background */}
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={DISC / 2 - BORDER_W / 2}
-            fill={colors.bgElevated}
-            stroke={color}
-            strokeWidth={BORDER_W}
-          />
-          {/* ③ Track (empty ring portion) */}
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={ARC_R}
-            fill="none"
-            stroke={`${color}28`}
-            strokeWidth={STROKE_W}
-          />
-          {/* ④ Progress arc — butt cap for blocky NB feel, starts from top */}
-          {clamp > 0 && (
-            <Circle
-              cx={CX}
-              cy={CY}
-              r={ARC_R}
-              fill="none"
-              stroke={color}
-              strokeWidth={STROKE_W}
-              strokeDasharray={`${dash} ${CIRC - dash}`}
-              strokeLinecap="butt"
-              transform={`rotate(-90 ${CX} ${CY})`}
-            />
-          )}
-        </Svg>
-        {/* ⑤ % label centered over the disc (not the shadow) */}
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: DISC,
-            height: DISC,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={[styles.ringPercent, { color }]}>{clamp}%</Text>
-        </View>
-      </View>
-      <Text style={styles.ringLabel} numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-// ─── XP Shimmer Bar ───────────────────────────────────────────────────────────
-
-function XPShimmerBar({ percent, color }: { percent: number; color: string }) {
-  const shimmerAnim = useRef(new Animated.Value(-1)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 2,
-        duration: 2000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [shimmerAnim]);
-
-  const translateX = shimmerAnim.interpolate({
-    inputRange: [-1, 2],
-    outputRange: [-120, 120],
-  });
-
-  return (
-    <View
-      style={{
-        height: 6,
-        backgroundColor: "rgba(255,255,255,0.08)",
-        borderRadius: 3,
-        overflow: "hidden",
-        marginTop: 8,
-      }}
-    >
-      {/* Fill */}
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: `${percent}%`,
-          backgroundColor: color,
-          borderRadius: 3,
-        }}
-      />
-      {/* Shimmer overlay — only visible over the filled portion */}
-      <Animated.View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: `${percent}%`,
-          overflow: "hidden",
-          borderRadius: 3,
-        }}
-      >
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 60,
-            backgroundColor: "rgba(255,255,255,0.35)",
-            transform: [{ translateX }, { skewX: "-20deg" }],
-          }}
-        />
-      </Animated.View>
-    </View>
-  );
-}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -255,11 +78,7 @@ export default function HomeScreen() {
   const level = user?.level ?? 4;
   const currentXP = user?.current_xp_in_level ?? 1240;
   const targetXP = user?.xp_to_next_level ?? 1500;
-  const checkDailyLogin = useUserStore((s) => s.checkDailyLogin);
-
-  useEffect(() => {
-    checkDailyLogin();
-  }, [checkDailyLogin]);
+  // checkDailyLogin is now handled globally in _layout.tsx via AppState
 
   const xpPercent = (currentXP / targetXP) * 100;
   const pendingCount = quests.filter((q) => q.completed_at === null).length;
@@ -281,65 +100,12 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ─────────────────────────────────────────── */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatarRow}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarInitials}>{getInitials(name)}</Text>
-              </View>
-              <View style={styles.avatarMeta}>
-                <Text style={styles.levelLabel}>CẤP {level}</Text>
-                <Text style={styles.userName}>{name}</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.headerIcons}>
-            <NeoBrutalBox
-              borderColor={colors.glassBorder}
-              backgroundColor={colors.bgElevated}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={1.5}
-              borderRadius={18}
-              onPress={() => router.push("/notifications")}
-              contentStyle={{
-                width: 36,
-                height: 36,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={22}
-                color={colors.textSecondary}
-              />
-            </NeoBrutalBox>
-            <NeoBrutalBox
-              borderColor={colors.glassBorder}
-              backgroundColor={colors.bgElevated}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={1.5}
-              borderRadius={18}
-              onPress={() => router.push("/settings")}
-              contentStyle={{
-                width: 36,
-                height: 36,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons
-                name="settings-outline"
-                size={22}
-                color={colors.textSecondary}
-              />
-            </NeoBrutalBox>
-          </View>
-        </View>
+        <HomeHeader
+          name={name}
+          level={level}
+          onNotifications={() => router.push("/notifications")}
+          onSettings={() => router.push("/settings")}
+        />
 
         {/* ── LIFE SKILLS section ─────────────────────────────── */}
         <View style={styles.section}>
