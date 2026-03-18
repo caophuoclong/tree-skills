@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../api/supabase';
-import { useUserStore } from '../stores/userStore';
-import type { ProfileRow } from '../api/supabase/database.types';
+import type { Session, User } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
+import { supabase } from "../api/supabase";
+import type { ProfileRow } from "../api/supabase/database.types";
+import { useUserStore } from "../stores/userStore";
 
 export interface AuthState {
   session: Session | null;
@@ -27,6 +27,10 @@ export function useAuth(): AuthState {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
+        console.log(
+          "User session found on mount, fetching profile...",
+          data.session?.user,
+        );
         fetchProfile(data.session.user.id);
       } else {
         setIsLoading(false);
@@ -34,16 +38,18 @@ export function useAuth(): AuthState {
     });
 
     // 2. Subscribe to auth state changes (sign in, sign out, token refresh)
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      if (newSession?.user) {
-        fetchProfile(newSession.user.id);
-      } else {
-        setProfile(null);
-        logout(); // clear Zustand store on sign out
-        setIsLoading(false);
-      }
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession);
+        if (newSession?.user) {
+          fetchProfile(newSession.user.id);
+        } else {
+          setProfile(null);
+          logout(); // clear Zustand store on sign out
+          setIsLoading(false);
+        }
+      },
+    );
 
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -51,14 +57,14 @@ export function useAuth(): AuthState {
   async function fetchProfile(userId: string) {
     setIsLoading(true);
     const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
       .single();
-
     if (data && !error) {
       setProfile(data);
       // Sync Supabase profile → Zustand userStore
+
       setUser({
         user_id: data.id,
         name: data.name,

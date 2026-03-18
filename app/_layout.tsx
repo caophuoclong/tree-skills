@@ -24,10 +24,11 @@ import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
 import { Fragment, useEffect } from "react";
 
-// Enable network mocks in development
-if (__DEV__) {
-  require("@/src/business-logic/api/mock").setupNetworkMocks();
-}
+// Network mocks are disabled — the app now uses Supabase directly.
+// To re-enable local mocks: uncomment the block below.
+// if (__DEV__) {
+//   require("@/src/business-logic/api/mock").setupNetworkMocks();
+// }
 
 // ─── Global font defaults ────────────────────────────────────────────────────
 // Patch every React Native Text so Space Grotesk is the base font.

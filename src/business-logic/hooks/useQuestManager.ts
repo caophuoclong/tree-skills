@@ -1,15 +1,16 @@
-import { useCallback, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useQuestStore } from '../stores/questStore';
-import { useUserStore } from '../stores/userStore';
-import { questService } from '../api/services/questService';
-import { useXPEngine } from './useXPEngine';
-import { useStaminaSystem } from './useStaminaSystem';
-import { useGrowthStreak } from './useGrowthStreak';
-import type { Quest, Branch } from '../types';
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
+import { questService } from "../api/services/questService";
+import { userService } from "../api/services/userService";
+import { useQuestStore } from "../stores/questStore";
+import { useUserStore } from "../stores/userStore";
+import type { Branch, Quest } from "../types";
+import { useGrowthStreak } from "./useGrowthStreak";
+import { useStaminaSystem } from "./useStaminaSystem";
+import { useXPEngine } from "./useXPEngine";
 
 function getTodayString(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 export interface QuestManagerResult {
@@ -17,7 +18,9 @@ export interface QuestManagerResult {
   completedCount: number;
   totalCount: number;
   isLoading: boolean;
-  completeQuest: (questId: string) => { reward: any | null; bonusXP: number; multiplier: number } | undefined;
+  completeQuest: (
+    questId: string,
+  ) => { reward: any | null; bonusXP: number; multiplier: number } | undefined;
   resetQuests: () => void;
   canCompleteQuest: (branch: Branch) => boolean;
 }
@@ -37,13 +40,14 @@ export function useQuestManager(): QuestManagerResult {
 
   // Determine primary branch and stamina
   const primaryBranch = user
-    ? ((user as unknown as { primaryBranch?: Branch }).primaryBranch ?? 'career')
-    : 'career';
+    ? ((user as unknown as { primaryBranch?: Branch }).primaryBranch ??
+      "career")
+    : "career";
   const stamina = user?.stamina ?? 100;
 
   // Fetch quests from API via service
   const { data: fetchedQuests, isLoading } = useQuery({
-    queryKey: ['quests', 'daily', primaryBranch, stamina],
+    queryKey: ["quests", "daily", primaryBranch, stamina],
     queryFn: () => questService.getDaily(primaryBranch, stamina),
     staleTime: 1000 * 60 * 5, // 5 min cache
   });
@@ -65,18 +69,49 @@ export function useQuestManager(): QuestManagerResult {
       const xpEarned = Math.floor(quest.xp_reward * xpMultiplier);
       incrementDailyQuestCount(quest.branch);
       const result = addXP(xpEarned);
-      
+
       onQuestComplete(quest.branch);
       recordActivity();
       storeComplete(questId);
 
-      // We could return result here if we want the UI to show a toast
+      // Persist quest completion to Supabase (fire-and-forget)
+      questService.complete(questId, xpEarned).catch((err) => {
+        if (__DEV__) console.warn("[questService.complete]", err);
+      });
+
+      // Persist updated profile XP/level to Supabase
+      const updatedUser = useUserStore.getState().user;
+      if (updatedUser) {
+        userService
+          .update({
+            total_xp: updatedUser.total_xp,
+            level: updatedUser.level,
+            current_xp_in_level: updatedUser.current_xp_in_level,
+            xp_to_next_level: updatedUser.xp_to_next_level,
+            last_active_date: new Date().toISOString().split("T")[0],
+          })
+          .catch((err) => {
+            if (__DEV__) console.warn("[userService.update]", err);
+          });
+      }
+
       return result;
     },
-    [dailyQuests, canComplete, xpMultiplier, addXP, onQuestComplete, recordActivity, storeComplete, incrementDailyQuestCount],
+    [
+      dailyQuests,
+      canComplete,
+      xpMultiplier,
+      addXP,
+      onQuestComplete,
+      recordActivity,
+      storeComplete,
+      incrementDailyQuestCount,
+    ],
   );
 
-  const completedCount = dailyQuests.filter((q) => q.completed_at !== null).length;
+  const completedCount = dailyQuests.filter(
+    (q) => q.completed_at !== null,
+  ).length;
 
   return {
     quests: dailyQuests,
