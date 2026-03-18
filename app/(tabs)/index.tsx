@@ -66,24 +66,45 @@ interface ProgressRingProps {
   label: string;
 }
 
+const RING_SIZE = 56;
+
 function ProgressRing({ percent, color, label }: ProgressRingProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.ringWrapper}>
-      <NeoBrutalBox
-        borderColor={color}
-        backgroundColor={`${color}15`}
-        shadowColor={color}
-        shadowOffsetX={3}
-        shadowOffsetY={3}
-        borderWidth={2}
-        borderRadius={24}
-        contentStyle={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
-      >
-        <Text style={[styles.ringPercent, { color }]}>{percent}%</Text>
-      </NeoBrutalBox>
+      {/* Manual NB circle: hard shadow layer behind + main circle on top */}
+      <View style={{ width: RING_SIZE + 3, height: RING_SIZE + 3 }}>
+        {/* Hard shadow — solid color, offset by (3,3) */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            width: RING_SIZE,
+            height: RING_SIZE,
+            borderRadius: RING_SIZE / 2,
+            backgroundColor: color,
+            top: 3,
+            left: 3,
+          }}
+        />
+        {/* Main circle */}
+        <View
+          style={{
+            width: RING_SIZE,
+            height: RING_SIZE,
+            borderRadius: RING_SIZE / 2,
+            backgroundColor: `${color}18`,
+            borderWidth: 2,
+            borderColor: color,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={[styles.ringPercent, { color }]}>{percent}%</Text>
+        </View>
+      </View>
       <Text style={styles.ringLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -592,32 +613,43 @@ export default function HomeScreen() {
           onPress={() => setNotifVisible(false)}
         >
           <View style={styles.notifContent}>
+            {/* NB accent strip at top */}
+            <View style={[styles.notifAccentStrip, { backgroundColor: colors.brandPrimary }]} />
+            {/* Drag handle */}
+            <View style={styles.notifHandle} />
+
             <View style={styles.notifHeader}>
-              <Text style={styles.notifHeaderTitle}>Thông báo</Text>
-              <TouchableOpacity onPress={() => setNotifVisible(false)}>
-                <Ionicons
-                  name="close-circle"
-                  size={28}
-                  color={colors.textMuted}
-                />
-              </TouchableOpacity>
+              <Text style={styles.notifHeaderTitle}>✦ Thông báo</Text>
+              <NeoBrutalBox
+                borderColor={colors.glassBorder}
+                backgroundColor={colors.bgElevated}
+                shadowColor="#000"
+                shadowOffsetX={2}
+                shadowOffsetY={2}
+                borderWidth={1.5}
+                borderRadius={14}
+                onPress={() => setNotifVisible(false)}
+                contentStyle={{ width: 32, height: 32, alignItems: "center", justifyContent: "center" }}
+              >
+                <Ionicons name="close" size={16} color={colors.textSecondary} />
+              </NeoBrutalBox>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {notifications.map((notif) => (
-                <View key={notif.id} style={styles.notifItem}>
-                  <View
-                    style={[
-                      styles.notifIcon,
-                      { backgroundColor: `${notif.color}20` },
-                    ]}
+                <View key={notif.id} style={[styles.notifItem, { borderBottomColor: colors.glassBorder }]}>
+                  <NeoBrutalBox
+                    borderColor={`${notif.color}60`}
+                    backgroundColor={`${notif.color}18`}
+                    shadowColor={notif.color}
+                    shadowOffsetX={2}
+                    shadowOffsetY={2}
+                    borderWidth={1.5}
+                    borderRadius={12}
+                    contentStyle={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
                   >
-                    <Ionicons
-                      name={notif.icon as any}
-                      size={20}
-                      color={notif.color}
-                    />
-                  </View>
+                    <Ionicons name={notif.icon as any} size={18} color={notif.color} />
+                  </NeoBrutalBox>
                   <View style={styles.notifText}>
                     <Text style={styles.notifTitle}>{notif.title}</Text>
                     <Text style={styles.notifBody}>{notif.body}</Text>
@@ -1018,12 +1050,28 @@ const createStyles = (colors: IColors) =>
     },
     notifContent: {
       backgroundColor: colors.bgSurface,
-      borderTopLeftRadius: 32,
-      borderTopRightRadius: 32,
-      padding: 24,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingHorizontal: 24,
+      paddingBottom: 24,
       maxHeight: "80%",
-      borderWidth: 1,
-      borderColor: colors.glassBorder,
+      borderWidth: 2,
+      borderColor: colors.brandPrimary,
+      overflow: "hidden",
+    },
+    notifAccentStrip: {
+      height: 4,
+      marginHorizontal: -24,
+      marginBottom: 0,
+    },
+    notifHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: "rgba(255,255,255,0.14)",
+      alignSelf: "center",
+      marginTop: 12,
+      marginBottom: 20,
     },
     notifHeader: {
       flexDirection: "row",
@@ -1039,16 +1087,8 @@ const createStyles = (colors: IColors) =>
     notifItem: {
       flexDirection: "row",
       gap: 16,
-      paddingVertical: 16,
+      paddingVertical: 14,
       borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.05)",
-    },
-    notifIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
     },
     notifText: {
       flex: 1,
