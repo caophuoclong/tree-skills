@@ -2,13 +2,11 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Foundation from "@expo/vector-icons/Foundation";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -134,37 +132,20 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
               },
             ]}
           >
-            {/* 
-            intensity        → 0 (trong) ──── 85 ──── 100 (mờ tối đa)
-
-            tint             → "systemUltraThinMaterial"  sáng, mỏng  ← hiện tại
-                              "systemMaterial"           trung bình
-                              "dark"                     tối
-                              "light"                    trắng rõ
-
-            backgroundColor  → rgba(255,255,255, X)  tăng X = sáng hơn
-                              rgba(0,0,0, X)        tăng X = tối hơn
-
-            borderColor      → rgba(255,255,255, X)  tăng X = viền rõ hơn
-
-            borderRadius     → 28 (pill) ←  giảm = vuông hơn
-
-            shadowOpacity    → 0.3 ← tăng = bóng đậm, giảm = nhẹ
-            shadowRadius     → 24  ← tăng = bóng loang rộng
-
-            position         → left: 16   bottom-left ← hiện tại
-                              right: 16  bottom-right
-
-            */}
-            <BlurView
-              intensity={80}
-              tint="systemUltraThinMaterial"
+              {/* NB hard shadow behind panel */}
+            <View
+              style={[
+                styles.allPanelShadow,
+                { backgroundColor: colors.textPrimary },
+              ]}
+            />
+            {/* NB panel */}
+            <View
               style={[
                 styles.allPanel,
                 {
-                  borderColor: "rgba(255,255,255,0.18)",
-                  backgroundColor: "rgba(255,255,255,0.10)",
-                  shadowColor: "#00000060",
+                  backgroundColor: colors.bgElevated,
+                  borderColor: colors.textPrimary,
                 },
               ]}
             >
@@ -181,8 +162,10 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
                     style={[
                       styles.allItem,
                       active && {
-                        backgroundColor: `${colors.brandPrimary}18`,
-                        borderRadius: 14,
+                        backgroundColor: `${colors.brandPrimary}20`,
+                        borderRadius: 10,
+                        borderWidth: 1.5,
+                        borderColor: colors.brandPrimary,
                       },
                     ]}
                     onPress={() => {
@@ -194,7 +177,11 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
                     <View
                       style={[
                         styles.allIconWrap,
-                        { backgroundColor: `${col}18` },
+                        {
+                          backgroundColor: `${col}20`,
+                          borderWidth: 1.5,
+                          borderColor: col,
+                        },
                       ]}
                     >
                       {meta.icon(col, 20)}
@@ -213,58 +200,30 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
                   </TouchableOpacity>
                 );
               })}
-            </BlurView>
+            </View>
           </Animated.View>
         </Pressable>
       </Modal>
 
-      {/* ── Floating bar ────────────────────────────────────────────────── */}
-      {/*
-       * ┌─────────────────────────────────────────────────────────────┐
-       * │  APPEARANCE TUNING — chỉnh tại đây                          │
-       * ├─────────────────────────────────────────────────────────────┤
-       * │  intensity   : 0–100                                        │
-       * │    0   = hoàn toàn trong suốt (không blur)                  │
-       * │    50  = blur nhẹ, nhìn thấy nền rõ                         │
-       * │    85  = blur mạnh, frosted glass ← hiện tại                │
-       * │    100 = mờ tối đa                                          │
-       * │                                                              │
-       * │  tint options (iOS):                                        │
-       * │    "light"                    → tint trắng rõ               │
-       * │    "dark"                     → tint đen, tối               │
-       * │    "default"                  → theo system theme           │
-       * │    "systemUltraThinMaterial"  → mỏng nhất, sáng ← hiện tại │
-       * │    "systemThinMaterial"       → mỏng vừa                   │
-       * │    "systemMaterial"           → dày vừa, đục hơn           │
-       * │    "systemThickMaterial"      → dày nhất, gần như đục      │
-       * │    "systemUltraThinMaterialDark" → ultra thin nhưng tối    │
-       * │    "systemMaterialDark"          → dark + đục vừa          │
-       * │                                                              │
-       * │  backgroundColor overlay:                                   │
-       * │    "rgba(255,255,255,0.05)"  → trắng rất nhẹ               │
-       * │    "rgba(255,255,255,0.10)"  → trắng nhẹ ← hiện tại        │
-       * │    "rgba(255,255,255,0.20)"  → trắng rõ hơn, sáng hơn      │
-       * │    "rgba(0,0,0,0.30)"        → dark overlay, tối lại        │
-       * │                                                              │
-       * │  borderColor:                                               │
-       * │    "rgba(255,255,255,0.10)"  → viền mờ                     │
-       * │    "rgba(255,255,255,0.18)"  → viền vừa ← hiện tại         │
-       * │    "rgba(255,255,255,0.30)"  → viền sáng rõ                │
-       * └─────────────────────────────────────────────────────────────┘
-       */}
+      {/* ── Floating NB bar ─────────────────────────────────────────────── */}
       <View
         style={[styles.floatWrap, { bottom: bottomOffset, left: 16 }]}
         pointerEvents="box-none"
       >
-        <BlurView
-          intensity={85} // ← tăng = mờ hơn, giảm = trong hơn
-          tint="systemUltraThinMaterial" // ← xem bảng tint options ở trên
+        {/* Hard-offset shadow layer */}
+        <View
           style={[
-            styles.glass,
+            styles.nbBarShadow,
+            { backgroundColor: colors.textPrimary },
+          ]}
+        />
+        {/* NB bar content */}
+        <View
+          style={[
+            styles.nbBar,
             {
-              borderColor: "rgba(255,255,255,0.18)", // ← độ sáng viền
-              backgroundColor: "rgba(255,255,255,0.10)", // ← overlay màu nền
-              shadowColor: "#000",
+              backgroundColor: colors.bgElevated,
+              borderColor: colors.textPrimary,
             },
           ]}
         >
@@ -278,7 +237,9 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
                   styles.navItem,
                   active && {
                     backgroundColor: `${colors.brandPrimary}20`,
-                    borderRadius: 20,
+                    borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: colors.brandPrimary,
                   },
                 ]}
                 onPress={() => navigate(name)}
@@ -300,7 +261,7 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
 
           {/* Divider */}
           <View
-            style={[styles.divider, { backgroundColor: colors.glassBorder }]}
+            style={[styles.divider, { backgroundColor: colors.textPrimary }]}
           />
 
           {/* "···" show all button */}
@@ -312,10 +273,10 @@ function FloatingNavBar({ state, navigation }: BottomTabBarProps) {
             <Ionicons
               name="ellipsis-horizontal"
               size={20}
-              color={colors.textMuted}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
-        </BlurView>
+        </View>
       </View>
     </>
   );
@@ -347,34 +308,37 @@ export default function TabLayout() {
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
+// NB shadow offset — shared constant
+const NB_SHADOW = 4;
+const NB_RADIUS = 14; // less pill-y than glass (was 28), more blocky NB feel
+
 const styles = StyleSheet.create({
-  // ─── Floating bar ───────────────────────────────────────────────────────────
+  // ─── Floating NB bar ────────────────────────────────────────────────────────
   floatWrap: {
     position: "absolute",
     zIndex: 999,
-    // Vị trí thanh:
-    //   bottom + left được set inline qua bottomOffset (safe area)
-    //   Muốn canh giữa: thay left=16 bằng alignSelf="center" + left/right tự tính
-    //   Muốn bottom-right: đổi left → right: 16
+    // Reserve space for hard shadow so it doesn't get clipped
+    paddingRight: NB_SHADOW,
+    paddingBottom: NB_SHADOW,
   },
-  glass: {
+  // Hard shadow: absolute layer offset by NB_SHADOW, same shape as bar
+  nbBarShadow: {
+    position: "absolute",
+    top: NB_SHADOW,
+    left: NB_SHADOW,
+    right: 0,
+    bottom: 0,
+    borderRadius: NB_RADIUS,
+  },
+  // The actual NB bar
+  nbBar: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 8,
-    borderRadius: 28, // ← tăng = tròn hơn, 0 = vuông góc
-    borderWidth: 1,
+    borderRadius: NB_RADIUS,
+    borderWidth: 2,
     gap: 2,
-    overflow: "hidden", // bắt buộc để BlurView bo tròn đúng
-    // Shadow — tạo cảm giác float
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 8 }, // ← height: đổ bóng xuống bao xa
-        shadowOpacity: 0.3, // ← 0.0 = không bóng, 1.0 = bóng đậm
-        shadowRadius: 24, // ← bóng lan rộng bao nhiêu px
-      },
-      android: { elevation: 16 }, // ← Android: chỉ có 1 giá trị này
-    }),
   },
   navItem: {
     flexDirection: "row",
@@ -388,10 +352,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   divider: {
-    width: 1,
+    width: 1.5,
     height: 24,
     marginHorizontal: 4,
-    opacity: 0.5,
+    opacity: 0.4,
   },
   moreBtn: {
     paddingHorizontal: 12,
@@ -400,7 +364,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // Show-all popup
+  // ─── Show-all NB popup ──────────────────────────────────────────────────────
   allOverlay: {
     flex: 1,
     backgroundColor: "transparent",
@@ -408,21 +372,25 @@ const styles = StyleSheet.create({
   allPanelWrap: {
     position: "absolute",
     width: 220,
+    // Reserve space for shadow
+    paddingRight: NB_SHADOW,
+    paddingBottom: NB_SHADOW,
+  },
+  // Hard shadow behind the popup panel
+  allPanelShadow: {
+    position: "absolute",
+    top: NB_SHADOW,
+    left: NB_SHADOW,
+    right: 0,
+    bottom: 0,
+    borderRadius: NB_RADIUS,
   },
   allPanel: {
-    borderRadius: 20,
-    borderWidth: 1,
+    borderRadius: NB_RADIUS,
+    borderWidth: 2,
     overflow: "hidden",
     paddingVertical: 8,
     paddingHorizontal: 4,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.35,
-        shadowRadius: 28,
-      },
-      android: { elevation: 20 },
-    }),
   },
   allTitle: {
     fontSize: 9,
@@ -444,7 +412,7 @@ const styles = StyleSheet.create({
   allIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -3,11 +3,11 @@ import React, { useMemo } from 'react';
 import {
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { NeoBrutalBox, NeoBrutalAccent } from '@/src/ui/atoms';
 import { useTheme } from '@/src/ui/tokens';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -23,18 +23,9 @@ export default function WelcomeScreen() {
         <View style={styles.glowOrb} />
 
         {/* App icon */}
-        <NeoBrutalBox
-          borderColor={colors.brandPrimary}
-          backgroundColor={colors.bgElevated}
-          shadowColor="#000"
-          shadowOffsetX={3}
-          shadowOffsetY={3}
-          borderWidth={2}
-          borderRadius={20}
-          contentStyle={{ width: 64, height: 64, alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}
-        >
+        <View style={styles.appIcon}>
           <Text style={styles.appIconEmoji}>🌿</Text>
-        </NeoBrutalBox>
+        </View>
 
         {/* Title + subtitle */}
         <Text style={styles.title}>Life Skill Tree</Text>
@@ -43,26 +34,20 @@ export default function WelcomeScreen() {
 
       {/* ── Buttons ────────────────────────────────────── */}
       <View style={styles.buttonsSection}>
-        <NeoBrutalAccent
-          accentColor={colors.brandPrimary}
-          strokeColor="rgba(0,0,0,0.5)"
-          shadowOffsetX={4}
-          shadowOffsetY={4}
-          borderWidth={2}
-          borderRadius={26}
+        <TouchableOpacity
+          style={styles.primaryBtn}
           onPress={() => router.push('/(auth)/register')}
-          style={{ marginBottom: 16 }}
-          contentStyle={{ height: 52, alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>Get Started</Text>
-        </NeoBrutalAccent>
+        </TouchableOpacity>
 
-        <Text
+        <TouchableOpacity
           onPress={() => router.push('/(auth)/login')}
-          style={styles.secondaryBtnText}
+          activeOpacity={0.7}
         >
-          I already have an account
-        </Text>
+          <Text style={styles.secondaryBtnText}>I already have an account</Text>
+        </TouchableOpacity>
 
         <Text style={styles.socialProof}>
           Join 10,000+ Gen Z building real skills
@@ -94,6 +79,17 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 100,
     backgroundColor: 'rgba(124,106,247,0.12)',
   },
+  appIcon: {
+    width: 64,
+    height: 64,
+    backgroundColor: colors.bgElevated,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
   appIconEmoji: {
     fontSize: 32,
   },
@@ -115,6 +111,19 @@ const createStyles = (colors: any) => StyleSheet.create({
   buttonsSection: {
     paddingHorizontal: 24,
     paddingBottom: 8,
+  },
+  primaryBtn: {
+    backgroundColor: colors.brandPrimary,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.brandPrimary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 16,
   },
   primaryBtnText: {
     fontSize: 16,

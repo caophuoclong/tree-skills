@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Text,
   View,
   StyleSheet,
   TouchableOpacity,
@@ -15,7 +14,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { NeoBrutalAccent, NeoBrutalBox } from '@/src/ui/atoms';
+import { AppText } from '@/src/ui/atoms/Text';
 import { SkillTreeBranch } from '@/src/ui/organisms/SkillTreeBranch';
 import { useSkillTreeStore } from '@/src/business-logic/stores/skillTreeStore';
 import { getInitialNodes } from '@/src/business-logic/data/skill-tree-nodes';
@@ -99,25 +98,20 @@ export default function BranchScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <NeoBrutalBox
-          borderColor={colors.glassBorder}
-          backgroundColor={colors.bgElevated}
-          shadowColor="#000"
-          shadowOffsetX={2}
-          shadowOffsetY={2}
-          borderWidth={1.5}
-          borderRadius={14}
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => router.back()}
-          contentStyle={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-        </NeoBrutalBox>
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
 
         <View style={styles.headerCenter}>
           <View style={[styles.branchDot, { backgroundColor: branchColor }]} />
-          <Text style={[styles.headerTitle, { color: branchColor, fontSize: 16, fontWeight: '700' }]}>
+          <AppText variant="bodyLG" style={[styles.headerTitle, { color: branchColor }]}>
             {branchLabel}
-          </Text>
+          </AppText>
         </View>
 
         {/* Spacer to balance the back button */}
@@ -138,99 +132,79 @@ export default function BranchScreen() {
           onRequestClose={closeModal}
         >
           <Pressable style={styles.modalOverlay} onPress={closeModal}>
-            <Pressable style={[styles.modalSheet, { borderColor: branchColor }]} onPress={() => {}}>
-              {/* NB accent strip */}
-              <View style={[styles.sheetAccentStrip, { backgroundColor: branchColor }]} />
-              {/* Drag handle */}
-              <View style={styles.sheetHandle} />
-
+            <Pressable style={styles.modalSheet} onPress={() => {}}>
               {/* Status badge */}
               <View style={styles.modalStatusRow}>
-                <NeoBrutalBox
-                  borderColor={`${STATUS_COLORS[selectedNode.status]}60`}
-                  backgroundColor={`${STATUS_COLORS[selectedNode.status]}18`}
-                  shadowColor={STATUS_COLORS[selectedNode.status]}
-                  shadowOffsetX={2}
-                  shadowOffsetY={2}
-                  borderWidth={1.5}
-                  borderRadius={9999}
-                  contentStyle={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 5 }}
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: `${STATUS_COLORS[selectedNode.status]}20` },
+                  ]}
                 >
-                  <View style={[styles.statusDot, { backgroundColor: STATUS_COLORS[selectedNode.status] }]} />
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: STATUS_COLORS[selectedNode.status] }}>
+                  <View
+                    style={[
+                      styles.statusDot,
+                      { backgroundColor: STATUS_COLORS[selectedNode.status] },
+                    ]}
+                  />
+                  <AppText
+                    variant="caption"
+                    style={{ color: STATUS_COLORS[selectedNode.status] }}
+                  >
                     {STATUS_LABELS[selectedNode.status]}
-                  </Text>
-                </NeoBrutalBox>
+                  </AppText>
+                </View>
               </View>
 
               {/* Node title */}
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+              <AppText variant="bodyLG" style={styles.modalTitle}>
                 {selectedNode.title}
-              </Text>
+              </AppText>
 
               {/* Description */}
-              <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+              <AppText variant="body" color={colors.textSecondary} style={styles.modalDesc}>
                 {selectedNode.description}
-              </Text>
+              </AppText>
 
               {/* Stats row */}
-              <NeoBrutalBox
-                borderColor={`${branchColor}40`}
-                backgroundColor={colors.bgElevated}
-                shadowColor={branchColor}
-                shadowOffsetX={3}
-                shadowOffsetY={3}
-                borderWidth={1.5}
-                borderRadius={12}
-                contentStyle={styles.modalStats}
-              >
+              <View style={styles.modalStats}>
                 <View style={styles.statItem}>
-                  <Ionicons name="flash" size={14} color={colors.brandPrimary} />
-                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                  <Ionicons name="flash" size={14} color={colors.brandGlow} />
+                  <AppText variant="caption" color={colors.textSecondary}>
                     {selectedNode.xp_required} XP cần thiết
-                  </Text>
+                  </AppText>
                 </View>
-                <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
+
+                <View style={styles.statDivider} />
+
                 <View style={styles.statItem}>
                   <Ionicons name="list" size={14} color={branchColor} />
-                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                  <AppText variant="caption" color={colors.textSecondary}>
                     {selectedNode.quests_completed}/{selectedNode.quests_total} nhiệm vụ
-                  </Text>
+                  </AppText>
                 </View>
-              </NeoBrutalBox>
+              </View>
 
               {/* Locked message */}
               {selectedNode.status === 'locked' && (
-                <NeoBrutalBox
-                  borderColor={`${colors.textMuted}40`}
-                  backgroundColor={colors.bgElevated}
-                  shadowColor="#000"
-                  shadowOffsetX={2}
-                  shadowOffsetY={2}
-                  borderWidth={1.5}
-                  borderRadius={10}
-                  contentStyle={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12 }}
-                >
+                <View style={styles.lockedBanner}>
                   <Ionicons name="lock-closed" size={14} color={colors.textMuted} />
-                  <Text style={{ fontSize: 12, color: colors.textMuted, flex: 1, lineHeight: 18 }}>
+                  <AppText variant="caption" color={colors.textMuted}>
                     Chưa mở khóa — hoàn thành các nút trước để tiếp tục
-                  </Text>
-                </NeoBrutalBox>
+                  </AppText>
+                </View>
               )}
 
               {/* Close button */}
-              <NeoBrutalAccent
-                accentColor={`${branchColor}18`}
-                strokeColor={branchColor}
-                shadowOffsetX={3}
-                shadowOffsetY={3}
-                borderWidth={2}
-                borderRadius={14}
+              <TouchableOpacity
+                style={[styles.closeButton, { borderColor: branchColor }]}
                 onPress={closeModal}
-                contentStyle={{ height: 48, alignItems: 'center', justifyContent: 'center' }}
+                activeOpacity={0.8}
               >
-                <Text style={{ fontSize: 15, fontWeight: '700', color: branchColor }}>Đóng</Text>
-              </NeoBrutalAccent>
+                <AppText variant="body" style={{ color: branchColor, fontWeight: '600' }}>
+                  Đóng
+                </AppText>
+              </TouchableOpacity>
             </Pressable>
           </Pressable>
         </Modal>
@@ -290,29 +264,24 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   modalSheet: {
     backgroundColor: colors.bgElevated,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: Spacing.lg,
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    padding: Spacing.lg,
     paddingBottom: Spacing.xl,
     gap: Spacing.md,
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
-  sheetAccentStrip: {
-    height: 4,
-    marginHorizontal: -Spacing.lg,
-    marginBottom: 0,
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    alignSelf: 'center',
-    marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   modalStatusRow: {
     flexDirection: 'row',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
   },
   statusDot: {
     width: 6,
@@ -320,7 +289,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: Radius.full,
   },
   modalTitle: {
-    fontSize: 18,
+    color: colors.textPrimary,
     fontWeight: '700',
   },
   modalDesc: {
@@ -329,6 +298,8 @@ const createStyles = (colors: any) => StyleSheet.create({
   modalStats: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.bgSurface,
+    borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
   },
@@ -341,8 +312,16 @@ const createStyles = (colors: any) => StyleSheet.create({
   statDivider: {
     width: 1,
     height: 20,
+    backgroundColor: colors.glassBorder,
   },
-  // lockedBanner now rendered as NeoBrutalBox inline
+  lockedBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: `${colors.textMuted}15`,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+  },
   closeButton: {
     alignItems: 'center',
     justifyContent: 'center',

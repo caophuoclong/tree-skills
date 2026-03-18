@@ -5,12 +5,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Branch } from "@/src/business-logic/types";
-import {
-  Emoji,
-  NeoBrutalAccent,
-  NeoBrutalBox,
-  NeoBrutalCard,
-} from "@/src/ui/atoms";
+import { Emoji, NeoBrutalAccent, NeoBrutalCard } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -28,7 +23,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle } from "react-native-svg";
+import { Shadow } from "react-native-shadow-2";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -72,84 +67,30 @@ interface ProgressRingProps {
   label: string;
 }
 
-// ─── NB Circular Progress Ring ────────────────────────────────────────────────
-// DISC = outer circle diameter; SHADOW_OFF = hard-shadow pixel offset (NB style)
-// Arc starts from top (rotate -90°); strokeLinecap="butt" for NB flat/blocky feel
-const DISC = 62;
-const SHADOW_OFF = 4;
-const SVG_SIZE = DISC + SHADOW_OFF; // reserves space for shadow so it doesn't clip
-const CX = DISC / 2;               // main disc center in SVG coords
-const CY = DISC / 2;
-const STROKE_W = 8;
-const BORDER_W = 2;
-const ARC_R = DISC / 2 - STROKE_W / 2 - BORDER_W;
-const CIRC = 2 * Math.PI * ARC_R;
-
 function ProgressRing({ percent, color, label }: ProgressRingProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const clamp = Math.min(100, Math.max(0, percent));
-  const dash = (clamp / 100) * CIRC;
 
   return (
     <View style={styles.ringWrapper}>
-      <View style={{ width: SVG_SIZE, height: SVG_SIZE }}>
-        <Svg width={SVG_SIZE} height={SVG_SIZE}>
-          {/* ① Hard-shadow disc — solid, offset by SHADOW_OFF (NB signature) */}
-          <Circle
-            cx={CX + SHADOW_OFF}
-            cy={CY + SHADOW_OFF}
-            r={DISC / 2}
-            fill={color}
-            opacity={0.4}
-          />
-          {/* ② Main disc background */}
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={DISC / 2 - BORDER_W / 2}
-            fill={colors.bgElevated}
-            stroke={color}
-            strokeWidth={BORDER_W}
-          />
-          {/* ③ Track (empty ring portion) */}
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={ARC_R}
-            fill="none"
-            stroke={`${color}28`}
-            strokeWidth={STROKE_W}
-          />
-          {/* ④ Progress arc — butt cap for blocky NB feel, starts from top */}
-          {clamp > 0 && (
-            <Circle
-              cx={CX}
-              cy={CY}
-              r={ARC_R}
-              fill="none"
-              stroke={color}
-              strokeWidth={STROKE_W}
-              strokeDasharray={`${dash} ${CIRC - dash}`}
-              strokeLinecap="butt"
-              transform={`rotate(-90 ${CX} ${CY})`}
-            />
-          )}
-        </Svg>
-        {/* ⑤ % label centered over the disc (not the shadow) */}
+      <Shadow
+        distance={2}
+        startColor="#00000099"
+        offset={[2, 2]}
+        style={{ borderRadius: 24 }}
+      >
         <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            top: 0, left: 0,
-            width: DISC, height: DISC,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={[
+            styles.ring,
+            {
+              borderColor: color,
+              backgroundColor: `${color}15`,
+            },
+          ]}
         >
-          <Text style={[styles.ringPercent, { color }]}>{clamp}%</Text>
+          <Text style={[styles.ringPercent, { color }]}>{percent}%</Text>
         </View>
-      </View>
+      </Shadow>
       <Text style={styles.ringLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -323,52 +264,30 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.headerIcons}>
-            <NeoBrutalBox
-              borderColor={colors.glassBorder}
-              backgroundColor={colors.bgElevated}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={1.5}
-              borderRadius={18}
+            <TouchableOpacity
+              style={styles.iconBtn}
               onPress={() => setNotifVisible(true)}
-              contentStyle={{
-                width: 36,
-                height: 36,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              activeOpacity={0.7}
             >
               <Ionicons
                 name="notifications-outline"
                 size={22}
                 color={colors.textSecondary}
               />
-            </NeoBrutalBox>
-            <NeoBrutalBox
-              borderColor={colors.glassBorder}
-              backgroundColor={colors.bgElevated}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={1.5}
-              borderRadius={18}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconBtn}
               onPress={() =>
                 Alert.alert("Cài đặt", "Tính năng đang được phát triển.")
               }
-              contentStyle={{
-                width: 36,
-                height: 36,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              activeOpacity={0.7}
             >
               <Ionicons
                 name="settings-outline"
                 size={22}
                 color={colors.textSecondary}
               />
-            </NeoBrutalBox>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -533,17 +452,16 @@ export default function HomeScreen() {
                 />
                 <View style={styles.xpHeaderRow}>
                   <Text style={styles.card2Label}>EXPERIENCE</Text>
-                  <NeoBrutalAccent
-                    accentColor={colors.brandPrimary}
-                    strokeColor="rgba(0,0,0,0.7)"
-                    shadowOffsetX={2}
-                    shadowOffsetY={2}
-                    borderWidth={1.5}
-                    borderRadius={4}
-                    contentStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
+                  <Shadow
+                    distance={2}
+                    startColor="#00000099"
+                    offset={[2, 2]}
+                    style={{ borderRadius: 4 }}
                   >
-                    <Text style={styles.levelPillText}>LVL {level}</Text>
-                  </NeoBrutalAccent>
+                    <View style={styles.levelPill}>
+                      <Text style={styles.levelPillText}>LVL {level}</Text>
+                    </View>
+                  </Shadow>
                 </View>
                 <Text style={styles.xpValue}>
                   {currentXP.toLocaleString()} / {targetXP.toLocaleString()} XP
@@ -597,23 +515,14 @@ export default function HomeScreen() {
           </View>
 
           {quests.slice(0, 3).map((quest) => (
-            <NeoBrutalBox
+            <NeoBrutalAccent
+              accentColor={colors.bgBase}
               key={quest.quest_id}
-              borderColor={colors.glassBorder}
-              backgroundColor={colors.bgSurface}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={1}
-              borderRadius={12}
-              style={{ marginBottom: 8 }}
-              onPress={() => router.push(`/quest/${quest.quest_id}`)}
+              style={{ marginVertical: 6 }}
               contentStyle={{
-                padding: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
+                padding: 4,
               }}
+              onPress={() => router.push(`/quest/${quest.quest_id}`)}
             >
               <View style={styles.miniQuestContent}>
                 <View
@@ -634,7 +543,7 @@ export default function HomeScreen() {
                   +{quest.xp_reward} XP
                 </Text>
               </View>
-            </NeoBrutalBox>
+            </NeoBrutalAccent>
           ))}
         </View>
 
@@ -673,68 +582,32 @@ export default function HomeScreen() {
           onPress={() => setNotifVisible(false)}
         >
           <View style={styles.notifContent}>
-            {/* NB accent strip at top */}
-            <View
-              style={[
-                styles.notifAccentStrip,
-                { backgroundColor: colors.brandPrimary },
-              ]}
-            />
-            {/* Drag handle */}
-            <View style={styles.notifHandle} />
-
             <View style={styles.notifHeader}>
-              <Text style={styles.notifHeaderTitle}>✦ Thông báo</Text>
-              <NeoBrutalBox
-                borderColor={colors.glassBorder}
-                backgroundColor={colors.bgElevated}
-                shadowColor="#000"
-                shadowOffsetX={2}
-                shadowOffsetY={2}
-                borderWidth={1.5}
-                borderRadius={14}
-                onPress={() => setNotifVisible(false)}
-                contentStyle={{
-                  width: 32,
-                  height: 32,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="close" size={16} color={colors.textSecondary} />
-              </NeoBrutalBox>
+              <Text style={styles.notifHeaderTitle}>Thông báo</Text>
+              <TouchableOpacity onPress={() => setNotifVisible(false)}>
+                <Ionicons
+                  name="close-circle"
+                  size={28}
+                  color={colors.textMuted}
+                />
+              </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {notifications.map((notif) => (
-                <View
-                  key={notif.id}
-                  style={[
-                    styles.notifItem,
-                    { borderBottomColor: colors.glassBorder },
-                  ]}
-                >
-                  <NeoBrutalBox
-                    borderColor={`${notif.color}60`}
-                    backgroundColor={`${notif.color}18`}
-                    shadowColor={notif.color}
-                    shadowOffsetX={2}
-                    shadowOffsetY={2}
-                    borderWidth={1.5}
-                    borderRadius={12}
-                    contentStyle={{
-                      width: 40,
-                      height: 40,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                <View key={notif.id} style={styles.notifItem}>
+                  <View
+                    style={[
+                      styles.notifIcon,
+                      { backgroundColor: `${notif.color}20` },
+                    ]}
                   >
                     <Ionicons
                       name={notif.icon as any}
-                      size={18}
+                      size={20}
                       color={notif.color}
                     />
-                  </NeoBrutalBox>
+                  </View>
                   <View style={styles.notifText}>
                     <Text style={styles.notifTitle}>{notif.title}</Text>
                     <Text style={styles.notifBody}>{notif.body}</Text>
@@ -815,6 +688,12 @@ const createStyles = (colors: IColors) =>
       flexDirection: "row",
       gap: 4,
     },
+    iconBtn: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
     // Section
     section: {
@@ -876,10 +755,17 @@ const createStyles = (colors: IColors) =>
       width: "42%",
       marginBottom: 8,
     },
+    ring: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 2,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     ringPercent: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: "900",
-      letterSpacing: -0.3,
     },
     ringLabel: {
       fontSize: 9,
@@ -1006,6 +892,13 @@ const createStyles = (colors: IColors) =>
       justifyContent: "space-between",
       marginBottom: 2,
     },
+    // Neobrutalism level pill — sharp corners, shadow via Shadow component
+    levelPill: {
+      backgroundColor: colors.brandPrimary,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+    },
     levelPillText: {
       fontSize: 10,
       fontWeight: "900",
@@ -1095,6 +988,17 @@ const createStyles = (colors: IColors) =>
       color: colors.brandPrimary,
       marginBottom: 8,
     },
+    miniQuestCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: colors.bgSurface,
+      padding: 12,
+      borderRadius: 12,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
     miniQuestContent: {
       flexDirection: "row",
       alignItems: "center",
@@ -1136,28 +1040,12 @@ const createStyles = (colors: IColors) =>
     },
     notifContent: {
       backgroundColor: colors.bgSurface,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      paddingHorizontal: 24,
-      paddingBottom: 24,
+      borderTopLeftRadius: 32,
+      borderTopRightRadius: 32,
+      padding: 24,
       maxHeight: "80%",
-      borderWidth: 2,
-      borderColor: colors.brandPrimary,
-      overflow: "hidden",
-    },
-    notifAccentStrip: {
-      height: 4,
-      marginHorizontal: -24,
-      marginBottom: 0,
-    },
-    notifHandle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: "rgba(255,255,255,0.14)",
-      alignSelf: "center",
-      marginTop: 12,
-      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
     },
     notifHeader: {
       flexDirection: "row",
@@ -1173,8 +1061,16 @@ const createStyles = (colors: IColors) =>
     notifItem: {
       flexDirection: "row",
       gap: 16,
-      paddingVertical: 14,
+      paddingVertical: 16,
       borderBottomWidth: 1,
+      borderBottomColor: "rgba(255,255,255,0.05)",
+    },
+    notifIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
     },
     notifText: {
       flex: 1,
