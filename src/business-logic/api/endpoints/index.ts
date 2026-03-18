@@ -19,4 +19,14 @@ export const API = {
     me: '/user/me',                  // GET
     update: '/user/me',              // PATCH
   },
+  customTrees: {
+    list: '/custom-trees',                   // GET
+    seed: '/custom-trees/seed',              // POST (first-time demo data)
+  },
+  roadmap: {
+    list: '/roadmap/milestones',                        // GET
+    create: '/roadmap/milestones',                      // POST
+    update: (id: string) => `/roadmap/milestones/${id}`, // PATCH
+    delete: (id: string) => `/roadmap/milestones/${id}`, // DELETE
+  },
 } as const;

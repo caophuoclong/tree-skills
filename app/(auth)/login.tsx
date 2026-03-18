@@ -13,26 +13,11 @@ import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Button } from '@/src/ui/atoms/Button';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { userService } from '@/src/business-logic/api/services/userService';
 import { useTheme } from '@/src/ui/tokens';
 
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
-import type { UserProgress } from '@/src/business-logic/types';
 
-const MOCK_USER: UserProgress = {
-  user_id: 'u1',
-  name: 'Người Dùng',
-  avatar_url: null,
-  level: 1,
-  total_xp: 0,
-  current_xp_in_level: 0,
-  xp_to_next_level: 100,
-  streak: 0,
-  best_streak: 0,
-  stamina: 100,
-  last_active_date: null,
-  last_login_at: new Date().toISOString(),
-  onboarding_done: false,
-};
 
 export default function LoginScreen() {
   const { colors } = useTheme();
@@ -45,10 +30,15 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!email || !password) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setUser(MOCK_USER);
-    setLoading(false);
-    router.replace('/(tabs)');
+    try {
+      // In production: POST /auth/login first, then fetch user
+      // For now: simulate auth then fetch mock user from network layer
+      const user = await userService.getMe();
+      setUser(user);
+      router.replace('/(tabs)');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

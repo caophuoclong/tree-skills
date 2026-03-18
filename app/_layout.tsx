@@ -17,6 +17,7 @@ import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
 
 import { queryClient } from "@/src/business-logic/api/query-client";
+import { useUser } from "@/src/business-logic/hooks/useUser";
 import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
@@ -50,11 +51,24 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
-export default function RootLayout() {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+
+function App() {
   const { isDark, colors } = useTheme();
   const checkDailyLogin = useUserStore((s) => s.checkDailyLogin);
   const { user } = useUserStore();
   const { addNotification } = useNotificationStore();
+
+  // Fetch current user from API → sync into userStore
+  useUser();
 
   const [fontsLoaded] = useFonts({
     "SpaceGrotesk-Light": SpaceGrotesk_300Light,
