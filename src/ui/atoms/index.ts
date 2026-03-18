@@ -16,4 +16,9 @@ export type { NeoBrutalBoxProps, NeoBrutalAccentProps } from "./NeoBrutalBox";
 export { ProgressBar } from "./ProgressBar";
 export { AppText } from "./Text";
 export { StreakToast } from "./StreakToast";
+export { SvgPaths } from "./SvgPaths";
+export type { Placed } from "./SvgPaths";
+export { TierBannerView } from "./TierBanner";
+export type { Banner } from "./TierBanner";
+export { NodeCircle } from "./NodeCircle";
 
