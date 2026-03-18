@@ -65,6 +65,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  level: { fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' },
+  level: { fontWeight: '700', fontFamily: 'SpaceMono-Bold' },
   counts: { textAlign: 'right' },
 });

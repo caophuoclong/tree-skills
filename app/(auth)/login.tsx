@@ -191,7 +191,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: Spacing.md,
     color: colors.textPrimary,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'SpaceGrotesk-Regular',
   },
   submitBtn: {
     marginTop: Spacing.sm,

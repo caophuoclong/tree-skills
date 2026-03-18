@@ -1,7 +1,20 @@
 import { QueryClientProvider } from '@tanstack/react-query';
+import {
+  SpaceGrotesk_300Light,
+  SpaceGrotesk_400Regular,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
+import {
+  SpaceMono_400Regular,
+  SpaceMono_700Bold,
+} from '@expo-google-fonts/space-mono';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { View } from 'react-native';
 
 import { queryClient } from '@/src/business-logic/api/query-client';
 import { LevelUpModal, LoginBonusModal } from '@/src/ui/molecules';
@@ -13,6 +26,21 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const { isDark, colors } = useTheme();
+
+  const [fontsLoaded] = useFonts({
+    'SpaceGrotesk-Light':    SpaceGrotesk_300Light,
+    'SpaceGrotesk-Regular':  SpaceGrotesk_400Regular,
+    'SpaceGrotesk-Medium':   SpaceGrotesk_500Medium,
+    'SpaceGrotesk-SemiBold': SpaceGrotesk_600SemiBold,
+    'SpaceGrotesk-Bold':     SpaceGrotesk_700Bold,
+    'SpaceMono-Regular':     SpaceMono_400Regular,
+    'SpaceMono-Bold':        SpaceMono_700Bold,
+  });
+
+  // Hold render until fonts are loaded to prevent flash of unstyled text
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: colors.bgBase }} />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
