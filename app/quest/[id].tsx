@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import {
-  Animated,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,8 +11,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useQuestManager } from "@/src/business-logic/hooks/useQuestManager";
+import { useXPEngine } from "@/src/business-logic/hooks/useXPEngine";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
-import { NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
+import { NeoBrutalBox } from "@/src/ui/atoms";
+import {
+  QuestCompleteButton,
+  QuestMetaRow,
+  QuestStepList,
+} from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -168,12 +174,8 @@ export default function QuestDetailScreen() {
 
   const { id } = useLocalSearchParams<{ id: string }>();
   const { quests, completeQuest } = useQuestManager();
-  const xpAnim = React.useRef(new Animated.Value(0)).current;
-  const [showXP, setShowXP] = React.useState(false);
-  const [xpResult, setXpResult] = React.useState<{
-    bonusXP: number;
-    multiplier: number;
-  } | null>(null);
+  const { addXP } = useXPEngine();
+  const { dailyStats } = useUserStore();
 
   const quest: Quest | undefined = quests.find((q) => q.quest_id === id);
 
@@ -184,31 +186,16 @@ export default function QuestDetailScreen() {
 
   const handleComplete = useCallback(() => {
     if (!quest || isCompleted) return;
-    const result = completeQuest(quest.quest_id);
 
-    if (result) {
-      setXpResult({ bonusXP: result.bonusXP, multiplier: result.multiplier });
-    }
+    // Mark quest complete
+    completeQuest(quest.quest_id);
 
-    // XP Animation
-    setShowXP(true);
-    Animated.sequence([
-      Animated.timing(xpAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(xpAnim, {
-        toValue: 0,
-        duration: 200,
-        delay: 600,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setShowXP(false);
-      router.back();
-    });
-  }, [quest, isCompleted, completeQuest, xpAnim]);
+    // Award XP with multiplier
+    addXP(quest.xp_reward);
+
+    // Auto-navigate back after animations finish
+    setTimeout(() => router.back(), 1200);
+  }, [quest, isCompleted, completeQuest, addXP]);
 
   if (!quest) {
     return (
@@ -269,47 +256,12 @@ export default function QuestDetailScreen() {
           contentStyle={styles.titleCard}
         >
           <Text style={styles.questTitle}>{quest.title}</Text>
-          <View style={styles.tagsRow}>
-            <NeoBrutalAccent
-              accentColor={`${colors.bgBase}`}
-              strokeColor={branchColor}
-              borderWidth={1}
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderRadius={9999}
-              contentStyle={styles.tagChip}
-            >
-              <Text style={[styles.tagText, { color: branchColor }]}>
-                {BRANCH_LABELS[quest.branch] ?? quest.branch}
-              </Text>
-            </NeoBrutalAccent>
-            <NeoBrutalBox
-              borderColor={colors.glassBorder}
-              backgroundColor={colors.bgElevated}
-              shadowColor="#000"
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderWidth={1}
-              borderRadius={9999}
-              contentStyle={styles.tagChipNeutral}
-            >
-              <Text style={styles.tagTextNeutral}>
-                {quest.duration_min} MIN
-              </Text>
-            </NeoBrutalBox>
-            <NeoBrutalAccent
-              accentColor={colors.bgBase}
-              strokeColor="#FBBF24"
-              borderWidth={1}
-              shadowOffsetX={2}
-              shadowOffsetY={2}
-              borderRadius={9999}
-              contentStyle={styles.tagChipXP}
-            >
-              <Ionicons name="flash" size={10} color={colors.softskills} />
-              <Text style={styles.tagTextXP}>+{quest.xp_reward} XP</Text>
-            </NeoBrutalAccent>
-          </View>
+          <QuestMetaRow
+            duration={quest.duration_min}
+            xpReward={quest.xp_reward}
+            difficulty={quest.difficulty}
+            branch={quest.branch}
+          />
         </NeoBrutalBox>
 
         {/* ── Tại sao điều này quan trọng ──────────────────── */}
@@ -321,25 +273,7 @@ export default function QuestDetailScreen() {
         {/* ── Cách hoàn thành ───────────────────────────────── */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>CÁCH HOÀN THÀNH</Text>
-          <View style={styles.stepsContainer}>
-            {steps.map((step, index) => (
-              <View key={index} style={styles.stepRow}>
-                <NeoBrutalBox
-                  borderColor={colors.brandPrimary}
-                  backgroundColor={colors.bgBase}
-                  shadowColor={colors.brandPrimary}
-                  shadowOffsetX={2}
-                  shadowOffsetY={2}
-                  borderWidth={1.5}
-                  borderRadius={12}
-                  contentStyle={styles.stepNumber}
-                >
-                  <Text style={styles.stepNumberText}>{index + 1}</Text>
-                </NeoBrutalBox>
-                <Text style={styles.stepText}>{step}</Text>
-              </View>
-            ))}
-          </View>
+          <QuestStepList steps={steps} />
         </View>
 
         {/* ── Tài nguyên tham khảo ────────────────────────── */}
@@ -378,83 +312,17 @@ export default function QuestDetailScreen() {
         <Text style={styles.footerNote}>
           ⚡ Không tốn Thể lực · Nhận XP thuần
         </Text>
-        {isCompleted ? (
-          <NeoBrutalBox
-            borderColor={`${colors.finance}33`}
-            backgroundColor={`${colors.finance}1A`}
-            shadowColor={colors.finance}
-            shadowOffsetX={3}
-            shadowOffsetY={3}
-            borderWidth={1}
-            borderRadius={26}
-            contentStyle={styles.completedBtn}
-          >
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color={colors.finance}
-            />
-            <Text style={styles.completedBtnText}>Đã hoàn thành</Text>
-          </NeoBrutalBox>
-        ) : (
-          <NeoBrutalAccent
-            accentColor={branchColor}
-            strokeColor="rgba(0,0,0,0.5)"
-            shadowOffsetX={4}
-            shadowOffsetY={4}
-            borderWidth={2}
-            borderRadius={26}
-            contentStyle={styles.completeBtn}
-            onPress={handleComplete}
-          >
-            <Text style={styles.completeBtnText}>Đánh dấu hoàn thành</Text>
-          </NeoBrutalAccent>
-        )}
+        <QuestCompleteButton
+          questId={quest.quest_id}
+          xpReward={quest.xp_reward}
+          isCompleted={isCompleted}
+          sessionCombo={dailyStats.session_combo}
+          onComplete={handleComplete}
+        />
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Text style={styles.skipText}>Bỏ qua hôm nay</Text>
         </TouchableOpacity>
       </View>
-
-      {/* XP Floating Animation */}
-      {showXP && (
-        <Animated.View
-          style={[
-            styles.xpFloatContainer,
-            {
-              opacity: xpAnim,
-              transform: [
-                {
-                  translateY: xpAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, -120],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {/* Hard offset shadow background */}
-          <View style={[styles.xpFloatShadow, { top: 3, left: 3 }]} />
-          <View style={styles.xpFloat}>
-            <Text style={styles.xpFloatText}>
-              +{quest?.xp_reward} XP
-              {xpResult && xpResult.bonusXP > 0 && (
-                <Text style={styles.xpBonusText}>
-                  {" "}
-                  +{xpResult.bonusXP} COMBO
-                </Text>
-              )}
-            </Text>
-            {xpResult && xpResult.multiplier > 1 && (
-              <View style={styles.comboBadge}>
-                <Text style={styles.comboText}>
-                  X{xpResult.multiplier} MULTIPLIER
-                </Text>
-              </View>
-            )}
-          </View>
-        </Animated.View>
-      )}
     </SafeAreaView>
   );
 }
@@ -504,56 +372,6 @@ const createStyles = (colors: any) =>
       fontWeight: "600",
     },
 
-    // XP Float Container
-    xpFloatContainer: {
-      position: "absolute",
-      bottom: 120,
-      alignSelf: "center",
-    },
-    // XP Float hard offset shadow
-    xpFloatShadow: {
-      position: "absolute",
-      backgroundColor: `${colors.softskills}33`,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.softskills,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      width: "auto",
-      minWidth: 160,
-    },
-    // XP Float main content
-    xpFloat: {
-      backgroundColor: colors.bgSurface,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.softskills,
-    },
-    xpFloatText: {
-      fontSize: 20,
-      fontWeight: "800",
-      color: colors.softskills,
-      textAlign: "center",
-    },
-    xpBonusText: {
-      fontSize: 14,
-      color: colors.career, // Use a bright color for bonus
-    },
-    comboBadge: {
-      backgroundColor: colors.career,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 4,
-      marginTop: 4,
-    },
-    comboText: {
-      fontSize: 10,
-      fontWeight: "900",
-      color: "#000000",
-      letterSpacing: 1,
-    },
 
     // Scroll
     scroll: {
@@ -575,46 +393,6 @@ const createStyles = (colors: any) =>
       fontWeight: "700",
       color: colors.textPrimary,
     },
-    tagsRow: {
-      flexDirection: "row",
-      gap: 8,
-      marginTop: 12,
-      flexWrap: "wrap",
-    },
-    tagChip: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    tagText: {
-      fontSize: 10,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    tagChipNeutral: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    tagTextNeutral: {
-      fontSize: 10,
-      color: colors.textSecondary,
-      fontFamily: "SpaceGrotesk-SemiBold",
-      fontWeight: "600",
-    },
-    tagChipXP: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 3,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    tagTextXP: {
-      fontSize: 10,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: colors.softskills,
-    },
 
     // Sections
     section: {
@@ -635,35 +413,6 @@ const createStyles = (colors: any) =>
       lineHeight: 22,
     },
 
-    // Steps
-    stepsContainer: {
-      gap: 12,
-    },
-    stepRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 12,
-    },
-    stepNumber: {
-      width: 24,
-      height: 24,
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-    },
-    stepNumberText: {
-      fontSize: 12,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: colors.brandPrimary,
-    },
-    stepText: {
-      fontSize: 13,
-      color: colors.textSecondary,
-      flex: 1,
-      lineHeight: 20,
-      paddingTop: 2,
-    },
 
     // Resources
     resourceRow: {
@@ -701,30 +450,6 @@ const createStyles = (colors: any) =>
       color: colors.textMuted,
       textAlign: "center",
       marginBottom: 16,
-    },
-    completeBtn: {
-      height: 52,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    completeBtnText: {
-      fontSize: 16,
-      fontFamily: "SpaceGrotesk-Bold",
-      fontWeight: "700",
-      color: "#FFFFFF",
-    },
-    completedBtn: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      height: 52,
-      gap: 8,
-    },
-    completedBtnText: {
-      fontSize: 16,
-      fontFamily: "SpaceGrotesk-SemiBold",
-      fontWeight: "600",
-      color: colors.finance,
     },
     skipText: {
       fontSize: 14,
