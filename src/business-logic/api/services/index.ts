@@ -3,3 +3,5 @@ export { skillTreeService } from './skillTreeService';
 export { challengeService } from './challengeService';
 export { assessmentService } from './assessmentService';
 export { userService } from './userService';
+
+export { roadmapService } from './roadmapService';

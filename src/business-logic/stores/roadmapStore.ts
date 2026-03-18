@@ -3,6 +3,7 @@ import type { RoadmapMilestone, TimeHorizon, Branch } from '../types';
 
 interface RoadmapStore {
   milestones: RoadmapMilestone[];
+  setMilestones: (milestones: RoadmapMilestone[]) => void;
   addMilestone: (title: string, branch: Branch, horizon: TimeHorizon) => void;
   toggleMilestone: (id: string) => void;
   deleteMilestone: (id: string) => void;
@@ -34,66 +35,11 @@ function getTargetDate(horizon: TimeHorizon): string {
   return targetDate.toISOString().split('T')[0];
 }
 
-// Seed data: 6 example milestones (2 per horizon, mixed branches)
-const SEED_MILESTONES: RoadmapMilestone[] = [
-  {
-    id: generateId(),
-    title: 'Hoàn thành khóa học Tiếng Anh A2',
-    branch: 'softskills',
-    horizon: 'short',
-    targetDate: getTargetDate('short'),
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: generateId(),
-    title: 'Tiết kiệm được $5000 quỹ khẩn cấp',
-    branch: 'finance',
-    horizon: 'short',
-    targetDate: getTargetDate('short'),
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: generateId(),
-    title: 'Nâng cấp lên vị trí cao hơn tại công ty',
-    branch: 'career',
-    horizon: 'mid',
-    targetDate: getTargetDate('mid'),
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: generateId(),
-    title: 'Đạt trọng lượng lý tưởng và sức khỏe tốt',
-    branch: 'wellbeing',
-    horizon: 'mid',
-    targetDate: getTargetDate('mid'),
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: generateId(),
-    title: 'Xây dựng sự nghiệp riêng độc lập',
-    branch: 'career',
-    horizon: 'long',
-    targetDate: getTargetDate('long'),
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: generateId(),
-    title: 'Tích lũy tài sản đạt tới 1 tỷ đồng',
-    branch: 'finance',
-    horizon: 'long',
-    targetDate: getTargetDate('long'),
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-];
 
 export const useRoadmapStore = create<RoadmapStore>((set) => ({
-  milestones: SEED_MILESTONES,
+  milestones: [], // populated via useRoadmap → roadmapService.getAll()
+
+  setMilestones: (milestones) => set({ milestones }),
 
   addMilestone: (title, branch, horizon) =>
     set((state) => ({

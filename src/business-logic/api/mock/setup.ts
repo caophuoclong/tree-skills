@@ -5,6 +5,8 @@ import { setupSkillTreeHandlers } from './handlers/skillTreeHandlers';
 import { setupChallengeHandlers } from './handlers/challengeHandlers';
 import { setupAssessmentHandlers } from './handlers/assessmentHandlers';
 import { setupUserHandlers } from './handlers/userHandlers';
+import { setupRoadmapHandlers } from './handlers/roadmapHandlers';
+import { setupCustomTreeHandlers } from './handlers/customTreeHandlers';
 
 let _mock: MockAdapter | null = null;
 
@@ -21,6 +23,8 @@ export function setupNetworkMocks() {
   setupChallengeHandlers(_mock);
   setupAssessmentHandlers(_mock);
   setupUserHandlers(_mock);
+  setupRoadmapHandlers(_mock);
+  setupCustomTreeHandlers(_mock);
 
   console.log('[DEV] Network mocks enabled — axios-mock-adapter active');
 }
