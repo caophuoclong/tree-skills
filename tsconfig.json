@@ -5,7 +5,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+        "jsx": "react-jsx" // or "react", "preserve", "react-native"
+
   },
   "include": [
     "**/*.ts",

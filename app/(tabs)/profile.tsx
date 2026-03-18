@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useMemo } from "react";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
@@ -39,7 +33,9 @@ function getBranchPercent(
 ): number {
   const bn = nodes.filter((n) => n.branch === branch);
   if (bn.length === 0) return 0;
-  return Math.round((bn.filter((n) => n.status === "completed").length / bn.length) * 100);
+  return Math.round(
+    (bn.filter((n) => n.status === "completed").length / bn.length) * 100,
+  );
 }
 
 // ─── Branch progress row ──────────────────────────────────────────────────────
@@ -58,7 +54,9 @@ function BranchProgressRow({ label, percent, color, emoji }: BranchRowProps) {
       <Text style={styles.branchEmoji}>{emoji}</Text>
       <View style={{ flex: 1, gap: 5 }}>
         <View style={styles.branchLabelRow}>
-          <Text style={[styles.branchLabel, { color: colors.textPrimary }]}>{label}</Text>
+          <Text style={[styles.branchLabel, { color: colors.textPrimary }]}>
+            {label}
+          </Text>
           <Text style={[styles.branchPercent, { color }]}>{percent}%</Text>
         </View>
         <ProgressBar value={percent} color={color} variant="thick" animated />
@@ -82,28 +80,90 @@ export default function ProfileScreen() {
   const bestStreak = user?.best_streak ?? 19;
   const initials = getInitials(name);
 
-  const careerPct   = getBranchPercent(nodes, "career")     || 80;
-  const financePct  = getBranchPercent(nodes, "finance")    || 60;
-  const softPct     = getBranchPercent(nodes, "softskills") || 40;
-  const wellPct     = getBranchPercent(nodes, "wellbeing")  || 30;
+  const careerPct = getBranchPercent(nodes, "career") || 80;
+  const financePct = getBranchPercent(nodes, "finance") || 60;
+  const softPct = getBranchPercent(nodes, "softskills") || 40;
+  const wellPct = getBranchPercent(nodes, "wellbeing") || 30;
 
-  const milestones = useMemo(() => [
-    { id: 1, title: "Tân binh",    description: "Đạt 3 ngày liên tiếp",           icon: "medal-outline",          unlocked: streak >= 3,       color: colors.career },
-    { id: 2, title: "Kiên trì",    description: "Đạt 7 ngày liên tiếp",           icon: "ribbon-outline",         unlocked: streak >= 7,       color: colors.finance },
-    { id: 3, title: "Kỷ luật",     description: "Đạt 14 ngày liên tiếp",          icon: "shield-checkmark-outline",unlocked: streak >= 14,     color: colors.softskills },
-    { id: 4, title: "Huyền thoại", description: "Đạt 30 ngày liên tiếp",          icon: "star-outline",           unlocked: streak >= 30,      color: colors.wellbeing },
-    { id: 5, title: "Bậc thầy Sự nghiệp",  description: "Hoàn thành nhánh Sự nghiệp",   icon: "briefcase",  unlocked: careerPct  >= 100, color: colors.career },
-    { id: 6, title: "Bậc thầy Tài chính",  description: "Hoàn thành nhánh Tài chính",   icon: "wallet",     unlocked: financePct >= 100, color: colors.finance },
-    { id: 7, title: "Bậc thầy Kỹ năng",    description: "Hoàn thành nhánh Kỹ năng mềm",icon: "people",     unlocked: softPct    >= 100, color: colors.softskills },
-    { id: 8, title: "Bậc thầy Sức khỏe",   description: "Hoàn thành nhánh Sức khỏe",   icon: "pulse",      unlocked: wellPct    >= 100, color: colors.wellbeing },
-  ], [streak, careerPct, financePct, softPct, wellPct, colors]);
+  const milestones = useMemo(
+    () => [
+      {
+        id: 1,
+        title: "Tân binh",
+        description: "Đạt 3 ngày liên tiếp",
+        icon: "medal-outline",
+        unlocked: streak >= 3,
+        color: colors.career,
+      },
+      {
+        id: 2,
+        title: "Kiên trì",
+        description: "Đạt 7 ngày liên tiếp",
+        icon: "ribbon-outline",
+        unlocked: streak >= 7,
+        color: colors.finance,
+      },
+      {
+        id: 3,
+        title: "Kỷ luật",
+        description: "Đạt 14 ngày liên tiếp",
+        icon: "shield-checkmark-outline",
+        unlocked: streak >= 14,
+        color: colors.softskills,
+      },
+      {
+        id: 4,
+        title: "Huyền thoại",
+        description: "Đạt 30 ngày liên tiếp",
+        icon: "star-outline",
+        unlocked: streak >= 30,
+        color: colors.wellbeing,
+      },
+      {
+        id: 5,
+        title: "Bậc thầy Sự nghiệp",
+        description: "Hoàn thành nhánh Sự nghiệp",
+        icon: "briefcase",
+        unlocked: careerPct >= 100,
+        color: colors.career,
+      },
+      {
+        id: 6,
+        title: "Bậc thầy Tài chính",
+        description: "Hoàn thành nhánh Tài chính",
+        icon: "wallet",
+        unlocked: financePct >= 100,
+        color: colors.finance,
+      },
+      {
+        id: 7,
+        title: "Bậc thầy Kỹ năng",
+        description: "Hoàn thành nhánh Kỹ năng mềm",
+        icon: "people",
+        unlocked: softPct >= 100,
+        color: colors.softskills,
+      },
+      {
+        id: 8,
+        title: "Bậc thầy Sức khỏe",
+        description: "Hoàn thành nhánh Sức khỏe",
+        icon: "pulse",
+        unlocked: wellPct >= 100,
+        color: colors.wellbeing,
+      },
+    ],
+    [streak, careerPct, financePct, softPct, wellPct, colors],
+  );
 
-  const STATS = useMemo(() => [
-    { value: "47",      label: "QUESTS\nDONE" },
-    { value: "23",      label: "ACTIVE\nDAYS" },
-    { value: bestStreak, label: "BEST\nSTREAK" },
-    { value: "3/4",     label: "BRANCHES\nDONE" },
-  ], [bestStreak]);
+  const STATS = useMemo(
+    () => [
+      { value: "47", label: "QUESTS\nDONE" },
+      { value: "23", label: "ACTIVE\nDAYS" },
+      { value: bestStreak, label: "BEST\nSTREAK" },
+      { value: "3/4", label: "BRANCHES\nDONE" },
+    ],
+    [bestStreak],
+  );
 
   const handleLogout = () => {
     Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất không?", [
@@ -111,19 +171,24 @@ export default function ProfileScreen() {
       {
         text: "Đăng xuất",
         style: "destructive",
-        onPress: () => { logout(); router.replace("/(auth)/welcome"); },
+        onPress: () => {
+          logout();
+          router.replace("/(auth)/welcome");
+        },
       },
     ]);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgBase }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.bgBase }]}
+      edges={["top"]}
+    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
         {/* ── Avatar header ─────────────────────────────────────────────────── */}
         <View style={styles.avatarSection}>
           {/* Avatar circle — NeoBrutalBox as circle */}
@@ -136,9 +201,18 @@ export default function ProfileScreen() {
               shadowOffsetX={4}
               shadowOffsetY={4}
               borderWidth={3}
-              contentStyle={{ width: 88, height: 88, alignItems: "center", justifyContent: "center" }}
+              contentStyle={{
+                width: 88,
+                height: 88,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <Text style={[styles.avatarInitials, { color: colors.textPrimary }]}>{initials}</Text>
+              <Text
+                style={[styles.avatarInitials, { color: colors.textPrimary }]}
+              >
+                {initials}
+              </Text>
             </NeoBrutalBox>
 
             {/* Level badge — absolute overlay */}
@@ -153,13 +227,17 @@ export default function ProfileScreen() {
               style={styles.levelBadge}
               contentStyle={{ paddingHorizontal: 8, paddingVertical: 3 }}
             >
-              <Text style={[styles.levelBadgeText, { color: colors.brandPrimary }]}>
+              <Text
+                style={[styles.levelBadgeText, { color: colors.brandPrimary }]}
+              >
                 LVL {level}
               </Text>
             </NeoBrutalBox>
           </View>
 
-          <Text style={[styles.userName, { color: colors.textPrimary }]}>{name}</Text>
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>
+            {name}
+          </Text>
           <Text style={[styles.userSubtitle, { color: colors.textSecondary }]}>
             Level {level} · {currentXP.toLocaleString()} XP
           </Text>
@@ -168,7 +246,6 @@ export default function ProfileScreen() {
         {/* ── Premium banner ────────────────────────────────────────────────── */}
         <NeoBrutalBox
           borderColor={colors.brandPrimary}
-          backgroundColor={`${colors.brandPrimary}15`}
           shadowColor="#000"
           shadowOffsetX={4}
           shadowOffsetY={4}
@@ -177,11 +254,15 @@ export default function ProfileScreen() {
           contentStyle={styles.premiumContent}
           onPress={() => {}}
         >
-          <Text style={[styles.premiumStar, { color: colors.brandPrimary }]}>✦</Text>
+          <Text style={[styles.premiumStar, { color: colors.brandPrimary }]}>
+            ✦
+          </Text>
           <Text style={[styles.premiumTitle, { color: colors.textPrimary }]}>
             PREMIUM PLAN · ACTIVE
           </Text>
-          <Text style={[styles.premiumRenew, { color: colors.textMuted }]}>Expires 17 Apr</Text>
+          <Text style={[styles.premiumRenew, { color: colors.textMuted }]}>
+            Expires 17 Apr
+          </Text>
           <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
         </NeoBrutalBox>
 
@@ -198,7 +279,9 @@ export default function ProfileScreen() {
           contentStyle={styles.streakContent}
         >
           {/* Left accent bar */}
-          <View style={[styles.accentBar, { backgroundColor: colors.warning }]} />
+          <View
+            style={[styles.accentBar, { backgroundColor: colors.warning }]}
+          />
           <Text style={[styles.streakTitle, { color: colors.textPrimary }]}>
             <Emoji size={18}>🔥</Emoji> STREAK: {streak} DAYS
           </Text>
@@ -249,36 +332,61 @@ export default function ProfileScreen() {
                 shadowOffsetY={m.unlocked ? 5 : 3}
                 borderWidth={2}
                 borderRadius={20}
-                style={{ width: 140, opacity: m.unlocked ? 1 : 0.55 }}
+                style={{
+                  width: 160,
+                  opacity: m.unlocked ? 1 : 0.55,
+                  height: 130,
+                }}
                 contentStyle={styles.milestoneContent}
               >
                 {/* Color accent bar on unlocked */}
                 {m.unlocked && (
-                  <View style={[styles.accentBar, { backgroundColor: m.color }]} />
+                  <View
+                    style={[styles.accentBar, { backgroundColor: m.color }]}
+                  />
                 )}
                 <View
-                  style={[
-                    styles.milestoneIcon,
-                    { backgroundColor: m.unlocked ? `${m.color}20` : colors.bgElevated },
-                  ]}
+                  style={{
+                    height: "100%",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
                 >
-                  <Ionicons
-                    name={m.icon as any}
-                    size={24}
-                    color={m.unlocked ? m.color : colors.textMuted}
-                  />
+                  <View
+                    style={[
+                      styles.milestoneIcon,
+                      {
+                        backgroundColor: m.unlocked
+                          ? `${m.color}20`
+                          : colors.bgElevated,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={m.icon as any}
+                      size={24}
+                      color={m.unlocked ? m.color : colors.textMuted}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.milestoneTitle,
+                      {
+                        color: m.unlocked
+                          ? colors.textPrimary
+                          : colors.textMuted,
+                      },
+                    ]}
+                  >
+                    {m.title}
+                  </Text>
+                  <Text
+                    style={[styles.milestoneDesc, { color: colors.textMuted }]}
+                    numberOfLines={1}
+                  >
+                    {m.description}
+                  </Text>
                 </View>
-                <Text
-                  style={[
-                    styles.milestoneTitle,
-                    { color: m.unlocked ? colors.textPrimary : colors.textMuted },
-                  ]}
-                >
-                  {m.title}
-                </Text>
-                <Text style={[styles.milestoneDesc, { color: colors.textMuted }]}>
-                  {m.description}
-                </Text>
               </NeoBrutalBox>
             ))}
           </ScrollView>
@@ -296,13 +404,48 @@ export default function ProfileScreen() {
             borderRadius={16}
             contentStyle={styles.branchCard}
           >
-            <BranchProgressRow label="Sự nghiệp"    percent={careerPct}  color={colors.career}     emoji="💼" />
-            <View style={[styles.branchDivider, { backgroundColor: colors.glassBorder }]} />
-            <BranchProgressRow label="Tài chính"    percent={financePct} color={colors.finance}    emoji="💰" />
-            <View style={[styles.branchDivider, { backgroundColor: colors.glassBorder }]} />
-            <BranchProgressRow label="Kỹ năng mềm"  percent={softPct}    color={colors.softskills} emoji="💬" />
-            <View style={[styles.branchDivider, { backgroundColor: colors.glassBorder }]} />
-            <BranchProgressRow label="Sức khỏe"     percent={wellPct}    color={colors.wellbeing}  emoji="🧘" />
+            <BranchProgressRow
+              label="Sự nghiệp"
+              percent={careerPct}
+              color={colors.career}
+              emoji="💼"
+            />
+            <View
+              style={[
+                styles.branchDivider,
+                { backgroundColor: colors.glassBorder },
+              ]}
+            />
+            <BranchProgressRow
+              label="Tài chính"
+              percent={financePct}
+              color={colors.finance}
+              emoji="💰"
+            />
+            <View
+              style={[
+                styles.branchDivider,
+                { backgroundColor: colors.glassBorder },
+              ]}
+            />
+            <BranchProgressRow
+              label="Kỹ năng mềm"
+              percent={softPct}
+              color={colors.softskills}
+              emoji="💬"
+            />
+            <View
+              style={[
+                styles.branchDivider,
+                { backgroundColor: colors.glassBorder },
+              ]}
+            />
+            <BranchProgressRow
+              label="Sức khỏe"
+              percent={wellPct}
+              color={colors.wellbeing}
+              emoji="🧘"
+            />
           </NeoBrutalThemed>
         </View>
 
@@ -319,9 +462,19 @@ export default function ProfileScreen() {
             onPress={() => router.push("/settings")}
             contentStyle={styles.navContent}
           >
-            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
-            <Text style={[styles.navText, { color: colors.textPrimary }]}>Cài đặt</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            <Ionicons
+              name="settings-outline"
+              size={20}
+              color={colors.textPrimary}
+            />
+            <Text style={[styles.navText, { color: colors.textPrimary }]}>
+              Cài đặt
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={colors.textMuted}
+            />
           </NeoBrutalBox>
 
           <NeoBrutalBox
@@ -335,15 +488,25 @@ export default function ProfileScreen() {
             onPress={() => router.push("/leaderboard")}
             contentStyle={styles.navContent}
           >
-            <Ionicons name="trophy-outline" size={20} color={colors.textPrimary} />
-            <Text style={[styles.navText, { color: colors.textPrimary }]}>Bảng xếp hạng</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            <Ionicons
+              name="trophy-outline"
+              size={20}
+              color={colors.textPrimary}
+            />
+            <Text style={[styles.navText, { color: colors.textPrimary }]}>
+              Bảng xếp hạng
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={colors.textMuted}
+            />
           </NeoBrutalBox>
 
           {/* Logout — danger accent */}
           <NeoBrutalAccent
-            accentColor={`${colors.danger}18`}
-            strokeColor={colors.danger}
+            accentColor={`${colors.danger}`}
+            strokeColor={colors.textPrimary}
             shadowOffsetX={3}
             shadowOffsetY={3}
             borderWidth={1.5}
@@ -351,9 +514,19 @@ export default function ProfileScreen() {
             onPress={handleLogout}
             contentStyle={styles.navContent}
           >
-            <Ionicons name="log-out-outline" size={20} color={colors.danger} />
-            <Text style={[styles.navText, { color: colors.danger }]}>Đăng xuất</Text>
-            <Ionicons name="chevron-forward" size={16} color={`${colors.danger}80`} />
+            <Ionicons
+              name="log-out-outline"
+              size={20}
+              color={colors.textPrimary}
+            />
+            <Text style={[styles.navText, { color: colors.textPrimary }]}>
+              Đăng xuất
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={`${colors.danger}80`}
+            />
           </NeoBrutalAccent>
         </View>
 
@@ -371,13 +544,22 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
 
   // Avatar
-  avatarSection: { alignItems: "center", paddingVertical: 28, paddingHorizontal: 20 },
+  avatarSection: {
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+  },
   avatarContainer: { position: "relative", marginBottom: 14 },
   avatarInitials: { fontSize: 26, fontWeight: "900" },
   levelBadge: { position: "absolute", bottom: -4, right: -8 },
   levelBadgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
   userName: { fontSize: 22, fontWeight: "800", marginBottom: 4 },
-  userSubtitle: { fontSize: 12, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", marginTop: 2 },
+  userSubtitle: {
+    fontSize: 12,
+    fontFamily: "SpaceGrotesk-SemiBold",
+    fontWeight: "600",
+    marginTop: 2,
+  },
 
   // Premium banner
   premiumContent: {
@@ -388,11 +570,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   premiumStar: { fontSize: 16 },
-  premiumTitle: { fontSize: 12, fontWeight: "900", flex: 1, letterSpacing: 0.5 },
-  premiumRenew: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600" },
+  premiumTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    flex: 1,
+    letterSpacing: 0.5,
+  },
+  premiumRenew: {
+    fontSize: 10,
+    fontFamily: "SpaceGrotesk-SemiBold",
+    fontWeight: "600",
+  },
 
   // Streak
-  streakContent: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 20 },
+  streakContent: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
   accentBar: {
     position: "absolute",
     left: 0,
@@ -401,7 +596,12 @@ const styles = StyleSheet.create({
     width: 6,
   },
   streakTitle: { fontSize: 18, fontWeight: "900", letterSpacing: 0.5 },
-  streakBest: { fontSize: 10, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", marginTop: 6 },
+  streakBest: {
+    fontSize: 10,
+    fontFamily: "SpaceGrotesk-SemiBold",
+    fontWeight: "600",
+    marginTop: 6,
+  },
 
   // Stats
   statsRow: {
@@ -410,7 +610,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 16,
   },
-  statContent: { alignItems: "center", paddingVertical: 14, paddingHorizontal: 8 },
+  statContent: {
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+  },
   statValue: { fontSize: 18, fontWeight: "900" },
   statLabel: {
     fontSize: 8,
@@ -423,7 +627,13 @@ const styles = StyleSheet.create({
 
   // Milestones
   milestoneSection: { marginTop: 32 },
-  milestoneList: { paddingLeft: 20, paddingRight: 10, gap: 14, flexDirection: "row", paddingBottom: 8 },
+  milestoneList: {
+    paddingLeft: 20,
+    paddingRight: 10,
+    gap: 14,
+    flexDirection: "row",
+    paddingBottom: 8,
+  },
   milestoneContent: { alignItems: "center", padding: 16 },
   milestoneIcon: {
     width: 52,
@@ -433,15 +643,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  milestoneTitle: { fontSize: 11, fontWeight: "900", textAlign: "center", marginBottom: 5, letterSpacing: 0.2 },
-  milestoneDesc: { fontSize: 9, fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500", textAlign: "center", lineHeight: 12 },
+  milestoneTitle: {
+    fontSize: 11,
+    fontWeight: "900",
+    textAlign: "center",
+    marginBottom: 5,
+    letterSpacing: 0.2,
+  },
+  milestoneDesc: {
+    fontSize: 9,
+    fontFamily: "SpaceGrotesk-Medium",
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 12,
+  },
 
   // Branch progress card
   branchCard: { padding: 18, gap: 14 },
   branchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   branchEmoji: { fontSize: 16, width: 24, textAlign: "center" },
-  branchLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2 },
-  branchLabel: { fontSize: 13, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600" },
+  branchLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
+  branchLabel: {
+    fontSize: 13,
+    fontFamily: "SpaceGrotesk-SemiBold",
+    fontWeight: "600",
+  },
   branchPercent: { fontSize: 12, fontWeight: "800" },
   branchDivider: { height: StyleSheet.hairlineWidth },
 
@@ -454,7 +685,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
   },
-  navText: { fontSize: 14, fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600", flex: 1 },
+  navText: {
+    fontSize: 14,
+    fontFamily: "SpaceGrotesk-SemiBold",
+    fontWeight: "600",
+    flex: 1,
+  },
 
   // Section title
   sectionTitle: {

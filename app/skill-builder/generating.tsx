@@ -143,7 +143,9 @@ export default function GeneratingScreen() {
                         : active
                           ? colors.brandPrimary
                           : colors.textMuted,
-                      fontFamily: active ? 'SpaceGrotesk-Bold' : 'SpaceGrotesk-Regular',
+                      fontFamily: active
+                        ? "SpaceGrotesk-Bold"
+                        : "SpaceGrotesk-Regular",
                       fontWeight: active ? "700" : "400",
                     },
                   ]}

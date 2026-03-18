@@ -16,7 +16,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef } from "react";
 import {
-  Alert,
   Animated,
   Easing,
   Modal,
@@ -355,9 +354,7 @@ export default function HomeScreen() {
               shadowOffsetY={2}
               borderWidth={1.5}
               borderRadius={18}
-              onPress={() =>
-                Alert.alert("Cài đặt", "Tính năng đang được phát triển.")
-              }
+              onPress={() => router.push("/settings")}
               contentStyle={{
                 width: 36,
                 height: 36,
@@ -656,7 +653,14 @@ export default function HomeScreen() {
               alignItems: "center",
             }}
           >
-            <Text style={{ color: "#7C6AF7", fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700", fontSize: 13 }}>
+            <Text
+              style={{
+                color: "#7C6AF7",
+                fontFamily: "SpaceGrotesk-Bold",
+                fontWeight: "700",
+                fontSize: 13,
+              }}
+            >
               <Emoji size={13}>🧪</Emoji> DEV → NeoBrutalBox Demo
             </Text>
           </Pressable>
@@ -795,7 +799,8 @@ const createStyles = (colors: IColors) =>
     },
     avatarInitials: {
       fontSize: 11,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.brandPrimary,
     },
     avatarMeta: {
@@ -803,14 +808,16 @@ const createStyles = (colors: IColors) =>
     },
     levelLabel: {
       fontSize: 9,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.brandPrimary,
       letterSpacing: 1,
       textTransform: "uppercase",
     },
     userName: {
       fontSize: 18,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.textPrimary,
     },
     headerIcons: {
@@ -939,7 +946,8 @@ const createStyles = (colors: IColors) =>
     },
     energyPercent: {
       fontSize: 10,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.finance,
     },
     energyInfoRow: {
@@ -950,7 +958,8 @@ const createStyles = (colors: IColors) =>
     },
     energyLabelSmall: {
       fontSize: 8,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       color: colors.textSecondary,
     },
 
@@ -969,7 +978,8 @@ const createStyles = (colors: IColors) =>
     // Quests card
     card2Label: {
       fontSize: 10,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       color: colors.textMuted,
       letterSpacing: 1,
       textTransform: "uppercase",
@@ -1024,7 +1034,8 @@ const createStyles = (colors: IColors) =>
     },
     xpNextLabel: {
       fontSize: 9,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.textMuted,
       marginTop: 8,
       letterSpacing: 0.5,
@@ -1072,7 +1083,8 @@ const createStyles = (colors: IColors) =>
     },
     suggestedTitle: {
       fontSize: 14,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       color: "#FFFFFF",
     },
     suggestedSub: {
@@ -1093,7 +1105,8 @@ const createStyles = (colors: IColors) =>
     },
     viewAllText: {
       fontSize: 12,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       color: colors.brandPrimary,
       marginBottom: 8,
     },
@@ -1110,7 +1123,8 @@ const createStyles = (colors: IColors) =>
     },
     miniQuestTitle: {
       fontSize: 14,
-      fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500",
+      fontFamily: "SpaceGrotesk-Medium",
+      fontWeight: "500",
       color: colors.textPrimary,
       flex: 1,
     },
@@ -1122,7 +1136,8 @@ const createStyles = (colors: IColors) =>
     },
     miniQuestXPText: {
       fontSize: 10,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.softskills,
     },
 
@@ -1184,7 +1199,8 @@ const createStyles = (colors: IColors) =>
     },
     notifTitle: {
       fontSize: 15,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.textPrimary,
     },
     notifBody: {

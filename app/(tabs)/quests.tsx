@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   Animated,
   Easing,
@@ -17,7 +17,7 @@ import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { getComboMultiplier } from "@/src/business-logic/hooks/useXPEngine";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
-import { Emoji, NeoBrutalBox, NeoBrutalAccent } from "@/src/ui/atoms";
+import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
 import { IColors, useTheme } from "@/src/ui/tokens";
 
 // ─── Branch helpers ───────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ export default function QuestsScreen() {
             />
           </View>
           <NeoBrutalAccent
-            accentColor={`${colors.brandPrimary}22`}
+            accentColor={`${colors.bgBase}`}
             strokeColor={colors.brandPrimary}
             borderWidth={1}
             shadowOffsetX={2}
@@ -449,7 +449,8 @@ const createStyles = (colors: IColors) =>
     staminaText: {
       fontSize: 11,
       color: colors.finance,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       minWidth: 30,
     },
 
@@ -483,7 +484,8 @@ const createStyles = (colors: IColors) =>
     },
     completePillText: {
       fontSize: 10,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.brandPrimary,
     },
 
@@ -510,7 +512,8 @@ const createStyles = (colors: IColors) =>
     },
     comboValue: {
       fontSize: 13,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: "#FFFFFF",
     },
     comboMultiplierPill: {
@@ -584,7 +587,8 @@ const createStyles = (colors: IColors) =>
     durationText: {
       fontSize: 11,
       color: colors.textMuted,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
     },
     checkbox: {
       width: 22,
@@ -593,7 +597,8 @@ const createStyles = (colors: IColors) =>
     },
     questTitle: {
       fontSize: 16,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.textPrimary,
       marginTop: 10,
       lineHeight: 22,
@@ -601,7 +606,8 @@ const createStyles = (colors: IColors) =>
     questTitleDone: {
       textDecorationLine: "line-through",
       color: colors.textSecondary,
-      fontFamily: 'SpaceGrotesk-Medium', fontWeight: "500",
+      fontFamily: "SpaceGrotesk-Medium",
+      fontWeight: "500",
     },
     // Neobrutalism XP badge — solid yellow, hard shadow
     xpBadge: {
@@ -647,7 +653,8 @@ const createStyles = (colors: IColors) =>
     },
     challengesTitle: {
       fontSize: 18,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.textPrimary,
     },
     challengeCard: {
@@ -695,7 +702,8 @@ const createStyles = (colors: IColors) =>
     },
     challengeProgressLabel: {
       fontSize: 11,
-      fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       color: colors.textSecondary,
     },
     challengeRewards: {
@@ -705,7 +713,8 @@ const createStyles = (colors: IColors) =>
     },
     challengeRewardText: {
       fontSize: 11,
-      fontFamily: 'SpaceGrotesk-Bold', fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.softskills,
     },
     challengeProgressBarTrack: {
