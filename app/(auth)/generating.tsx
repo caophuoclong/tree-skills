@@ -13,6 +13,7 @@ import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
 import { NeoBrutalBox } from '@/src/ui/atoms';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
+import { queryClient } from '@/src/business-logic/api/query-client';
 
 interface GenerationStatus {
   status: string;
@@ -40,61 +41,12 @@ export default function GeneratingScreen() {
   });
   const [progressValue, setProgressValue] = useState(0);
   const [isTimedOut, setIsTimedOut] = useState(false);
-  const [isFetchingData, setIsFetchingData] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasNavigated = useRef(false);
 
   const treeScale = useSharedValue(0.3);
   const treeOpacity = useSharedValue(0);
-
-  // Fetch data from DB after completion
-  const fetchGeneratedData = useCallback(async () => {
-    console.log('[generating] Fetching generated data from DB...');
-    setIsFetchingData(true);
-
-    try {
-      const { supabase } = await import('@/src/business-logic/api/supabase');
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) return;
-
-      // Fetch user's skill nodes
-      const { data: skillNodes } = await supabase
-        .from('user_skill_nodes')
-        .select(`
-          node_id,
-          status,
-          quests_completed,
-          skill_nodes (
-            node_id, branch, tier, title, description, xp_required, quests_total
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('status', 'in_progress');
-
-      console.log('[generating] Fetched skill nodes:', skillNodes?.length);
-
-      // Fetch today's quests
-      const today = new Date().toISOString().split('T')[0];
-      const { data: quests } = await supabase
-        .from('user_quests')
-        .select(`
-          quest_id,
-          completed_at,
-          quests (
-            quest_id, title, description, branch, difficulty, duration_min, xp_reward, node_id
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('date', today);
-
-      console.log('[generating] Fetched quests:', quests?.length);
-
-    } catch (err) {
-      console.error('[generating] Error fetching data:', err);
-    } finally {
-      setIsFetchingData(false);
-    }
-  }, []);
 
   const navigateToReveal = useCallback(async () => {
     if (hasNavigated.current) return;
@@ -102,11 +54,13 @@ export default function GeneratingScreen() {
     console.log('[generating] Navigating to reveal');
     if (pollInterval.current) clearInterval(pollInterval.current);
 
-    // Fetch data before navigating
-    await fetchGeneratedData();
+    // Invalidate all queries so the app refetches fresh data
+    queryClient.invalidateQueries({ queryKey: ['skill-tree'] });
+    queryClient.invalidateQueries({ queryKey: ['quests'] });
+    queryClient.invalidateQueries({ queryKey: ['challenges'] });
 
     router.replace('/(auth)/reveal');
-  }, [fetchGeneratedData]);
+  }, []);
 
   useEffect(() => {
     // Tree entry animation
@@ -147,6 +101,7 @@ export default function GeneratingScreen() {
             // Only navigate when truly completed
             if (data.status === 'completed') {
               console.log('[generating] Generation completed!');
+              setIsCompleted(true);
               navigateToReveal();
             } else if (data.status === 'failed') {
               console.error('[generating] Generation failed:', data.error_message);
@@ -244,11 +199,11 @@ export default function GeneratingScreen() {
         )}
 
         <AppText variant="body" color={colors.textMuted} style={styles.hint}>
-          {isFetchingData ? 'Loading your data...' : 'This may take a moment...'}
+          This may take a moment...
         </AppText>
 
-        {/* Timeout floating indicator at bottom */}
-        {isTimedOut && !hasNavigated.current && (
+        {/* Timeout floating indicator at bottom — hidden when completed */}
+        {isTimedOut && !isCompleted && !hasNavigated.current && (
           <View style={styles.timeoutContainer}>
             <NeoBrutalBox
               shadowOffsetX={4}
