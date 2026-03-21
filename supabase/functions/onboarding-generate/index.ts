@@ -1,8 +1,15 @@
-import { parseAIResponse } from "../_shared/ai.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { generateWithAILogged } from "../_shared/prompt-logger.ts";
 import { fillPromptTemplate, getSystemPrompt } from "../_shared/prompt.ts";
 import { createServiceClient } from "../_shared/supabase.ts";
+
+function parseAIResponse(raw: string): any {
+  const cleaned = raw
+    .replace(/^```(?:json)?\s*\n?/i, "")
+    .replace(/\n?```\s*$/i, "")
+    .trim();
+  return JSON.parse(cleaned);
+}
 
 interface SkillNode {
   node_id: string;
@@ -40,17 +47,21 @@ async function retryAI(
   promptFilled: string,
   context: string,
   options: any,
-  maxRetries: number = 2
+  maxRetries: number = 2,
 ): Promise<string> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const response = await generateWithAILogged(promptFilled, context, options);
+      const response = await generateWithAILogged(
+        promptFilled,
+        context,
+        options,
+      );
       return response;
     } catch (error) {
       console.error(`AI attempt ${attempt + 1} failed:`, error);
       if (attempt === maxRetries) throw error;
       // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
   throw new Error("All retry attempts failed");
@@ -59,7 +70,10 @@ async function retryAI(
 /**
  * Get fallback quests for a node from database
  */
-async function getFallbackQuests(supabase: any, nodeId: string): Promise<GeneratedQuest[]> {
+async function getFallbackQuests(
+  supabase: any,
+  nodeId: string,
+): Promise<GeneratedQuest[]> {
   const { data } = await supabase
     .from("quests")
     .select("*")
@@ -120,16 +134,21 @@ Return JSON with "quests" array containing quest objects with: title, descriptio
 
   try {
     // Try AI generation with retry
-    const aiResponse = await retryAI(promptFilled, context, {
-      userId,
-      promptName: "quest_generation",
-      promptVersion: questPrompt.version,
-      edgeFunction: "onboarding-generate",
-      variables,
-    }, 2);
+    const aiResponse = await retryAI(
+      promptFilled,
+      context,
+      {
+        userId,
+        promptName: "quest_generation",
+        promptVersion: questPrompt.version,
+        edgeFunction: "onboarding-generate",
+        variables,
+      },
+      2,
+    );
 
     // Parse response - handle both array and object with quests property
-    const parsed = JSON.parse(aiResponse);
+    const parsed = parseAIResponse(aiResponse);
     if (Array.isArray(parsed)) {
       generatedQuests = parsed;
     } else if (parsed.quests && Array.isArray(parsed.quests)) {
@@ -142,7 +161,10 @@ Return JSON with "quests" array containing quest objects with: title, descriptio
       throw new Error("No quests in AI response");
     }
   } catch (error) {
-    console.error(`AI generation failed for node ${node.node_id}, using fallback:`, error);
+    console.error(
+      `AI generation failed for node ${node.node_id}, using fallback:`,
+      error,
+    );
     // Use fallback quests from database
     generatedQuests = await getFallbackQuests(supabase, node.node_id);
   }
@@ -155,16 +177,18 @@ Return JSON with "quests" array containing quest objects with: title, descriptio
   const today = new Date().toISOString().split("T")[0];
 
   // Insert quests with node_id
-  const questsToInsert = generatedQuests.slice(0, node.quests_total).map((quest, index) => ({
-    quest_id: `gen_${node.node_id}_q${index + 1}_${Date.now()}`,
-    title: quest.title,
-    description: quest.description,
-    branch: node.branch,
-    difficulty: quest.difficulty,
-    duration_min: quest.duration_min,
-    xp_reward: quest.xp_reward,
-    node_id: node.node_id,
-  }));
+  const questsToInsert = generatedQuests
+    .slice(0, node.quests_total)
+    .map((quest, index) => ({
+      quest_id: `gen_${node.node_id}_q${index + 1}_${Date.now()}`,
+      title: quest.title,
+      description: quest.description,
+      branch: node.branch,
+      difficulty: quest.difficulty,
+      duration_min: quest.duration_min,
+      xp_reward: quest.xp_reward,
+      node_id: node.node_id,
+    }));
   console.log("generateQuestsForNode questsToInsert:", questsToInsert);
 
   const { error: questError } = await supabase
@@ -251,14 +275,23 @@ Deno.serve(async (req) => {
     };
     const primaryBranch = profile.primary_branch || "career";
 
-    // 2. Fetch onboarding answers
-    const { data: onboarding } = await supabase
-      .from("user_onboardings")
-      .select("answers")
-      .eq("user_id", user_id)
-      .single();
+    // 2. Fetch onboarding detail data via RPC
+    const { data: detailRows } = await supabase.rpc("onboarding_detail_data", {
+      p_user_id: user_id,
+    });
 
-    const answers = onboarding?.answers || {};
+    // Transform to { [type]: { key, label, description } }
+    const answers: Record<
+      string,
+      { key: string; label: string; description: string }
+    > = {};
+    for (const row of detailRows ?? []) {
+      answers[row.type] = {
+        key: row.key,
+        label: row.label,
+        description: row.description,
+      };
+    }
 
     // 3. Fetch existing skill nodes for the branch
     const { data: existingNodes } = await supabase
@@ -289,11 +322,11 @@ Deno.serve(async (req) => {
 
     const branchWeights = {
       career:
-        userNodes?.filter((n: any) => n.node_id.startsWith("career"))
-          .length || 0,
+        userNodes?.filter((n: any) => n.node_id.startsWith("career")).length ||
+        0,
       finance:
-        userNodes?.filter((n: any) => n.node_id.startsWith("finance"))
-          .length || 0,
+        userNodes?.filter((n: any) => n.node_id.startsWith("finance")).length ||
+        0,
       softskills:
         userNodes?.filter((n: any) => n.node_id.startsWith("softskills"))
           .length || 0,
@@ -328,7 +361,10 @@ Deno.serve(async (req) => {
 Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", "xp_required", "quests_total" }] }`;
 
     let generatedSkills: { nodes: SkillNode[] } = { nodes: [] };
-
+    console.log("Filled skill prompt:", skillPromptFilled);
+    console.log("Skill generation context:", skillContext);
+    console.log("Skill generation variables:", skillVariables);
+    console.log("Skill geneartedSkills before AI call:", generatedSkills);
     try {
       // Try AI generation with retry
       const skillAIResponse = await retryAI(
@@ -341,11 +377,11 @@ Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", 
           edgeFunction: "onboarding-generate",
           variables: skillVariables,
         },
-        2
+        2,
       );
 
       // Parse response
-      const parsed = JSON.parse(skillAIResponse);
+      const parsed = parseAIResponse(skillAIResponse);
       if (parsed.nodes && Array.isArray(parsed.nodes)) {
         generatedSkills = parsed;
       } else if (Array.isArray(parsed)) {
@@ -389,7 +425,9 @@ Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", 
       .map((node: SkillNode) => ({
         ...node,
         // Add gen_ prefix to distinguish from fallback data
-        node_id: node.node_id.startsWith('gen_') ? node.node_id : `gen_${node.node_id}`,
+        node_id: node.node_id.startsWith("gen_")
+          ? node.node_id
+          : `gen_${node.node_id}`,
       }));
 
     if (skillsToInsert.length > 0) {

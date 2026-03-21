@@ -12,6 +12,7 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
@@ -30,6 +31,9 @@ import { Fragment, useEffect, useRef } from "react";
 // if (__DEV__) {
 //   require("@/src/business-logic/api/mock").setupNetworkMocks();
 // }
+
+// Keep the splash screen visible while fonts and data load
+SplashScreen.preventAutoHideAsync();
 
 // ─── Global font defaults ────────────────────────────────────────────────────
 // Patch every React Native Text so Space Grotesk is the base font.
@@ -75,30 +79,6 @@ function App() {
     "SpaceMono-Regular": SpaceMono_400Regular,
     "SpaceMono-Bold": SpaceMono_700Bold,
   });
-
-  // Redirect to auth screen when not authenticated
-  // Only redirect AFTER splash screen has had time to show (2 seconds minimum)
-  const hasRedirected = useRef(false);
-  const canRedirect = useRef(false);
-
-  useEffect(() => {
-    // Allow redirects after 2 seconds (splash screen minimum time)
-    const timer = setTimeout(() => {
-      canRedirect.current = true;
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!fontsLoaded || isAuthLoading || !canRedirect.current) return;
-    if (isAuthenticated) {
-      hasRedirected.current = false; // Reset when authenticated
-    } else if (!hasRedirected.current) {
-      hasRedirected.current = true;
-      console.log("[App] Not authenticated — redirecting to welcome");
-      router.replace("/(auth)/welcome");
-    }
-  }, [fontsLoaded, isAuthenticated, isAuthLoading]);
 
   // ── E2: Daily login bonus ──────────────────────────────────────────────────
   // Fire once after fonts are ready AND user is authenticated.
@@ -146,9 +126,16 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fontsLoaded, isAuthenticated]);
 
+  // Hide splash screen once fonts and data are ready
+  useEffect(() => {
+    if (fontsLoaded && !isDataLoading) {
+      SplashScreen.hide();
+    }
+  }, [fontsLoaded, isDataLoading]);
+
   // Hold render until fonts are loaded to prevent flash of unstyled text
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: colors.bgBase }} />;
+    return null;
   }
 
   return (

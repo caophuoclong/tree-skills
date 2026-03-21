@@ -977,6 +977,7 @@ export type Database = {
         Args: { p_node_id: string; p_user_id: string }
         Returns: boolean
       }
+      empty_user_data: { Args: { p_user_id: string }; Returns: undefined }
       generate_tier_dependencies: { Args: never; Returns: undefined }
       get_locked_quests: {
         Args: { p_user_id: string }
@@ -1007,6 +1008,16 @@ export type Database = {
       is_node_unlocked: {
         Args: { p_node_id: string; p_user_id: string }
         Returns: boolean
+      }
+      onboarding_detail_data: {
+        Args: { p_user_id: string }
+        Returns: {
+          description: string
+          key: string
+          label: string
+          step_key: string
+          type: string
+        }[]
       }
     }
     Enums: {

@@ -28,6 +28,7 @@ export default function SplashScreen() {
   const isAuthLoading = useUserStore((s) => s.isAuthLoading);
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
   const sessionReady = useUserStore((s) => s.sessionReady);
+  const onboardingDone = useUserStore((s) => s.user?.onboarding_done ?? false);
 
   useEffect(() => {
     // Glow pulse animation
@@ -64,23 +65,27 @@ export default function SplashScreen() {
   useEffect(() => {
     if (isAuthLoading) return; // Still loading, don't navigate yet
 
-    console.log('[splash] Auth loading done, isAuthenticated:', isAuthenticated, 'sessionReady:', sessionReady);
+    console.log('[splash] Auth loading done, isAuthenticated:', isAuthenticated, 'sessionReady:', sessionReady, 'onboardingDone:', onboardingDone);
 
     // Minimum 1.5 seconds splash time
     const timer = setTimeout(() => {
       if (isAuthenticated && sessionReady) {
-        // User is logged in, navigate to tabs (will be handled by _layout.tsx redirect)
-        console.log('[splash] User authenticated, navigating');
-        router.replace('/(tabs)');
+        if (onboardingDone) {
+          console.log('[splash] User authenticated, onboarding done → tabs');
+          router.replace('/(tabs)');
+        } else {
+          console.log('[splash] User authenticated, onboarding not done → onboarding');
+          router.replace('/(auth)/onboarding');
+        }
       } else {
         // User not logged in, go to welcome
-        console.log('[splash] User not authenticated, going to welcome');
+        console.log('[splash] User not authenticated → welcome');
         router.replace('/(auth)/welcome');
       }
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isAuthLoading, isAuthenticated, sessionReady]);
+  }, [isAuthLoading, isAuthenticated, sessionReady, onboardingDone]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
