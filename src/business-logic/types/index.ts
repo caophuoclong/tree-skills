@@ -14,6 +14,7 @@ export interface SkillNode {
   xp_required: number;
   quests_total: number;
   quests_completed: number;
+  isLocked: boolean;
 }
 
 export interface Quest {

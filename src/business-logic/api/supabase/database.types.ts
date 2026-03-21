@@ -973,6 +973,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_unlock_node: {
+        Args: { p_node_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      generate_tier_dependencies: { Args: never; Returns: undefined }
+      get_locked_quests: {
+        Args: { p_user_id: string }
+        Returns: {
+          branch: string
+          node_id: string
+          node_tier: number
+          node_title: string
+          quest_id: string
+          title: string
+        }[]
+      }
+      get_unlocked_nodes: {
+        Args: { p_user_id: string }
+        Returns: {
+          branch: string
+          description: string
+          is_locked: boolean
+          node_id: string
+          quests_completed: number
+          quests_total: number
+          status: string
+          tier: number
+          title: string
+          xp_required: number
+        }[]
+      }
       is_node_unlocked: {
         Args: { p_node_id: string; p_user_id: string }
         Returns: boolean
