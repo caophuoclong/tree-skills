@@ -249,10 +249,8 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!canSubmit) return;
-    const success = await signUp(email, password, name);
-    if (success && !needsEmailConfirmation) {
-      router.replace('/(tabs)');
-    }
+    // Just sign up — useAuth will handle navigation based on onboarding status
+    await signUp(email, password, name);
     // if needsEmailConfirmation → UI shows the confirmation card automatically
   };
 

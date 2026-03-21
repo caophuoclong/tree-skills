@@ -4,676 +4,733 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4";
-  };
+    PostgrestVersion: "14.4"
+  }
   public: {
     Tables: {
       ai_providers: {
         Row: {
-          api_base_url: string;
-          api_key_env: string;
-          config: Json;
-          created_at: string;
-          default_model: string;
-          display_name: string;
-          id: string;
-          is_active: boolean;
-          name: string;
-          updated_at: string;
-        };
+          api_base_url: string
+          api_key_env: string
+          config: Json
+          created_at: string
+          default_model: string
+          display_name: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
         Insert: {
-          api_base_url: string;
-          api_key_env: string;
-          config?: Json;
-          created_at?: string;
-          default_model: string;
-          display_name: string;
-          id?: string;
-          is_active?: boolean;
-          name: string;
-          updated_at?: string;
-        };
+          api_base_url: string
+          api_key_env: string
+          config?: Json
+          created_at?: string
+          default_model: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
         Update: {
-          api_base_url?: string;
-          api_key_env?: string;
-          config?: Json;
-          created_at?: string;
-          default_model?: string;
-          display_name?: string;
-          id?: string;
-          is_active?: boolean;
-          name?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          api_base_url?: string
+          api_key_env?: string
+          config?: Json
+          created_at?: string
+          default_model?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assessment_options: {
         Row: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          id: string;
-          question_id: number;
-          sort_order: number;
-          text: string;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          id: string
+          question_id: number
+          sort_order: number
+          text: string
+        }
         Insert: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          id: string;
-          question_id: number;
-          sort_order?: number;
-          text: string;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          id: string
+          question_id: number
+          sort_order?: number
+          text: string
+        }
         Update: {
-          branch?: Database["public"]["Enums"]["branch_type"];
-          id?: string;
-          question_id?: number;
-          sort_order?: number;
-          text?: string;
-        };
+          branch?: Database["public"]["Enums"]["branch_type"]
+          id?: string
+          question_id?: number
+          sort_order?: number
+          text?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "assessment_options_question_id_fkey";
-            columns: ["question_id"];
-            isOneToOne: false;
-            referencedRelation: "assessment_questions";
-            referencedColumns: ["id"];
+            foreignKeyName: "assessment_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_questions"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       assessment_questions: {
         Row: {
-          id: number;
-          question: string;
-          sort_order: number;
-        };
+          id: number
+          question: string
+          sort_order: number
+        }
         Insert: {
-          id?: number;
-          question: string;
-          sort_order?: number;
-        };
+          id?: number
+          question: string
+          sort_order?: number
+        }
         Update: {
-          id?: number;
-          question?: string;
-          sort_order?: number;
-        };
-        Relationships: [];
-      };
+          id?: number
+          question?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
-          color: string;
-          emoji: string;
-          icon: string;
-          id: Database["public"]["Enums"]["branch_type"];
-          label: string;
-          label_en: string;
-          sort_order: number;
-        };
+          color: string
+          emoji: string
+          icon: string
+          id: Database["public"]["Enums"]["branch_type"]
+          label: string
+          label_en: string
+          sort_order: number
+        }
         Insert: {
-          color: string;
-          emoji: string;
-          icon: string;
-          id: Database["public"]["Enums"]["branch_type"];
-          label: string;
-          label_en: string;
-          sort_order?: number;
-        };
+          color: string
+          emoji: string
+          icon: string
+          id: Database["public"]["Enums"]["branch_type"]
+          label: string
+          label_en: string
+          sort_order?: number
+        }
         Update: {
-          color?: string;
-          emoji?: string;
-          icon?: string;
-          id?: Database["public"]["Enums"]["branch_type"];
-          label?: string;
-          label_en?: string;
-          sort_order?: number;
-        };
-        Relationships: [];
-      };
+          color?: string
+          emoji?: string
+          icon?: string
+          id?: Database["public"]["Enums"]["branch_type"]
+          label?: string
+          label_en?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at: string;
-          description: string;
-          duration_days: number;
-          id: string;
-          target_count: number;
-          title: string;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          description: string
+          duration_days: number
+          id: string
+          target_count: number
+          title: string
+        }
         Insert: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          description?: string;
-          duration_days: number;
-          id: string;
-          target_count: number;
-          title: string;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          duration_days: number
+          id: string
+          target_count: number
+          title: string
+        }
         Update: {
-          branch?: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          description?: string;
-          duration_days?: number;
-          id?: string;
-          target_count?: number;
-          title?: string;
-        };
-        Relationships: [];
-      };
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          duration_days?: number
+          id?: string
+          target_count?: number
+          title?: string
+        }
+        Relationships: []
+      }
       custom_goal_trees: {
         Row: {
-          clusters: Json;
-          created_at: string;
-          goal: string;
-          id: string;
-          updated_at: string;
-          user_id: string;
-        };
+          clusters: Json
+          created_at: string
+          goal: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          clusters?: Json;
-          created_at?: string;
-          goal: string;
-          id?: string;
-          updated_at?: string;
-          user_id: string;
-        };
+          clusters?: Json
+          created_at?: string
+          goal: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          clusters?: Json;
-          created_at?: string;
-          goal?: string;
-          id?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
+          clusters?: Json
+          created_at?: string
+          goal?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_bonuses: {
         Row: {
-          bonus_date: string;
-          created_at: string;
-          id: string;
-          streak_day: number;
-          user_id: string;
-          xp_earned: number;
-        };
+          bonus_date: string
+          created_at: string
+          id: string
+          streak_day: number
+          user_id: string
+          xp_earned: number
+        }
         Insert: {
-          bonus_date?: string;
-          created_at?: string;
-          id?: string;
-          streak_day?: number;
-          user_id: string;
-          xp_earned: number;
-        };
+          bonus_date?: string
+          created_at?: string
+          id?: string
+          streak_day?: number
+          user_id: string
+          xp_earned: number
+        }
         Update: {
-          bonus_date?: string;
-          created_at?: string;
-          id?: string;
-          streak_day?: number;
-          user_id?: string;
-          xp_earned?: number;
-        };
-        Relationships: [];
-      };
+          bonus_date?: string
+          created_at?: string
+          id?: string
+          streak_day?: number
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: []
+      }
       master_data: {
         Row: {
-          created_at: string;
-          data: Json;
-          description: string;
-          id: string;
-          is_active: boolean;
-          key: string;
-          sort_order: number;
-          type: string;
-          updated_at: string;
-          version: number;
-        };
+          created_at: string
+          data: Json
+          description: string
+          id: string
+          is_active: boolean
+          key: string
+          multiple: boolean
+          sort_order: number
+          type: string
+          updated_at: string
+          version: number
+        }
         Insert: {
-          created_at?: string;
-          data?: Json;
-          description?: string;
-          id?: string;
-          is_active?: boolean;
-          key: string;
-          sort_order?: number;
-          type: string;
-          updated_at?: string;
-          version?: number;
-        };
+          created_at?: string
+          data?: Json
+          description?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          multiple?: boolean
+          sort_order?: number
+          type: string
+          updated_at?: string
+          version?: number
+        }
         Update: {
-          created_at?: string;
-          data?: Json;
-          description?: string;
-          id?: string;
-          is_active?: boolean;
-          key?: string;
-          sort_order?: number;
-          type?: string;
-          updated_at?: string;
-          version?: number;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          data?: Json
+          description?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          multiple?: boolean
+          sort_order?: number
+          type?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
-          body: string;
-          created_at: string;
-          id: string;
-          is_read: boolean;
-          title: string;
-          type: Database["public"]["Enums"]["notif_type"];
-          user_id: string;
-        };
+          body: string
+          created_at: string
+          id: string
+          is_read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notif_type"]
+          user_id: string
+        }
         Insert: {
-          body?: string;
-          created_at?: string;
-          id?: string;
-          is_read?: boolean;
-          title: string;
-          type: Database["public"]["Enums"]["notif_type"];
-          user_id: string;
-        };
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title: string
+          type: Database["public"]["Enums"]["notif_type"]
+          user_id: string
+        }
         Update: {
-          body?: string;
-          created_at?: string;
-          id?: string;
-          is_read?: boolean;
-          title?: string;
-          type?: Database["public"]["Enums"]["notif_type"];
-          user_id?: string;
-        };
-        Relationships: [];
-      };
+          body?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notif_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      onboarding_steps: {
+        Row: {
+          id: number
+          master_type: string | null
+          multiple: boolean
+          required: boolean
+          sort_order: number
+          step_key: string
+          subtitle: string
+          title: string
+        }
+        Insert: {
+          id?: number
+          master_type?: string | null
+          multiple?: boolean
+          required?: boolean
+          sort_order?: number
+          step_key: string
+          subtitle: string
+          title: string
+        }
+        Update: {
+          id?: number
+          master_type?: string | null
+          multiple?: boolean
+          required?: boolean
+          sort_order?: number
+          step_key?: string
+          subtitle?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
-          avatar_url: string | null;
-          best_streak: number;
-          created_at: string;
-          current_xp_in_level: number;
-          id: string;
-          last_active_date: string | null;
-          level: number;
-          name: string;
-          onboarding_done: boolean;
-          primary_branch: Database["public"]["Enums"]["branch_type"] | null;
-          shield_activated_date: string | null;
-          shields_remaining: number;
-          stamina: number;
-          streak: number;
-          total_xp: number;
-          updated_at: string;
-          xp_to_next_level: number;
-        };
+          avatar_url: string | null
+          best_streak: number
+          created_at: string
+          current_xp_in_level: number
+          id: string
+          last_active_date: string | null
+          level: number
+          name: string
+          onboarding_done: boolean
+          primary_branch: Database["public"]["Enums"]["branch_type"] | null
+          shield_activated_date: string | null
+          shields_remaining: number
+          stamina: number
+          streak: number
+          total_xp: number
+          updated_at: string
+          xp_to_next_level: number
+        }
         Insert: {
-          avatar_url?: string | null;
-          best_streak?: number;
-          created_at?: string;
-          current_xp_in_level?: number;
-          id: string;
-          last_active_date?: string | null;
-          level?: number;
-          name?: string;
-          onboarding_done?: boolean;
-          primary_branch?: Database["public"]["Enums"]["branch_type"] | null;
-          shield_activated_date?: string | null;
-          shields_remaining?: number;
-          stamina?: number;
-          streak?: number;
-          total_xp?: number;
-          updated_at?: string;
-          xp_to_next_level?: number;
-        };
+          avatar_url?: string | null
+          best_streak?: number
+          created_at?: string
+          current_xp_in_level?: number
+          id: string
+          last_active_date?: string | null
+          level?: number
+          name?: string
+          onboarding_done?: boolean
+          primary_branch?: Database["public"]["Enums"]["branch_type"] | null
+          shield_activated_date?: string | null
+          shields_remaining?: number
+          stamina?: number
+          streak?: number
+          total_xp?: number
+          updated_at?: string
+          xp_to_next_level?: number
+        }
         Update: {
-          avatar_url?: string | null;
-          best_streak?: number;
-          created_at?: string;
-          current_xp_in_level?: number;
-          id?: string;
-          last_active_date?: string | null;
-          level?: number;
-          name?: string;
-          onboarding_done?: boolean;
-          primary_branch?: Database["public"]["Enums"]["branch_type"] | null;
-          shield_activated_date?: string | null;
-          shields_remaining?: number;
-          stamina?: number;
-          streak?: number;
-          total_xp?: number;
-          updated_at?: string;
-          xp_to_next_level?: number;
-        };
-        Relationships: [];
-      };
+          avatar_url?: string | null
+          best_streak?: number
+          created_at?: string
+          current_xp_in_level?: number
+          id?: string
+          last_active_date?: string | null
+          level?: number
+          name?: string
+          onboarding_done?: boolean
+          primary_branch?: Database["public"]["Enums"]["branch_type"] | null
+          shield_activated_date?: string | null
+          shields_remaining?: number
+          stamina?: number
+          streak?: number
+          total_xp?: number
+          updated_at?: string
+          xp_to_next_level?: number
+        }
+        Relationships: []
+      }
       quests: {
         Row: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at: string;
-          description: string;
-          difficulty: Database["public"]["Enums"]["difficulty_type"];
-          duration_min: number;
-          node_id: string | null;
-          quest_id: string;
-          title: string;
-          xp_reward: number;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          description: string
+          difficulty: Database["public"]["Enums"]["difficulty_type"]
+          duration_min: number
+          node_id: string | null
+          quest_id: string
+          title: string
+          xp_reward: number
+        }
         Insert: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          description?: string;
-          difficulty: Database["public"]["Enums"]["difficulty_type"];
-          duration_min: number;
-          node_id?: string | null;
-          quest_id: string;
-          title: string;
-          xp_reward: number;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          difficulty: Database["public"]["Enums"]["difficulty_type"]
+          duration_min: number
+          node_id?: string | null
+          quest_id: string
+          title: string
+          xp_reward: number
+        }
         Update: {
-          branch?: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          description?: string;
-          difficulty?: Database["public"]["Enums"]["difficulty_type"];
-          duration_min?: number;
-          node_id?: string | null;
-          quest_id?: string;
-          title?: string;
-          xp_reward?: number;
-        };
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          difficulty?: Database["public"]["Enums"]["difficulty_type"]
+          duration_min?: number
+          node_id?: string | null
+          quest_id?: string
+          title?: string
+          xp_reward?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "quests_node_id_fkey";
-            columns: ["node_id"];
-            isOneToOne: false;
-            referencedRelation: "skill_nodes";
-            referencedColumns: ["node_id"];
+            foreignKeyName: "quests_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "skill_nodes"
+            referencedColumns: ["node_id"]
           },
-        ];
-      };
+        ]
+      }
       roadmap_milestones: {
         Row: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at: string;
-          horizon: Database["public"]["Enums"]["time_horizon"];
-          id: string;
-          is_completed: boolean;
-          target_date: string;
-          title: string;
-          updated_at: string;
-          user_id: string;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          horizon: Database["public"]["Enums"]["time_horizon"]
+          id: string
+          is_completed: boolean
+          target_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          horizon: Database["public"]["Enums"]["time_horizon"];
-          id?: string;
-          is_completed?: boolean;
-          target_date: string;
-          title: string;
-          updated_at?: string;
-          user_id: string;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          horizon: Database["public"]["Enums"]["time_horizon"]
+          id?: string
+          is_completed?: boolean
+          target_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          branch?: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          horizon?: Database["public"]["Enums"]["time_horizon"];
-          id?: string;
-          is_completed?: boolean;
-          target_date?: string;
-          title?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          horizon?: Database["public"]["Enums"]["time_horizon"]
+          id?: string
+          is_completed?: boolean
+          target_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       skill_nodes: {
         Row: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at: string;
-          description: string;
-          node_id: string;
-          quests_total: number;
-          sort_order: number;
-          tier: number;
-          title: string;
-          xp_required: number;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at: string
+          description: string
+          node_id: string
+          quests_total: number
+          sort_order: number
+          tier: number
+          title: string
+          xp_required: number
+        }
         Insert: {
-          branch: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          description?: string;
-          node_id: string;
-          quests_total?: number;
-          sort_order?: number;
-          tier: number;
-          title: string;
-          xp_required?: number;
-        };
+          branch: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          node_id: string
+          quests_total?: number
+          sort_order?: number
+          tier: number
+          title: string
+          xp_required?: number
+        }
         Update: {
-          branch?: Database["public"]["Enums"]["branch_type"];
-          created_at?: string;
-          description?: string;
-          node_id?: string;
-          quests_total?: number;
-          sort_order?: number;
-          tier?: number;
-          title?: string;
-          xp_required?: number;
-        };
-        Relationships: [];
-      };
+          branch?: Database["public"]["Enums"]["branch_type"]
+          created_at?: string
+          description?: string
+          node_id?: string
+          quests_total?: number
+          sort_order?: number
+          tier?: number
+          title?: string
+          xp_required?: number
+        }
+        Relationships: []
+      }
       system_prompts: {
         Row: {
-          created_at: string;
-          description: string;
-          id: string;
-          is_active: boolean;
-          model: string | null;
-          name: string;
-          prompt: string;
-          provider_id: string | null;
-          updated_at: string;
-          variables: Json;
-          version: number;
-        };
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          model: string | null
+          name: string
+          prompt: string
+          provider_id: string | null
+          updated_at: string
+          variables: Json
+          version: number
+        }
         Insert: {
-          created_at?: string;
-          description?: string;
-          id?: string;
-          is_active?: boolean;
-          model?: string | null;
-          name: string;
-          prompt: string;
-          provider_id?: string | null;
-          updated_at?: string;
-          variables?: Json;
-          version?: number;
-        };
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name: string
+          prompt: string
+          provider_id?: string | null
+          updated_at?: string
+          variables?: Json
+          version?: number
+        }
         Update: {
-          created_at?: string;
-          description?: string;
-          id?: string;
-          is_active?: boolean;
-          model?: string | null;
-          name?: string;
-          prompt?: string;
-          provider_id?: string | null;
-          updated_at?: string;
-          variables?: Json;
-          version?: number;
-        };
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name?: string
+          prompt?: string
+          provider_id?: string | null
+          updated_at?: string
+          variables?: Json
+          version?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "system_prompts_provider_id_fkey";
-            columns: ["provider_id"];
-            isOneToOne: false;
-            referencedRelation: "ai_providers";
-            referencedColumns: ["id"];
+            foreignKeyName: "system_prompts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "ai_providers"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       user_challenges: {
         Row: {
-          challenge_id: string;
-          completed_at: string | null;
-          ends_at: string;
-          id: string;
-          joined_at: string;
-          progress: number;
-          user_id: string;
-        };
+          challenge_id: string
+          completed_at: string | null
+          ends_at: string
+          id: string
+          joined_at: string
+          progress: number
+          user_id: string
+        }
         Insert: {
-          challenge_id: string;
-          completed_at?: string | null;
-          ends_at: string;
-          id?: string;
-          joined_at?: string;
-          progress?: number;
-          user_id: string;
-        };
+          challenge_id: string
+          completed_at?: string | null
+          ends_at: string
+          id?: string
+          joined_at?: string
+          progress?: number
+          user_id: string
+        }
         Update: {
-          challenge_id?: string;
-          completed_at?: string | null;
-          ends_at?: string;
-          id?: string;
-          joined_at?: string;
-          progress?: number;
-          user_id?: string;
-        };
+          challenge_id?: string
+          completed_at?: string | null
+          ends_at?: string
+          id?: string
+          joined_at?: string
+          progress?: number
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "user_challenges_challenge_id_fkey";
-            columns: ["challenge_id"];
-            isOneToOne: false;
-            referencedRelation: "challenges";
-            referencedColumns: ["id"];
+            foreignKeyName: "user_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
+      user_onboardings: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_quests: {
         Row: {
-          completed_at: string;
-          date: string;
-          id: string;
-          quest_id: string;
-          user_id: string;
-          xp_earned: number;
-        };
+          completed_at: string
+          date: string
+          id: string
+          quest_id: string
+          user_id: string
+          xp_earned: number
+        }
         Insert: {
-          completed_at?: string;
-          date?: string;
-          id?: string;
-          quest_id: string;
-          user_id: string;
-          xp_earned: number;
-        };
+          completed_at?: string
+          date?: string
+          id?: string
+          quest_id: string
+          user_id: string
+          xp_earned: number
+        }
         Update: {
-          completed_at?: string;
-          date?: string;
-          id?: string;
-          quest_id?: string;
-          user_id?: string;
-          xp_earned?: number;
-        };
+          completed_at?: string
+          date?: string
+          id?: string
+          quest_id?: string
+          user_id?: string
+          xp_earned?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "user_quests_quest_id_fkey";
-            columns: ["quest_id"];
-            isOneToOne: false;
-            referencedRelation: "quests";
-            referencedColumns: ["quest_id"];
+            foreignKeyName: "user_quests_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "quests"
+            referencedColumns: ["quest_id"]
           },
-        ];
-      };
+        ]
+      }
       user_skill_nodes: {
         Row: {
-          completed_at: string | null;
-          created_at: string;
-          id: string;
-          node_id: string;
-          quests_completed: number;
-          status: Database["public"]["Enums"]["node_status"];
-          unlocked_at: string | null;
-          user_id: string;
-        };
+          completed_at: string | null
+          created_at: string
+          id: string
+          node_id: string
+          quests_completed: number
+          status: Database["public"]["Enums"]["node_status"]
+          unlocked_at: string | null
+          user_id: string
+        }
         Insert: {
-          completed_at?: string | null;
-          created_at?: string;
-          id?: string;
-          node_id: string;
-          quests_completed?: number;
-          status?: Database["public"]["Enums"]["node_status"];
-          unlocked_at?: string | null;
-          user_id: string;
-        };
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          node_id: string
+          quests_completed?: number
+          status?: Database["public"]["Enums"]["node_status"]
+          unlocked_at?: string | null
+          user_id: string
+        }
         Update: {
-          completed_at?: string | null;
-          created_at?: string;
-          id?: string;
-          node_id?: string;
-          quests_completed?: number;
-          status?: Database["public"]["Enums"]["node_status"];
-          unlocked_at?: string | null;
-          user_id?: string;
-        };
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          node_id?: string
+          quests_completed?: number
+          status?: Database["public"]["Enums"]["node_status"]
+          unlocked_at?: string | null
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "user_skill_nodes_node_id_fkey";
-            columns: ["node_id"];
-            isOneToOne: false;
-            referencedRelation: "skill_nodes";
-            referencedColumns: ["node_id"];
+            foreignKeyName: "user_skill_nodes_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "skill_nodes"
+            referencedColumns: ["node_id"]
           },
-        ];
-      };
-    };
+        ]
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Enums: {
-      branch_type: "career" | "finance" | "softskills" | "wellbeing";
-      difficulty_type: "easy" | "medium" | "hard";
-      node_status: "locked" | "in_progress" | "completed";
+      branch_type: "career" | "finance" | "softskills" | "wellbeing"
+      difficulty_type: "easy" | "medium" | "hard"
+      node_status: "locked" | "in_progress" | "completed"
       notif_type:
         | "streak_reminder"
         | "quest_suggestion"
         | "level_up"
         | "challenge_complete"
-        | "wellbeing_warning";
-      time_horizon: "short" | "mid" | "long";
-    };
+        | "wellbeing_warning"
+      time_horizon: "short" | "mid" | "long"
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
-};
+      [_ in never]: never
+    }
+  }
+}
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<
-  keyof Database,
-  "public"
->];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R;
+      Row: infer R
     }
     ? R
     : never
@@ -681,95 +738,95 @@ export type Tables<
         DefaultSchema["Views"])
     ? (DefaultSchema["Tables"] &
         DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R;
+        Row: infer R
       }
       ? R
       : never
-    : never;
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
+      Insert: infer I
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I;
+        Insert: infer I
       }
       ? I
       : never
-    : never;
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
+      Update: infer U
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U;
+        Update: infer U
       }
       ? U
       : never
-    : never;
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never;
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+    schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
+    : never
 
 export const Constants = {
   public: {
@@ -787,4 +844,4 @@ export const Constants = {
       time_horizon: ["short", "mid", "long"],
     },
   },
-} as const;
+} as const

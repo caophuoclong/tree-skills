@@ -138,6 +138,23 @@ export function useAuth(): AuthState {
       setUser(userData);
       // Mark session as ready for data fetching
       setSessionReady(true);
+
+      // Redirect based on onboarding status
+      if (!data.onboarding_done) {
+        console.log("[useAuth] Onboarding not done — redirecting to onboarding");
+        try {
+          router.replace("/(auth)/onboarding");
+        } catch {
+          // Router might not be ready yet
+        }
+      } else {
+        console.log("[useAuth] Onboarding done — redirecting to tabs");
+        try {
+          router.replace("/(tabs)");
+        } catch {
+          // Router might not be ready yet
+        }
+      }
     } else {
       console.error("[useAuth] Failed to fetch profile:", error);
       setAuthLoading(false);

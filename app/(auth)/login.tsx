@@ -158,10 +158,8 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) return;
-    const success = await signIn(email, password);
-    if (success) {
-      router.replace('/(tabs)');
-    }
+    // Just sign in — useAuth will handle navigation based on onboarding status
+    await signIn(email, password);
   };
 
   return (

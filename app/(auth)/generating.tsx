@@ -5,7 +5,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -28,7 +27,6 @@ export default function GeneratingScreen() {
 
   const treeScale = useSharedValue(0.3);
   const treeOpacity = useSharedValue(0);
-  const statusOpacity = useSharedValue(1);
 
   useEffect(() => {
     // Tree entry animation
@@ -46,19 +44,8 @@ export default function GeneratingScreen() {
     }, 30);
 
     // Cycle status messages every 1 second
-    const msg1 = setTimeout(() => {
-      statusOpacity.value = withTiming(0, { duration: 200 }, () => {
-        setStatusIndex(1);
-        statusOpacity.value = withTiming(1, { duration: 200 });
-      });
-    }, 1000);
-
-    const msg2 = setTimeout(() => {
-      statusOpacity.value = withTiming(0, { duration: 200 }, () => {
-        setStatusIndex(2);
-        statusOpacity.value = withTiming(1, { duration: 200 });
-      });
-    }, 2000);
+    const msg1 = setTimeout(() => setStatusIndex(1), 1000);
+    const msg2 = setTimeout(() => setStatusIndex(2), 2000);
 
     // Navigate after 3.5 seconds
     const nav = setTimeout(() => {
@@ -76,10 +63,6 @@ export default function GeneratingScreen() {
   const treeStyle = useAnimatedStyle(() => ({
     opacity: treeOpacity.value,
     transform: [{ scale: treeScale.value }],
-  }));
-
-  const statusStyle = useAnimatedStyle(() => ({
-    opacity: statusOpacity.value,
   }));
 
   return (
@@ -103,11 +86,9 @@ export default function GeneratingScreen() {
             animated={false}
           />
           <View style={styles.progressRow}>
-            <Animated.View style={statusStyle}>
-              <AppText variant="body" color={colors.textSecondary}>
-                {STATUS_MESSAGES[statusIndex]}
-              </AppText>
-            </Animated.View>
+            <AppText variant="body" color={colors.textSecondary}>
+              {STATUS_MESSAGES[statusIndex]}
+            </AppText>
             <AppText variant="caption" color={colors.textMuted}>
               {Math.round(progressValue)}%
             </AppText>

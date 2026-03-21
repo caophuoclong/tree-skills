@@ -8,7 +8,13 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "functions:deploy": "./scripts/deploy-functions.sh",
+    "functions:serve": "supabase functions serve",
+    "functions:deploy:skills": "./scripts/deploy-functions.sh generate-skills",
+    "functions:deploy:quests": "./scripts/deploy-functions.sh generate-quests",
+    "functions:deploy:challenges": "./scripts/deploy-functions.sh generate-challenges",
+    "functions:deploy:assess": "./scripts/deploy-functions.sh analyze-assessment"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
