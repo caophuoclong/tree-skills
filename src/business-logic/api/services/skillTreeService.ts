@@ -2,8 +2,8 @@ import type { SkillNode } from "../../types";
 import { supabase } from "../supabase";
 
 // Cast for RPC and new tables
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
+
+const db = supabase;
 
 async function getAuthUserId(): Promise<string | null> {
   const {
@@ -69,9 +69,7 @@ export const skillTreeService = {
     );
 
     // Fetch dependencies
-    const { data: deps } = await db
-      .from("skill_node_dependencies")
-      .select("*");
+    const { data: deps } = await db.from("skill_node_dependencies").select("*");
 
     const depsMap = new Map<string, string[]>();
     for (const dep of deps ?? []) {
@@ -129,14 +127,14 @@ export const skillTreeService = {
    * Get locked quests for user (from locked nodes)
    */
   async getLockedQuests(): Promise<
-    Array<{
+    {
       quest_id: string;
       title: string;
       branch: string;
       node_id: string;
       node_title: string;
       node_tier: number;
-    }>
+    }[]
   > {
     const userId = await getAuthUserId();
     if (!userId) return [];
@@ -168,10 +166,12 @@ export const skillTreeService = {
     if (patch.status === "in_progress")
       dbPatch.unlocked_at = new Date().toISOString();
 
-    const { error } = await supabase.from("user_skill_nodes").upsert(
-      { node_id: nodeId, user_id: userId, ...dbPatch },
-      { onConflict: "user_id,node_id" },
-    );
+    const { error } = await supabase
+      .from("user_skill_nodes")
+      .upsert(
+        { node_id: nodeId, user_id: userId, ...dbPatch },
+        { onConflict: "user_id,node_id" },
+      );
     if (error) throw error;
 
     // Return the updated node

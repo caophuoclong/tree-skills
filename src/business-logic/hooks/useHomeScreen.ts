@@ -9,15 +9,15 @@
  * - XP/stamina display logic
  */
 
+import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
+import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
+import type { Branch, MoodScore } from "@/src/business-logic/types";
+import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import { useGrowthStreak } from "./useGrowthStreak";
 import { useQuestManager } from "./useQuestManager";
 import { useStaminaSystem } from "./useStaminaSystem";
-import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
-import { useUserStore } from "@/src/business-logic/stores/userStore";
-import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
-import type { Branch, MoodScore } from "@/src/business-logic/types";
-import * as Haptics from "expo-haptics";
 
 const MILESTONE_STREAKS = [7, 14, 30];
 
@@ -31,11 +31,11 @@ export function useHomeScreen() {
   const { quests } = useQuestManager();
   const { streak } = useGrowthStreak();
   const { stamina } = useStaminaSystem();
-  const { nodes, setNodes } = useSkillTreeStore();
+  const { nodes } = useSkillTreeStore();
   const { streakShield, activateStreakShield, isStreakProtectedToday } =
     useUserStore();
   const unreadCount = useNotificationStore(
-    (s) => s.notifications.filter((n) => !n.read).length
+    (s) => s.notifications.filter((n) => !n.read).length,
   );
 
   // State
@@ -65,24 +65,21 @@ export function useHomeScreen() {
   const streakAtRisk = (() => {
     if (!streak || streak === 0) return false;
     const { lastLoginDate } = useUserStore.getState();
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 86400000)
+      .toISOString()
+      .split("T")[0];
     const hour = new Date().getHours();
     return lastLoginDate === yesterday && hour >= 20;
   })();
 
   // Calculate branch progress
   const branchProgress = (() => {
-    const branches: Branch[] = [
-      "career",
-      "finance",
-      "softskills",
-      "wellbeing",
-    ];
+    const branches: Branch[] = ["career", "finance", "softskills", "wellbeing"];
     return branches.map((branch) => {
       const branchNodes = nodes.filter((n) => n.branch === branch);
       if (branchNodes.length === 0) return { branch, percent: 0 };
       const completed = branchNodes.filter(
-        (n) => n.status === "completed"
+        (n) => n.status === "completed",
       ).length;
       return {
         branch,
@@ -97,12 +94,11 @@ export function useHomeScreen() {
   // Clamp currentXP so it never exceeds targetXP in display
   const rawCurrentXP = user?.current_xp_in_level ?? null;
   const targetXP = user?.xp_to_next_level ?? null;
-  const currentXP = rawCurrentXP !== null && targetXP !== null
-    ? Math.min(rawCurrentXP, targetXP)
-    : rawCurrentXP;
-  const xpPercent = currentXP !== null && targetXP !== null && targetXP > 0
-    ? Math.min((currentXP / targetXP) * 100, 100)
-    : 0;
+  const currentXP = rawCurrentXP;
+  const xpPercent =
+    currentXP !== null && targetXP !== null && targetXP > 0
+      ? Math.min((currentXP / targetXP) * 100, 100)
+      : 0;
   const pendingCount = quests.filter((q) => q.completed_at === null).length;
 
   // Branch progress — 0% when no nodes loaded yet

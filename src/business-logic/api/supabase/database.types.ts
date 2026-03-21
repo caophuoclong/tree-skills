@@ -1024,7 +1024,7 @@ export type Database = {
       branch_type: "career" | "finance" | "softskills" | "wellbeing"
       difficulty_type: "easy" | "medium" | "hard"
       generation_status: "pending" | "generating" | "completed" | "failed"
-      node_status: "locked" | "in_progress" | "completed"
+      node_status: "locked" | "in_progress" | "completed" | "todo"
       notif_type:
         | "streak_reminder"
         | "quest_suggestion"
@@ -1162,7 +1162,7 @@ export const Constants = {
       branch_type: ["career", "finance", "softskills", "wellbeing"],
       difficulty_type: ["easy", "medium", "hard"],
       generation_status: ["pending", "generating", "completed", "failed"],
-      node_status: ["locked", "in_progress", "completed"],
+      node_status: ["locked", "in_progress", "completed", "todo"],
       notif_type: [
         "streak_reminder",
         "quest_suggestion",

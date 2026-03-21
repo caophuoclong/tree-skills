@@ -22,6 +22,11 @@ import { useTheme } from "@/src/ui/tokens";
 export default function TreeScreen() {
   const { colors } = useTheme();
   const { nodes, activeBranch, setActiveBranch } = useSkillTreeStore();
+  // console.log(
+  //   "🚀 ~ TreeScreen ~ nodes, activeBranch, setActiveBranch:",
+  //   nodes,
+  //   activeBranch,
+  // );
   const { dailyQuests } = useQuestStore();
   // Data is fetched by useAppData at root — no need to call useSkillTree here
   const { branches: BRANCHES, branchMeta: BRANCH_META } = useBranches();
@@ -30,11 +35,7 @@ export default function TreeScreen() {
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(
     null,
   );
-  const {
-    nodeGoalMap,
-    trees: customTrees,
-    initWithDemoData,
-  } = useCustomSkillTreeStore();
+  const { nodeGoalMap, trees: customTrees } = useCustomSkillTreeStore();
 
   // // useSkillTree already syncs fetchedNodes → skillTreeStore via setNodes()
   // // initWithDemoData seeds the custom tree store on first mount
@@ -95,6 +96,7 @@ export default function TreeScreen() {
     nodeGoalMap,
   ]);
 
+  console.log("🚀 ~ TreeScreen ~ visibleNodes:", visibleNodes);
   const { placed, banners, totalHeight } = useTreeLayout(visibleNodes);
 
   // When goal filter is active, progress counts across all goal nodes (not just this branch)

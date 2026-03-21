@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
-import { router } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import { useOnboardingStore } from '../stores/onboardingStore';
-import { useUserStore } from '../stores/userStore';
-import { useSkillTreeStore } from '../stores/skillTreeStore';
-import { assessmentService } from '../api/services/assessmentService';
-import { calculateBranchWeights, getPrimaryBranch } from '../data/assessment-questions';
-import type { Branch, OnboardingAnswer } from '../types';
+import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
+import { useCallback } from "react";
+import { assessmentService } from "../api/services/assessmentService";
+import {
+  calculateBranchWeights,
+  getPrimaryBranch,
+} from "../data/assessment-questions";
+import { useOnboardingStore } from "../stores/onboardingStore";
+import { useSkillTreeStore } from "../stores/skillTreeStore";
+import { useUserStore } from "../stores/userStore";
+import type { Branch, OnboardingAnswer } from "../types";
 
 export interface OnboardingResult {
   currentQuestion: any | null;
@@ -35,18 +38,19 @@ export function useOnboarding(): OnboardingResult {
   } = useOnboardingStore();
 
   const { user, setUser } = useUserStore();
-  const { nodes: skillNodes, setNodes } = useSkillTreeStore();
+  const { nodes: skillNodes } = useSkillTreeStore();
 
   // Fetch assessment questions from API
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
-    queryKey: ['assessment', 'questions'],
+    queryKey: ["assessment", "questions"],
     queryFn: () => assessmentService.getQuestions(),
     staleTime: Infinity, // questions never change during session
   });
 
   const currentQuestion = questions[currentQuestionIndex] ?? null;
   const totalQuestions = questions.length;
-  const progress = totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0;
+  const progress =
+    totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0;
 
   const selectAnswer = useCallback(
     (branch: Branch) => {
@@ -66,7 +70,13 @@ export function useOnboarding(): OnboardingResult {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentQuestion, currentQuestionIndex, totalQuestions, setAnswer, nextQuestion],
+    [
+      currentQuestion,
+      currentQuestionIndex,
+      totalQuestions,
+      setAnswer,
+      nextQuestion,
+    ],
   );
 
   const finishOnboarding = useCallback(() => {
@@ -74,9 +84,12 @@ export function useOnboarding(): OnboardingResult {
     const primary = getPrimaryBranch(weights);
 
     // Use already-fetched nodes from store (populated via useSkillTree → skillTreeService)
-    const initialNodes = skillNodes.length > 0
-      ? skillNodes.filter((n) => n.branch === primary || n.branch === 'career')
-      : [];
+    const initialNodes =
+      skillNodes.length > 0
+        ? skillNodes.filter(
+            (n) => n.branch === primary || n.branch === "career",
+          )
+        : [];
     setTreeConfig({
       primaryBranch: primary,
       branchWeights: weights as Record<Branch, number>,
@@ -94,12 +107,12 @@ export function useOnboarding(): OnboardingResult {
       } as typeof user);
     }
 
-    router.replace('/(auth)/generating');
+    router.replace("/(auth)/generating");
   }, [answers, setTreeConfig, completeOnboarding, user, setUser]);
 
   const handleSkip = useCallback(() => {
     skip();
-    router.replace('/(tabs)');
+    router.replace("/(tabs)");
   }, [skip]);
 
   return {

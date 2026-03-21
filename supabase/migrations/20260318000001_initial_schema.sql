@@ -7,7 +7,7 @@
 
 -- ─── ENUMS ────────────────────────────────────────────────────────────────────
 create type branch_type    as enum ('career', 'finance', 'softskills', 'wellbeing');
-create type node_status    as enum ('locked', 'in_progress', 'completed');
+create type node_status    as enum ('locked', 'in_progress', 'completed', 'todo');
 create type difficulty_type as enum ('easy', 'medium', 'hard');
 create type time_horizon   as enum ('short', 'mid', 'long');
 create type notif_type     as enum ('streak_reminder', 'quest_suggestion', 'level_up', 'challenge_complete', 'wellbeing_warning');

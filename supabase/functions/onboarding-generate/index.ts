@@ -2,6 +2,91 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { generateWithAILogged } from "../_shared/prompt-logger.ts";
 import { fillPromptTemplate, getSystemPrompt } from "../_shared/prompt.ts";
 import { createServiceClient } from "../_shared/supabase.ts";
+import { SystemPrompt } from "../_shared/types.ts";
+
+const today = new Date().toISOString().split("T")[0];
+
+type Props = {
+  user_id: string;
+  branch: Record<string, string>;
+  level?: number;
+  streak?: number;
+  answers: Record<string, { key: string; label: string; description: string }>;
+  skillPrompt: SystemPrompt;
+  localization: { language: string };
+};
+
+export async function filledPrompts({
+  user_id,
+  branch,
+  level,
+  streak,
+  answers,
+  skillPrompt,
+  localization,
+}: Props): Promise<{
+  skillPromptFilled: string;
+  skillContext: string;
+  skillVariables: Record<string, string>;
+  branch: Record<string, string>;
+}> {
+  const supabase = createServiceClient();
+
+  // 4. Fetch user's completed nodes
+  const { data: userNodes } = await supabase
+    .from("user_skill_nodes")
+    .select("node_id, status")
+    .eq("user_id", user_id);
+
+  const completedNodes = (userNodes || [])
+    .filter((n: any) => n.status === "completed")
+    .map((n: any) => n.node_id);
+
+  const branchWeights = {
+    career:
+      userNodes?.filter((n: any) => n.node_id.startsWith("career")).length || 0,
+    finance:
+      userNodes?.filter((n: any) => n.node_id.startsWith("finance")).length ||
+      0,
+    softskills:
+      userNodes?.filter((n: any) => n.node_id.startsWith("softskills"))
+        .length || 0,
+    wellbeing:
+      userNodes?.filter((n: any) => n.node_id.startsWith("wellbeing")).length ||
+      0,
+  };
+
+  const skillVariables = {
+    user_level: String(level || 1),
+    primary_branch: branch.label_en || "career",
+    branch_weights: JSON.stringify(branchWeights),
+    branch_weights_career: String(branchWeights.career),
+    branch_weights_finance: String(branchWeights.finance),
+    branch_weights_softskills: String(branchWeights.softskills),
+    branch_weights_wellbeing: String(branchWeights.wellbeing),
+    streak: String(streak || 0),
+    completed_nodes: JSON.stringify(completedNodes),
+  };
+
+  const skillPromptFilled = fillPromptTemplate(
+    skillPrompt.prompt,
+    skillVariables,
+  );
+
+  const skillContext = `Generate a personalized skill tree for a user with:
+- Language: ${localization.language}
+- Onboarding answers: ${JSON.stringify(answers)}
+- Primary branch: ${branch.label_en || "career"}
+- Level: ${level || 1}
+
+Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", "xp_required", "quests_total" }] }`;
+  return {
+    skillPromptFilled,
+    skillContext,
+    skillVariables,
+    branch,
+  };
+}
 
 function parseAIResponse(raw: string): any {
   const cleaned = raw
@@ -174,8 +259,6 @@ Return JSON with "quests" array containing quest objects with: title, descriptio
     return 0;
   }
 
-  const today = new Date().toISOString().split("T")[0];
-
   // Insert quests with node_id
   const questsToInsert = generatedQuests
     .slice(0, node.quests_total)
@@ -231,8 +314,7 @@ Deno.serve(async (req) => {
   const supabase = createServiceClient();
 
   try {
-    // const { user_id } = await req.json();
-    const user_id = "9c59bd86-3fa3-4447-86b8-7962096efa19";
+    const { user_id } = await req.json();
 
     if (!user_id) {
       return new Response(JSON.stringify({ error: "user_id is required" }), {
@@ -273,7 +355,6 @@ Deno.serve(async (req) => {
       language: "vi",
       timezone: "Asia/Ho_Chi_Minh",
     };
-    const primaryBranch = profile.primary_branch || "career";
 
     // 2. Fetch onboarding detail data via RPC
     const { data: detailRows } = await supabase.rpc("onboarding_detail_data", {
@@ -292,262 +373,250 @@ Deno.serve(async (req) => {
         description: row.description,
       };
     }
-
-    // 3. Fetch existing skill nodes for the branch
-    const { data: existingNodes } = await supabase
-      .from("skill_nodes")
-      .select("node_id")
-      .eq("branch", primaryBranch);
-
-    const existingNodeIds = (existingNodes || []).map((n: any) => n.node_id);
-
-    // 4. Fetch user's completed nodes
-    const { data: userNodes } = await supabase
-      .from("user_skill_nodes")
-      .select("node_id, status")
-      .eq("user_id", user_id);
-
-    const completedNodes = (userNodes || [])
-      .filter((n: any) => n.status === "completed")
-      .map((n: any) => n.node_id);
-
+    let progress = 5;
     // 5. Generate skill nodes
     await updateTracking(supabase, user_id, {
       current_step: "Generating skill tree...",
-      progress: 10,
+      progress,
     });
 
     const skillPrompt = await getSystemPrompt("skill_generation");
     if (!skillPrompt) throw new Error("Skill generation prompt not found");
 
-    const branchWeights = {
-      career:
-        userNodes?.filter((n: any) => n.node_id.startsWith("career")).length ||
-        0,
-      finance:
-        userNodes?.filter((n: any) => n.node_id.startsWith("finance")).length ||
-        0,
-      softskills:
-        userNodes?.filter((n: any) => n.node_id.startsWith("softskills"))
-          .length || 0,
-      wellbeing:
-        userNodes?.filter((n: any) => n.node_id.startsWith("wellbeing"))
-          .length || 0,
-    };
-
-    const skillVariables = {
-      user_level: String(profile.level || 1),
-      primary_branch: primaryBranch,
-      branch_weights: JSON.stringify(branchWeights),
-      branch_weights_career: String(branchWeights.career),
-      branch_weights_finance: String(branchWeights.finance),
-      branch_weights_softskills: String(branchWeights.softskills),
-      branch_weights_wellbeing: String(branchWeights.wellbeing),
-      streak: String(profile.streak || 0),
-      completed_nodes: JSON.stringify(completedNodes),
-    };
-
-    const skillPromptFilled = fillPromptTemplate(
-      skillPrompt.prompt,
-      skillVariables,
-    );
-
-    const skillContext = `Generate a personalized skill tree for a user with:
-- Language: ${localization.language}
-- Onboarding answers: ${JSON.stringify(answers)}
-- Primary branch: ${primaryBranch}
-- Level: ${profile.level || 1}
-
-Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", "xp_required", "quests_total" }] }`;
-
-    let generatedSkills: { nodes: SkillNode[] } = { nodes: [] };
-    console.log("Filled skill prompt:", skillPromptFilled);
-    console.log("Skill generation context:", skillContext);
-    console.log("Skill generation variables:", skillVariables);
-    console.log("Skill geneartedSkills before AI call:", generatedSkills);
-    try {
-      // Try AI generation with retry
-      const skillAIResponse = await retryAI(
-        skillPromptFilled,
-        skillContext,
-        {
-          userId: user_id,
-          promptName: "skill_generation",
-          promptVersion: skillPrompt.version,
-          edgeFunction: "onboarding-generate",
-          variables: skillVariables,
-        },
-        2,
-      );
-
-      // Parse response
-      const parsed = parseAIResponse(skillAIResponse);
-      if (parsed.nodes && Array.isArray(parsed.nodes)) {
-        generatedSkills = parsed;
-      } else if (Array.isArray(parsed)) {
-        generatedSkills = { nodes: parsed };
-      }
-
-      if (generatedSkills.nodes.length === 0) {
-        throw new Error("No nodes in AI response");
-      }
-    } catch (error) {
-      console.error("AI skill generation failed, using fallback:", error);
-      // Use fallback nodes from database for primary branch
-      const { data: fallbackNodes } = await supabase
-        .from("skill_nodes")
-        .select("*")
-        .eq("branch", primaryBranch)
-        .order("tier", { ascending: true })
-        .order("tier_order", { ascending: true })
-        .limit(6);
-
-      generatedSkills.nodes = (fallbackNodes ?? []).map((n: any) => ({
-        node_id: n.node_id,
-        branch: n.branch,
-        tier: n.tier,
-        title: n.title,
-        description: n.description,
-        xp_required: n.xp_required,
-        quests_total: n.quests_total,
-      }));
-    }
-    console.log("generatedSkills:", generatedSkills);
-
-    await updateTracking(supabase, user_id, {
-      current_step: "Saving skill nodes...",
-      progress: 25,
-    });
-
-    // 6. Save generated skill nodes
-    const skillsToInsert = (generatedSkills.nodes || [])
-      .filter((node: SkillNode) => !existingNodeIds.includes(node.node_id))
-      .map((node: SkillNode) => ({
-        ...node,
-        // Add gen_ prefix to distinguish from fallback data
-        node_id: node.node_id.startsWith("gen_")
-          ? node.node_id
-          : `gen_${node.node_id}`,
-      }));
-
-    if (skillsToInsert.length > 0) {
-      // Insert skill nodes
-      await supabase.from("skill_nodes").insert(
-        skillsToInsert.map((node: SkillNode) => ({
-          node_id: node.node_id,
-          branch: node.branch,
-          tier: node.tier,
-          title: node.title,
-          description: node.description,
-          xp_required: node.xp_required,
-          quests_total: node.quests_total,
-        })),
-      );
-
-      // Regenerate tier dependencies to include new nodes
-      await (supabase as any).rpc("generate_tier_dependencies");
-
-      // Create user_skill_nodes for first 3 nodes (unlock them)
-      const nodesToUnlock = skillsToInsert.slice(0, 3);
-      await supabase.from("user_skill_nodes").upsert(
-        nodesToUnlock.map((node: SkillNode) => ({
+    const { data: branches, error } = await supabase
+      .from("branches")
+      .select("*")
+      .order("id", { ascending: true });
+    console.log(error);
+    const prompts = await Promise.all(
+      branches.map(async (branch: any) =>
+        filledPrompts({
           user_id,
-          node_id: node.node_id,
-          status: "in_progress",
-          unlocked_at: new Date().toISOString(),
-        })),
-        { onConflict: "user_id,node_id" },
-      );
+          branch,
+          skillPrompt,
+          level: profile.level,
+          streak: profile.streak,
+          answers,
+          localization: localization.language,
+        }),
+      ),
+    );
+    let index = 0;
+    for (const {
+      skillPromptFilled,
+      skillContext,
+      skillVariables,
+      branch,
+    } of prompts) {
+      index++;
+      let generatedSkills: { nodes: SkillNode[] } = { nodes: [] };
+      try {
+        // Try AI generation with retry
+        const skillAIResponse = await retryAI(
+          skillPromptFilled,
+          skillContext,
+          {
+            userId: user_id,
+            promptName: "skill_generation",
+            promptVersion: skillPrompt.version,
+            edgeFunction: "onboarding-generate",
+            variables: skillVariables,
+          },
+          2,
+        );
 
-      await updateTracking(supabase, user_id, {
-        skills_done: true,
-        skills_count: skillsToInsert.length,
-        current_step: "Skill tree complete!",
-        progress: 40,
-      });
+        // Parse response
+        const parsed = parseAIResponse(skillAIResponse);
+        if (parsed.nodes && Array.isArray(parsed.nodes)) {
+          generatedSkills = parsed;
+        } else if (Array.isArray(parsed)) {
+          generatedSkills = { nodes: parsed };
+        }
 
-      // 7. Generate quests for each unlocked node
-      await updateTracking(supabase, user_id, {
-        status: "generating_quests",
-        current_step: "Generating quests for skills...",
-        progress: 45,
-      });
-
-      let totalQuests = 0;
-      const nodesWithQuests = skillsToInsert.slice(0, 3);
-
-      for (let i = 0; i < nodesWithQuests.length; i++) {
-        const node = nodesWithQuests[i];
-        const nodeProgress = 45 + Math.floor((i / nodesWithQuests.length) * 45);
+        if (generatedSkills.nodes.length === 0) {
+          throw new Error("No nodes in AI response");
+        }
+        console.log("generatedSkills:", generatedSkills);
+        progress += (index + 1) * 5;
 
         await updateTracking(supabase, user_id, {
-          current_step: `Generating quests for "${node.title}"...`,
-          progress: nodeProgress,
+          current_step: "Saving skill nodes...",
+          progress,
         });
 
-        try {
-          const questCount = await generateQuestsForNode(
-            supabase,
-            user_id,
-            node,
-            profile,
-            localization,
-            answers,
+        // 6. Save generated skill nodes
+        const skillsToInsert = (generatedSkills.nodes || []).map(
+          (node: SkillNode) => ({
+            ...node,
+            // Add gen_ prefix to distinguish from fallback data
+            node_id: node.node_id.startsWith("gen_")
+              ? node.node_id
+              : `gen_${node.node_id}`,
+          }),
+        );
+
+        if (skillsToInsert.length > 0) {
+          // Insert skill nodes
+          await supabase.from("skill_nodes").insert(
+            skillsToInsert.map((node: SkillNode) => ({
+              node_id: node.node_id,
+              branch: node.branch,
+              tier: node.tier,
+              title: node.title,
+              description: node.description,
+              xp_required: node.xp_required,
+              quests_total: node.quests_total,
+            })),
           );
-          totalQuests += questCount;
-        } catch (err) {
-          console.error(
-            `Error generating quests for node ${node.node_id}:`,
-            err,
+          progress += 5;
+          await updateTracking(supabase, user_id, {
+            skills_done: true,
+            skills_count: skillsToInsert.length,
+            current_step: "Skill tree complete!",
+            progress,
+          });
+          //  store for user with locked status (only tier 1 unlocked)
+          await supabase.from("user_skill_nodes").insert(
+            skillsToInsert.map((node: SkillNode) => ({
+              node_id: node.node_id,
+              user_id,
+              status: node.tier === 1 ? "todo" : "locked",
+              quests_completed: 0,
+            })),
+          );
+          progress += 5;
+          // 7. Generate quests for each unlocked node
+          await updateTracking(supabase, user_id, {
+            status: "generating_quests",
+            current_step: "Generating quests for skills...",
+            progress,
+          });
+
+          let totalQuests = 0;
+          const questProgressStart = progress;
+          const questProgressEnd = 90;
+          const questProgressSpan = Math.max(
+            0,
+            questProgressEnd - questProgressStart,
+          );
+
+          for (let i = 0; i < skillsToInsert.length; i++) {
+            const node = skillsToInsert[i];
+            const nodeProgress =
+              questProgressStart +
+              Math.floor(((i + 1) / skillsToInsert.length) * questProgressSpan);
+
+            await updateTracking(supabase, user_id, {
+              current_step: `Generating quests for "${node.title}"...`,
+              progress: nodeProgress,
+            });
+
+            try {
+              const questCount = await generateQuestsForNode(
+                supabase,
+                user_id,
+                node,
+                profile,
+                localization,
+                answers,
+              );
+              totalQuests += questCount;
+            } catch (err) {
+              console.error(
+                `Error generating quests for node ${node.node_id}:`,
+                err,
+              );
+            }
+          }
+          progress = questProgressEnd;
+
+          // 8. Update user_quests_count in tracking
+          await updateTracking(supabase, user_id, {
+            quests_done: true,
+            quests_count: totalQuests,
+            status: "completed",
+            current_step: "Generation complete!",
+            progress: 100,
+            completed_at: new Date().toISOString(),
+          });
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: {
+                skills_generated: skillsToInsert.length,
+                quests_generated: totalQuests,
+                unlocked_nodes: nodesWithQuests.map((n) => ({
+                  node_id: n.node_id,
+                  title: n.title,
+                })),
+              },
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        } else {
+          await updateTracking(supabase, user_id, {
+            status: "completed",
+            current_step: "No new skills to generate",
+            progress: 100,
+            completed_at: new Date().toISOString(),
+          });
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: {
+                skills_generated: 0,
+                quests_generated: 0,
+                message: "No new skills needed",
+              },
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
           );
         }
+      } catch (error: any) {
+        // console.error("AI skill generation failed, using fallback:", error);
+        // Use fallback nodes from database for primary branch
+        const { data: fallbackNodes } = await supabase
+          .from("skill_nodes")
+          .select(`*, quests(quest_id)`)
+          .eq("branch", branch.id)
+          .order("tier", { ascending: true })
+          .order("tier_order", { ascending: true });
+        const questsToInsert = (fallbackNodes || [])
+          .map((nodes: { quests: { quest_id: string }[] }) => nodes.quests)
+          .flat();
+        const nodesToInsert = (fallbackNodes ?? []).map((n: any) => ({
+          node_id: n.node_id,
+          user_id,
+          status: n.tier === 1 ? "todo" : "locked",
+          quests_completed: 0,
+        }));
+        const userQuestsToInsert = questsToInsert.map(
+          (quest: { quest_id: string }) => ({
+            user_id,
+            quest_id: quest.quest_id,
+            date: today,
+            xp_earned: 0,
+            completed_at: null,
+          }),
+        );
+        await supabase.from("user_quests").insert(userQuestsToInsert);
+        await supabase.from("user_skill_nodes").insert(nodesToInsert);
       }
-
-      // 8. Update user_quests_count in tracking
-      await updateTracking(supabase, user_id, {
-        quests_done: true,
-        quests_count: totalQuests,
-        status: "completed",
-        current_step: "Generation complete!",
-        progress: 100,
-        completed_at: new Date().toISOString(),
-      });
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: {
-            skills_generated: skillsToInsert.length,
-            quests_generated: totalQuests,
-            unlocked_nodes: nodesWithQuests.map((n) => ({
-              node_id: n.node_id,
-              title: n.title,
-            })),
-          },
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    } else {
-      await updateTracking(supabase, user_id, {
-        status: "completed",
-        current_step: "No new skills to generate",
-        progress: 100,
-        completed_at: new Date().toISOString(),
-      });
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: {
-            skills_generated: 0,
-            quests_generated: 0,
-            message: "No new skills needed",
-          },
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
     }
-  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          skills_generated: 0,
+          quests_generated: 0,
+          message: "No new skills needed",
+        },
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (error: any) {
     console.error("onboarding-generate error:", error);
 
     return new Response(JSON.stringify({ error: error.message }), {

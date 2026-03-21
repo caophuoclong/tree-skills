@@ -1,19 +1,18 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { queryClient } from "@/src/business-logic/api/query-client";
+import { ProgressBar } from "@/src/ui/atoms/ProgressBar";
+import { AppText } from "@/src/ui/atoms/Text";
+import { useTheme } from "@/src/ui/tokens";
+import { Spacing } from "@/src/ui/tokens/spacing";
+import { router } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { AppText } from '@/src/ui/atoms/Text';
-import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
-import { NeoBrutalBox } from '@/src/ui/atoms';
-import { useTheme } from '@/src/ui/tokens';
-import { Spacing } from '@/src/ui/tokens/spacing';
-import { queryClient } from '@/src/business-logic/api/query-client';
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface GenerationStatus {
   status: string;
@@ -30,9 +29,9 @@ export default function GeneratingScreen() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus>({
-    status: 'pending',
+    status: "pending",
     progress: 0,
-    current_step: 'Starting...',
+    current_step: "Starting...",
     skills_done: false,
     quests_done: false,
     skills_count: 0,
@@ -51,15 +50,15 @@ export default function GeneratingScreen() {
   const navigateToReveal = useCallback(async () => {
     if (hasNavigated.current) return;
     hasNavigated.current = true;
-    console.log('[generating] Navigating to reveal');
+    console.log("[generating] Navigating to reveal");
     if (pollInterval.current) clearInterval(pollInterval.current);
 
     // Invalidate all queries so the app refetches fresh data
-    queryClient.invalidateQueries({ queryKey: ['skill-tree'] });
-    queryClient.invalidateQueries({ queryKey: ['quests'] });
-    queryClient.invalidateQueries({ queryKey: ['challenges'] });
+    queryClient.invalidateQueries({ queryKey: ["skill-tree"] });
+    queryClient.invalidateQueries({ queryKey: ["quests"] });
+    queryClient.invalidateQueries({ queryKey: ["challenges"] });
 
-    router.replace('/(auth)/reveal');
+    router.replace("/(auth)/reveal");
   }, []);
 
   useEffect(() => {
@@ -69,10 +68,10 @@ export default function GeneratingScreen() {
 
     // Start polling generation status
     const startPolling = async () => {
-      const { supabase } = await import('@/src/business-logic/api/supabase');
+      const { supabase } = await import("@/src/business-logic/api/supabase");
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) {
-        console.log('[generating] No userId, navigating to reveal');
+        console.log("[generating] No userId, navigating to reveal");
         navigateToReveal();
         return;
       }
@@ -83,36 +82,44 @@ export default function GeneratingScreen() {
       const pollStatus = async () => {
         try {
           const { data, error } = await db
-            .from('generation_tracking')
-            .select('*')
-            .eq('user_id', userId)
+            .from("generation_tracking")
+            .select("*")
+            .eq("user_id", userId)
             .single();
 
           if (error) {
-            console.log('[generating] Poll error:', error);
+            console.log("[generating] Poll error:", error);
             return;
           }
 
           if (data) {
-            console.log('[generating] Status:', data.status, 'Progress:', data.progress);
+            console.log(
+              "[generating] Status:",
+              data.status,
+              "Progress:",
+              data.progress,
+            );
             setGenerationStatus(data);
             setProgressValue(data.progress || 0);
 
             // Only navigate when truly completed
-            if (data.status === 'completed') {
-              console.log('[generating] Generation completed!');
+            if (data.status === "completed") {
+              console.log("[generating] Generation completed!");
               setIsCompleted(true);
               navigateToReveal();
-            } else if (data.status === 'failed') {
-              console.error('[generating] Generation failed:', data.error_message);
+            } else if (data.status === "failed") {
+              console.error(
+                "[generating] Generation failed:",
+                data.error_message,
+              );
               // Navigate anyway after showing error briefly
               setTimeout(() => navigateToReveal(), 2000);
             }
           } else {
-            console.log('[generating] No tracking data found');
+            console.log("[generating] No tracking data found");
           }
         } catch (err) {
-          console.error('[generating] Poll exception:', err);
+          console.error("[generating] Poll exception:", err);
         }
       };
 
@@ -126,16 +133,19 @@ export default function GeneratingScreen() {
     // Show timeout indicator after 30 seconds
     const timeoutWarning = setTimeout(() => {
       if (!hasNavigated.current) {
-        console.log('[generating] Showing timeout indicator');
+        console.log("[generating] Showing timeout indicator");
         setIsTimedOut(true);
       }
     }, 30000);
 
     // Fallback timeout - only navigate if still not complete after 120 seconds
     const timeout = setTimeout(() => {
-      console.log('[generating] Fallback timeout - status:', generationStatus.status);
-      if (generationStatus.status !== 'completed' && !hasNavigated.current) {
-        console.warn('[generating] Timeout reached, navigating anyway');
+      console.log(
+        "[generating] Fallback timeout - status:",
+        generationStatus.status,
+      );
+      if (generationStatus.status !== "completed" && !hasNavigated.current) {
+        console.warn("[generating] Timeout reached, navigating anyway");
         navigateToReveal();
       }
     }, 120000);
@@ -173,7 +183,11 @@ export default function GeneratingScreen() {
             animated={false}
           />
           <View style={styles.progressRow}>
-            <AppText variant="body" color={colors.textSecondary}>
+            <AppText
+              variant="body"
+              color={colors.textSecondary}
+              numberOfLines={1}
+            >
               {generationStatus.current_step}
             </AppText>
             <AppText variant="caption" color={colors.textMuted}>
@@ -201,91 +215,66 @@ export default function GeneratingScreen() {
         <AppText variant="body" color={colors.textMuted} style={styles.hint}>
           This may take a moment...
         </AppText>
-
-        {/* Timeout floating indicator at bottom — hidden when completed */}
-        {isTimedOut && !isCompleted && !hasNavigated.current && (
-          <View style={styles.timeoutContainer}>
-            <NeoBrutalBox
-              shadowOffsetX={4}
-              shadowOffsetY={4}
-              shadowColor="#000"
-              borderColor={colors.warning}
-              backgroundColor={isDark ? '#1E1E22' : '#FFF'}
-              borderWidth={2}
-              borderRadius={12}
-              contentStyle={styles.timeoutContent}
-            >
-              <ActivityIndicator size="small" color={colors.warning} />
-              <View style={styles.timeoutTextCol}>
-                <AppText variant="body" color={colors.textPrimary}>
-                  Still generating...
-                </AppText>
-                <AppText variant="caption" color={colors.textMuted}>
-                  {generationStatus.current_step}
-                </AppText>
-              </View>
-            </NeoBrutalBox>
-          </View>
-        )}
       </View>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.bgBase,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.screenPadding,
-    gap: Spacing.xl,
-  },
-  treeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  treeEmoji: {
-    fontSize: 96,
-  },
-  headline: {
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  progressContainer: {
-    width: '100%',
-    gap: Spacing.sm,
-  },
-  progressRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statsRow: {
-    gap: 4,
-    alignItems: 'center',
-  },
-  hint: {
-    textAlign: 'center',
-    opacity: 0.6,
-  },
-  timeoutContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 20,
-    right: 20,
-  },
-  timeoutContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  timeoutTextCol: {
-    flex: 1,
-    gap: 2,
-  },
-});
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: colors.bgBase,
+    },
+    container: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: Spacing.screenPadding,
+      gap: Spacing.xl,
+    },
+    treeContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    treeEmoji: {
+      fontSize: 96,
+    },
+    headline: {
+      color: colors.textPrimary,
+      textAlign: "center",
+    },
+    progressContainer: {
+      width: "100%",
+      gap: Spacing.sm,
+    },
+    progressRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    statsRow: {
+      gap: 4,
+      alignItems: "center",
+    },
+    hint: {
+      textAlign: "center",
+      opacity: 0.6,
+    },
+    timeoutContainer: {
+      position: "absolute",
+      bottom: 40,
+      left: 20,
+      right: 20,
+    },
+    timeoutContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      gap: 12,
+    },
+    timeoutTextCol: {
+      flex: 1,
+      gap: 2,
+    },
+  });

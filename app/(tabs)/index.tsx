@@ -19,7 +19,6 @@ export default function HomeScreen() {
   const styles = useMemo(() => createHomeScreenStyles(colors), [colors]);
   const branchColors = useMemo(() => getBranchColors(colors), [colors]);
 
-  console.log("🚀 ~ HomeScreen ~ useHomeScreen:", useHomeScreen());
   const {
     name,
     level,

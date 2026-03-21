@@ -221,15 +221,17 @@ export function SkillsSection({
             </View>
             <Text style={styles.xpValue}>
               {currentXP != null ? currentXP.toLocaleString() : "—"} /{" "}
-              {targetXP != null ? targetXP.toLocaleString() : "—"} XP
+              {targetXP != null
+                ? (targetXP + (currentXP ?? 0)).toLocaleString()
+                : "—"}{" "}
+              XP
             </Text>
             <Text style={styles.xpNextLabel}>
               TIẾP THEO: CẤP {(level ?? 0) + 1}
             </Text>
             <XPShimmerBar percent={xpPercent} color={colors.brandPrimary} />
             <Text style={styles.xpUntilLabel}>
-              Còn {Math.max(0, (targetXP ?? 0) - (currentXP ?? 0))} XP nữa để
-              lên cấp
+              Còn {targetXP} XP nữa để lên cấp
             </Text>
           </View>
         </NeoBrutalCard>

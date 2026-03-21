@@ -1,11 +1,13 @@
-import { supabase } from '../supabase';
+import { supabase } from "../supabase";
 
 // Cast to any for tables not yet in generated types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
+
+const db = supabase;
 
 async function getAuthUserId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return user?.id ?? null;
 }
 
@@ -29,7 +31,10 @@ export interface OnboardingStep {
   options: OnboardingOption[];
 }
 
-export type OnboardingAnswers = Record<string, string | string[] | number | null>;
+export type OnboardingAnswers = Record<
+  string,
+  string | string[] | number | null
+>;
 
 export const onboardingService = {
   /**
@@ -40,14 +45,20 @@ export const onboardingService = {
 
     // Fetch steps config
     const { data: steps, error: stepsError } = await db
-      .from('onboarding_steps')
-      .select('*')
-      .order('sort_order');
+      .from("onboarding_steps")
+      .select("*")
+      .order("sort_order");
 
-    console.log("[onboardingService] steps result:", { steps: steps?.length, error: stepsError });
+    console.log("[onboardingService] steps result:", {
+      steps: steps?.length,
+      error: stepsError,
+    });
 
     if (stepsError) {
-      console.error("[onboardingService] Error fetching steps:", stepsError.message);
+      console.error(
+        "[onboardingService] Error fetching steps:",
+        stepsError.message,
+      );
       return [];
     }
 
@@ -61,13 +72,16 @@ export const onboardingService = {
     console.log("[onboardingService] masterTypes:", masterTypes);
 
     const { data: allOptions, error: optionsError } = await db
-      .from('master_data')
-      .select('id, key, type, data')
-      .in('type', masterTypes)
-      .eq('is_active', true)
-      .order('sort_order');
+      .from("master_data")
+      .select("id, key, type, data")
+      .in("type", masterTypes)
+      .eq("is_active", true)
+      .order("sort_order");
 
-    console.log("[onboardingService] options result:", { options: allOptions?.length, error: optionsError });
+    console.log("[onboardingService] options result:", {
+      options: allOptions?.length,
+      error: optionsError,
+    });
 
     // Group options by type
     const optionsByType: Record<string, OnboardingOption[]> = {};
@@ -78,10 +92,10 @@ export const onboardingService = {
       optionsByType[opt.type].push({
         id: opt.id,
         key: opt.key,
-        label: opt.data.label,
-        label_en: opt.data.label_en ?? '',
-        icon: opt.data.icon ?? '',
-        desc: opt.data.desc,
+        label: opt.data?.label ?? "",
+        label_en: opt.data?.label_en ?? "",
+        icon: opt.data?.icon ?? "",
+        desc: opt.data?.desc ?? "",
       });
     }
 
@@ -107,11 +121,14 @@ export const onboardingService = {
     if (!userId) return false;
 
     const { data, error } = await db
-      .from('user_onboardings')
-      .upsert({
-        user_id: userId,
-        answers,
-      }, { onConflict: 'user_id' })
+      .from("user_onboardings")
+      .upsert(
+        {
+          user_id: userId,
+          answers,
+        },
+        { onConflict: "user_id" },
+      )
       .select();
 
     console.log("[onboardingService] upsert result:", { data, error });
@@ -131,9 +148,9 @@ export const onboardingService = {
     if (!userId) return null;
 
     const { data } = await db
-      .from('user_onboardings')
-      .select('answers')
-      .eq('user_id', userId)
+      .from("user_onboardings")
+      .select("answers")
+      .eq("user_id", userId)
       .single();
 
     return data?.answers ?? null;
@@ -147,9 +164,9 @@ export const onboardingService = {
     if (!userId) return false;
 
     const { data } = await db
-      .from('user_onboardings')
-      .select('id')
-      .eq('user_id', userId)
+      .from("user_onboardings")
+      .select("id")
+      .eq("user_id", userId)
       .single();
 
     return !!data;

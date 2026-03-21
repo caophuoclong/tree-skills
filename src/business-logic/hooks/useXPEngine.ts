@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
-import { useUserStore } from '../stores/userStore';
-import { userService } from '../api/services/userService';
+import { useCallback } from "react";
+import { userService } from "../api/services/userService";
+import { useUserStore } from "../stores/userStore";
 
 // XP required per level — grows progressively
+// TODO: Move it to a master_data table in Supabase with type is "xp_thresholds"
 const XP_THRESHOLDS: Record<number, number> = {
   1: 100,
   2: 150,
@@ -37,8 +38,7 @@ export function computeLevel(totalXP: number): {
     level++;
   }
 
-  const xpToNext =
-    level >= MAX_LEVEL ? 0 : getXPThreshold(level) - remaining;
+  const xpToNext = level >= MAX_LEVEL ? 0 : getXPThreshold(level) - remaining;
 
   return { level, currentXP: remaining, xpToNext };
 }
@@ -49,23 +49,48 @@ export interface LevelUpReward {
   unlocks: string;
 }
 
+// TODO: Move level-up rewards to master_data table in Supabase with type "level_up_rewards"
 function getLevelUpReward(level: number): LevelUpReward {
   const rewards: Record<number, LevelUpReward> = {
-    2: { level: 2, message: 'Good progress!', unlocks: 'Unlocked harder quests' },
-    3: { level: 3, message: 'Skills improving!', unlocks: 'Unlocked new skill branch' },
-    4: { level: 4, message: 'Standing out!', unlocks: 'Unlocked detailed stats' },
-    5: { level: 5, message: 'Halfway there!', unlocks: 'Unlocked leaderboard' },
-    6: { level: 6, message: 'Shining bright!', unlocks: 'Unlocked community quests' },
-    7: { level: 7, message: 'Role model!', unlocks: 'Unlocked mentor badges' },
-    8: { level: 8, message: 'Peak approaching!', unlocks: 'Unlocked special titles' },
-    9: { level: 9, message: 'Almost expert!', unlocks: 'Unlocked challenge mode' },
-    10: { level: 10, message: 'Peak reached!', unlocks: 'Grandmaster title' },
+    2: {
+      level: 2,
+      message: "Good progress!",
+      unlocks: "Unlocked harder quests",
+    },
+    3: {
+      level: 3,
+      message: "Skills improving!",
+      unlocks: "Unlocked new skill branch",
+    },
+    4: {
+      level: 4,
+      message: "Standing out!",
+      unlocks: "Unlocked detailed stats",
+    },
+    5: { level: 5, message: "Halfway there!", unlocks: "Unlocked leaderboard" },
+    6: {
+      level: 6,
+      message: "Shining bright!",
+      unlocks: "Unlocked community quests",
+    },
+    7: { level: 7, message: "Role model!", unlocks: "Unlocked mentor badges" },
+    8: {
+      level: 8,
+      message: "Peak approaching!",
+      unlocks: "Unlocked special titles",
+    },
+    9: {
+      level: 9,
+      message: "Almost expert!",
+      unlocks: "Unlocked challenge mode",
+    },
+    10: { level: 10, message: "Peak reached!", unlocks: "Grandmaster title" },
   };
   return (
     rewards[level] ?? {
       level,
       message: `Level ${level}!`,
-      unlocks: 'Keep going!',
+      unlocks: "Keep going!",
     }
   );
 }
@@ -78,13 +103,17 @@ export function getComboMultiplier(combo: number): number {
 }
 
 export interface XPEngineResult {
-  addXP: (
-    amount: number,
-  ) => { reward: LevelUpReward | null; bonusXP: number; multiplier: number };
+  addXP: (amount: number) => {
+    reward: LevelUpReward | null;
+    bonusXP: number;
+    multiplier: number;
+  };
   getXPThreshold: (level: number) => number;
-  computeLevel: (
-    totalXP: number,
-  ) => { level: number; currentXP: number; xpToNext: number };
+  computeLevel: (totalXP: number) => {
+    level: number;
+    currentXP: number;
+    xpToNext: number;
+  };
 }
 
 export function useXPEngine(): XPEngineResult {
@@ -93,7 +122,11 @@ export function useXPEngine(): XPEngineResult {
   const addXP = useCallback(
     (
       amount: number,
-    ): { reward: LevelUpReward | null; bonusXP: number; multiplier: number } => {
+    ): {
+      reward: LevelUpReward | null;
+      bonusXP: number;
+      multiplier: number;
+    } => {
       if (!user) return { reward: null, bonusXP: 0, multiplier: 1 };
 
       const dailyStats = useUserStore.getState().dailyStats;
@@ -123,7 +156,7 @@ export function useXPEngine(): XPEngineResult {
           xp_to_next_level: xpToNext,
         })
         .catch((err) => {
-          if (__DEV__) console.warn('[useXPEngine] Failed to persist XP:', err);
+          if (__DEV__) console.warn("[useXPEngine] Failed to persist XP:", err);
         });
 
       let levelReward: LevelUpReward | null = null;
