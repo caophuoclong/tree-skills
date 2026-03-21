@@ -94,11 +94,27 @@ export const useUserStore = create<UserStore>((set) => ({
   updateStreak: (streak) =>
     set((state) => {
       if (!state.user) return state;
+
+      const bestStreak = Math.max(state.user.best_streak, streak);
+      const today = new Date().toISOString().split('T')[0];
+
+      // Persist to Supabase (fire-and-forget)
+      import('../api/services/userService').then(({ userService }) => {
+        userService.update({
+          streak,
+          best_streak: bestStreak,
+          last_active_date: today,
+        }).catch((err) => {
+          if (__DEV__) console.warn('[updateStreak] Failed to persist:', err);
+        });
+      });
+
       return {
         user: {
           ...state.user,
           streak,
-          best_streak: Math.max(state.user.best_streak, streak),
+          best_streak: bestStreak,
+          last_active_date: today,
         },
       };
     }),

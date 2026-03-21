@@ -41,16 +41,24 @@ export function useGrowthStreak(): StreakInfo {
     const today = formatDate(new Date());
     const yesterday = formatDate(new Date(Date.now() - 86400000));
 
-    if (lastActive === today) return; // already recorded today
+    console.log('[recordActivity] lastActive:', lastActive, 'today:', today, 'yesterday:', yesterday);
+
+    if (lastActive === today) {
+      console.log('[recordActivity] Already recorded today');
+      return; // already recorded today
+    }
 
     let newStreak: number;
     if (lastActive === yesterday) {
       newStreak = streak + 1;
+      console.log('[recordActivity] Consecutive day, streak:', newStreak);
     } else if (!lastActive) {
       newStreak = 1;
+      console.log('[recordActivity] First activity, streak:', newStreak);
     } else {
       // Streak broken — reset to 1
       newStreak = 1;
+      console.log('[recordActivity] Streak broken, resetting to 1');
     }
 
     updateStreak(newStreak);

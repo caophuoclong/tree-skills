@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { AppText } from '@/src/ui/atoms/Text';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
+import { useUserStore } from '@/src/business-logic/stores/userStore';
 
 export default function SplashScreen() {
   const { colors } = useTheme();
@@ -23,6 +24,10 @@ export default function SplashScreen() {
   const logoScale = useSharedValue(0.8);
   const textOpacity = useSharedValue(0);
   const textTranslateY = useSharedValue(20);
+
+  const isAuthLoading = useUserStore((s) => s.isAuthLoading);
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
+  const sessionReady = useUserStore((s) => s.sessionReady);
 
   useEffect(() => {
     // Glow pulse animation
@@ -53,14 +58,29 @@ export default function SplashScreen() {
       textOpacity.value = withTiming(1, { duration: 500 });
       textTranslateY.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
     }, 400);
+  }, []);
 
-    // Auto-navigate after 2.5 seconds
+  // Wait for auth loading to complete before navigating
+  useEffect(() => {
+    if (isAuthLoading) return; // Still loading, don't navigate yet
+
+    console.log('[splash] Auth loading done, isAuthenticated:', isAuthenticated, 'sessionReady:', sessionReady);
+
+    // Minimum 1.5 seconds splash time
     const timer = setTimeout(() => {
-      router.replace('/(auth)/welcome');
-    }, 2500);
+      if (isAuthenticated && sessionReady) {
+        // User is logged in, navigate to tabs (will be handled by _layout.tsx redirect)
+        console.log('[splash] User authenticated, navigating');
+        router.replace('/(tabs)');
+      } else {
+        // User not logged in, go to welcome
+        console.log('[splash] User not authenticated, going to welcome');
+        router.replace('/(auth)/welcome');
+      }
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAuthLoading, isAuthenticated, sessionReady]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,

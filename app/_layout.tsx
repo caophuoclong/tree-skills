@@ -77,9 +77,20 @@ function App() {
   });
 
   // Redirect to auth screen when not authenticated
+  // Only redirect AFTER splash screen has had time to show (2 seconds minimum)
   const hasRedirected = useRef(false);
+  const canRedirect = useRef(false);
+
   useEffect(() => {
-    if (!fontsLoaded || isAuthLoading) return;
+    // Allow redirects after 2 seconds (splash screen minimum time)
+    const timer = setTimeout(() => {
+      canRedirect.current = true;
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!fontsLoaded || isAuthLoading || !canRedirect.current) return;
     if (isAuthenticated) {
       hasRedirected.current = false; // Reset when authenticated
     } else if (!hasRedirected.current) {

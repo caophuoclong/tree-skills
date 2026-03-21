@@ -34,7 +34,49 @@ async function updateTracking(
 }
 
 /**
- * Generate quests for a specific skill node
+ * Retry AI call with fallback
+ */
+async function retryAI(
+  promptFilled: string,
+  context: string,
+  options: any,
+  maxRetries: number = 2
+): Promise<string> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await generateWithAILogged(promptFilled, context, options);
+      return response;
+    } catch (error) {
+      console.error(`AI attempt ${attempt + 1} failed:`, error);
+      if (attempt === maxRetries) throw error;
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  throw new Error("All retry attempts failed");
+}
+
+/**
+ * Get fallback quests for a node from database
+ */
+async function getFallbackQuests(supabase: any, nodeId: string): Promise<GeneratedQuest[]> {
+  const { data } = await supabase
+    .from("quests")
+    .select("*")
+    .eq("node_id", nodeId)
+    .limit(4);
+
+  return (data ?? []).map((q: any) => ({
+    title: q.title,
+    description: q.description,
+    difficulty: q.difficulty,
+    duration_min: q.duration_min,
+    xp_reward: q.xp_reward,
+  }));
+}
+
+/**
+ * Generate quests for a specific skill node with retry and fallback
  */
 async function generateQuestsForNode(
   supabase: any,
@@ -70,25 +112,51 @@ Requirements:
 - Language: ${localization.language}
 - User answers: ${JSON.stringify(answers)}
 - Each quest must be specific to learning "${node.title}"
-- Difficulty progression: start easy, get harder`;
+- Difficulty progression: start easy, get harder
 
-  const aiResponse = await generateWithAILogged(promptFilled, context, {
-    userId,
-    promptName: "quest_generation",
-    promptVersion: questPrompt.version,
-    edgeFunction: "onboarding-generate",
-    variables,
-  });
+Return JSON with "quests" array containing quest objects with: title, description, difficulty, duration_min, xp_reward`;
 
-  const generatedQuests = parseAIResponse<GeneratedQuest[]>(aiResponse);
+  let generatedQuests: GeneratedQuest[] = [];
 
-  if (generatedQuests.length === 0) return 0;
+  try {
+    // Try AI generation with retry
+    const aiResponse = await retryAI(promptFilled, context, {
+      userId,
+      promptName: "quest_generation",
+      promptVersion: questPrompt.version,
+      edgeFunction: "onboarding-generate",
+      variables,
+    }, 2);
+
+    // Parse response - handle both array and object with quests property
+    const parsed = JSON.parse(aiResponse);
+    if (Array.isArray(parsed)) {
+      generatedQuests = parsed;
+    } else if (parsed.quests && Array.isArray(parsed.quests)) {
+      generatedQuests = parsed.quests;
+    } else if (parsed.data && Array.isArray(parsed.data)) {
+      generatedQuests = parsed.data;
+    }
+
+    if (generatedQuests.length === 0) {
+      throw new Error("No quests in AI response");
+    }
+  } catch (error) {
+    console.error(`AI generation failed for node ${node.node_id}, using fallback:`, error);
+    // Use fallback quests from database
+    generatedQuests = await getFallbackQuests(supabase, node.node_id);
+  }
+
+  if (generatedQuests.length === 0) {
+    console.error(`No quests available for node ${node.node_id}`);
+    return 0;
+  }
 
   const today = new Date().toISOString().split("T")[0];
 
   // Insert quests with node_id
-  const questsToInsert = generatedQuests.map((quest, index) => ({
-    quest_id: `${node.node_id}_q${index + 1}_${Date.now()}`,
+  const questsToInsert = generatedQuests.slice(0, node.quests_total).map((quest, index) => ({
+    quest_id: `gen_${node.node_id}_q${index + 1}_${Date.now()}`,
     title: quest.title,
     description: quest.description,
     branch: node.branch,
@@ -97,7 +165,7 @@ Requirements:
     xp_reward: quest.xp_reward,
     node_id: node.node_id,
   }));
-  console.log("🚀 ~ generateQuestsForNode ~ questsToInsert:", questsToInsert);
+  console.log("generateQuestsForNode questsToInsert:", questsToInsert);
 
   const { error: questError } = await supabase
     .from("quests")
@@ -259,22 +327,56 @@ Deno.serve(async (req) => {
 
 Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", "xp_required", "quests_total" }] }`;
 
-    const skillAIResponse = await generateWithAILogged(
-      skillPromptFilled,
-      skillContext,
-      {
-        userId: user_id,
-        promptName: "skill_generation",
-        promptVersion: skillPrompt.version,
-        edgeFunction: "onboarding-generate",
-        variables: skillVariables,
-      },
-    );
+    let generatedSkills: { nodes: SkillNode[] } = { nodes: [] };
 
-    const generatedSkills = parseAIResponse<{ nodes: SkillNode[] }>(
-      skillAIResponse,
-    );
-    console.log("🚀 ~ generatedSkills:", generatedSkills);
+    try {
+      // Try AI generation with retry
+      const skillAIResponse = await retryAI(
+        skillPromptFilled,
+        skillContext,
+        {
+          userId: user_id,
+          promptName: "skill_generation",
+          promptVersion: skillPrompt.version,
+          edgeFunction: "onboarding-generate",
+          variables: skillVariables,
+        },
+        2
+      );
+
+      // Parse response
+      const parsed = JSON.parse(skillAIResponse);
+      if (parsed.nodes && Array.isArray(parsed.nodes)) {
+        generatedSkills = parsed;
+      } else if (Array.isArray(parsed)) {
+        generatedSkills = { nodes: parsed };
+      }
+
+      if (generatedSkills.nodes.length === 0) {
+        throw new Error("No nodes in AI response");
+      }
+    } catch (error) {
+      console.error("AI skill generation failed, using fallback:", error);
+      // Use fallback nodes from database for primary branch
+      const { data: fallbackNodes } = await supabase
+        .from("skill_nodes")
+        .select("*")
+        .eq("branch", primaryBranch)
+        .order("tier", { ascending: true })
+        .order("tier_order", { ascending: true })
+        .limit(6);
+
+      generatedSkills.nodes = (fallbackNodes ?? []).map((n: any) => ({
+        node_id: n.node_id,
+        branch: n.branch,
+        tier: n.tier,
+        title: n.title,
+        description: n.description,
+        xp_required: n.xp_required,
+        quests_total: n.quests_total,
+      }));
+    }
+    console.log("generatedSkills:", generatedSkills);
 
     await updateTracking(supabase, user_id, {
       current_step: "Saving skill nodes...",
@@ -282,9 +384,13 @@ Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", 
     });
 
     // 6. Save generated skill nodes
-    const skillsToInsert = (generatedSkills.nodes || []).filter(
-      (node: SkillNode) => !existingNodeIds.includes(node.node_id),
-    );
+    const skillsToInsert = (generatedSkills.nodes || [])
+      .filter((node: SkillNode) => !existingNodeIds.includes(node.node_id))
+      .map((node: SkillNode) => ({
+        ...node,
+        // Add gen_ prefix to distinguish from fallback data
+        node_id: node.node_id.startsWith('gen_') ? node.node_id : `gen_${node.node_id}`,
+      }));
 
     if (skillsToInsert.length > 0) {
       // Insert skill nodes
