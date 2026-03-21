@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useUserStore } from '../stores/userStore';
+import { userService } from '../api/services/userService';
 
 // XP required per level — grows progressively
 const XP_THRESHOLDS: Record<number, number> = {
@@ -16,13 +17,16 @@ const XP_THRESHOLDS: Record<number, number> = {
 };
 
 const MAX_LEVEL = 10;
-const MAX_LEVEL_XP = 9999;
 
 export function getXPThreshold(level: number): number {
-  return XP_THRESHOLDS[level] ?? MAX_LEVEL_XP;
+  return XP_THRESHOLDS[level] ?? XP_THRESHOLDS[MAX_LEVEL];
 }
 
-export function computeLevel(totalXP: number): { level: number; currentXP: number; xpToNext: number } {
+export function computeLevel(totalXP: number): {
+  level: number;
+  currentXP: number;
+  xpToNext: number;
+} {
   let level = 1;
   let remaining = totalXP;
 
@@ -33,7 +37,8 @@ export function computeLevel(totalXP: number): { level: number; currentXP: numbe
     level++;
   }
 
-  const xpToNext = level >= MAX_LEVEL ? MAX_LEVEL_XP : getXPThreshold(level) - remaining;
+  const xpToNext =
+    level >= MAX_LEVEL ? 0 : getXPThreshold(level) - remaining;
 
   return { level, currentXP: remaining, xpToNext };
 }
@@ -46,17 +51,23 @@ export interface LevelUpReward {
 
 function getLevelUpReward(level: number): LevelUpReward {
   const rewards: Record<number, LevelUpReward> = {
-    2: { level: 2, message: 'Bạn đang tiến bộ!', unlocks: 'Mở khóa nhiệm vụ khó hơn' },
-    3: { level: 3, message: 'Kỹ năng của bạn đang được rèn giũa!', unlocks: 'Mở khóa nhánh kỹ năng mới' },
-    4: { level: 4, message: 'Bạn đang nổi bật!', unlocks: 'Mở khóa thống kê chi tiết' },
-    5: { level: 5, message: 'Nửa chặng đường rồi!', unlocks: 'Mở khóa bảng xếp hạng' },
-    6: { level: 6, message: 'Kỹ năng của bạn đang phát sáng!', unlocks: 'Mở khóa nhiệm vụ cộng đồng' },
-    7: { level: 7, message: 'Bạn là tấm gương cho người khác!', unlocks: 'Mở khóa mentor badges' },
-    8: { level: 8, message: 'Đỉnh cao đang gần kề!', unlocks: 'Mở khóa danh hiệu đặc biệt' },
-    9: { level: 9, message: 'Bạn gần như là chuyên gia!', unlocks: 'Mở khóa chế độ thử thách' },
-    10: { level: 10, message: 'Bạn đã đạt đỉnh cao!', unlocks: 'Danh hiệu Grandmaster' },
+    2: { level: 2, message: 'Good progress!', unlocks: 'Unlocked harder quests' },
+    3: { level: 3, message: 'Skills improving!', unlocks: 'Unlocked new skill branch' },
+    4: { level: 4, message: 'Standing out!', unlocks: 'Unlocked detailed stats' },
+    5: { level: 5, message: 'Halfway there!', unlocks: 'Unlocked leaderboard' },
+    6: { level: 6, message: 'Shining bright!', unlocks: 'Unlocked community quests' },
+    7: { level: 7, message: 'Role model!', unlocks: 'Unlocked mentor badges' },
+    8: { level: 8, message: 'Peak approaching!', unlocks: 'Unlocked special titles' },
+    9: { level: 9, message: 'Almost expert!', unlocks: 'Unlocked challenge mode' },
+    10: { level: 10, message: 'Peak reached!', unlocks: 'Grandmaster title' },
   };
-  return rewards[level] ?? { level, message: `Lên level ${level}!`, unlocks: 'Tiếp tục phát triển' };
+  return (
+    rewards[level] ?? {
+      level,
+      message: `Level ${level}!`,
+      unlocks: 'Keep going!',
+    }
+  );
 }
 
 export function getComboMultiplier(combo: number): number {
@@ -67,16 +78,22 @@ export function getComboMultiplier(combo: number): number {
 }
 
 export interface XPEngineResult {
-  addXP: (amount: number) => { reward: LevelUpReward | null; bonusXP: number; multiplier: number };
+  addXP: (
+    amount: number,
+  ) => { reward: LevelUpReward | null; bonusXP: number; multiplier: number };
   getXPThreshold: (level: number) => number;
-  computeLevel: (totalXP: number) => { level: number; currentXP: number; xpToNext: number };
+  computeLevel: (
+    totalXP: number,
+  ) => { level: number; currentXP: number; xpToNext: number };
 }
 
 export function useXPEngine(): XPEngineResult {
   const { user, setUser, setLevelUpReward } = useUserStore();
 
   const addXP = useCallback(
-    (amount: number): { reward: LevelUpReward | null; bonusXP: number; multiplier: number } => {
+    (
+      amount: number,
+    ): { reward: LevelUpReward | null; bonusXP: number; multiplier: number } => {
       if (!user) return { reward: null, bonusXP: 0, multiplier: 1 };
 
       const dailyStats = useUserStore.getState().dailyStats;
@@ -88,6 +105,7 @@ export function useXPEngine(): XPEngineResult {
       const newTotalXP = user.total_xp + totalAmount;
       const { level: newLevel, currentXP, xpToNext } = computeLevel(newTotalXP);
 
+      // Update local store
       setUser({
         ...user,
         total_xp: newTotalXP,
@@ -95,6 +113,18 @@ export function useXPEngine(): XPEngineResult {
         current_xp_in_level: currentXP,
         xp_to_next_level: xpToNext,
       });
+
+      // Persist to Supabase (fire-and-forget)
+      userService
+        .update({
+          total_xp: newTotalXP,
+          level: newLevel,
+          current_xp_in_level: currentXP,
+          xp_to_next_level: xpToNext,
+        })
+        .catch((err) => {
+          if (__DEV__) console.warn('[useXPEngine] Failed to persist XP:', err);
+        });
 
       let levelReward: LevelUpReward | null = null;
       if (newLevel > prevLevel) {

@@ -217,6 +217,102 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_stats: {
+        Row: {
+          career_finance_quests: number
+          created_at: string
+          date: string
+          id: string
+          quests_completed: number
+          quests_total: number
+          stamina_end: number
+          stamina_start: number
+          streak_day: number
+          updated_at: string
+          user_id: string
+          wellbeing_quests: number
+          xp_earned: number
+        }
+        Insert: {
+          career_finance_quests?: number
+          created_at?: string
+          date: string
+          id?: string
+          quests_completed?: number
+          quests_total?: number
+          stamina_end?: number
+          stamina_start?: number
+          streak_day?: number
+          updated_at?: string
+          user_id: string
+          wellbeing_quests?: number
+          xp_earned?: number
+        }
+        Update: {
+          career_finance_quests?: number
+          created_at?: string
+          date?: string
+          id?: string
+          quests_completed?: number
+          quests_total?: number
+          stamina_end?: number
+          stamina_start?: number
+          streak_day?: number
+          updated_at?: string
+          user_id?: string
+          wellbeing_quests?: number
+          xp_earned?: number
+        }
+        Relationships: []
+      }
+      generation_tracking: {
+        Row: {
+          completed_at: string | null
+          current_step: string | null
+          error_message: string | null
+          id: string
+          progress: number
+          quests_count: number
+          quests_done: boolean
+          skills_count: number
+          skills_done: boolean
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          id?: string
+          progress?: number
+          quests_count?: number
+          quests_done?: boolean
+          skills_count?: number
+          skills_done?: boolean
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          id?: string
+          progress?: number
+          quests_count?: number
+          quests_done?: boolean
+          skills_count?: number
+          skills_done?: boolean
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       master_data: {
         Row: {
           created_at: string
@@ -331,6 +427,7 @@ export type Database = {
           id: string
           last_active_date: string | null
           level: number
+          localization: Json
           name: string
           onboarding_done: boolean
           primary_branch: Database["public"]["Enums"]["branch_type"] | null
@@ -350,6 +447,7 @@ export type Database = {
           id: string
           last_active_date?: string | null
           level?: number
+          localization?: Json
           name?: string
           onboarding_done?: boolean
           primary_branch?: Database["public"]["Enums"]["branch_type"] | null
@@ -369,6 +467,7 @@ export type Database = {
           id?: string
           last_active_date?: string | null
           level?: number
+          localization?: Json
           name?: string
           onboarding_done?: boolean
           primary_branch?: Database["public"]["Enums"]["branch_type"] | null
@@ -379,6 +478,63 @@ export type Database = {
           total_xp?: number
           updated_at?: string
           xp_to_next_level?: number
+        }
+        Relationships: []
+      }
+      prompt_executions: {
+        Row: {
+          ai_response: string | null
+          duration_ms: number | null
+          edge_function: string
+          error_message: string | null
+          executed_at: string
+          filled_prompt: string
+          id: string
+          model: string | null
+          parsed_data: Json | null
+          prompt_name: string
+          prompt_version: number
+          provider: string | null
+          success: boolean
+          tokens_used: number | null
+          user_id: string | null
+          variables: Json
+        }
+        Insert: {
+          ai_response?: string | null
+          duration_ms?: number | null
+          edge_function: string
+          error_message?: string | null
+          executed_at?: string
+          filled_prompt: string
+          id?: string
+          model?: string | null
+          parsed_data?: Json | null
+          prompt_name: string
+          prompt_version?: number
+          provider?: string | null
+          success?: boolean
+          tokens_used?: number | null
+          user_id?: string | null
+          variables?: Json
+        }
+        Update: {
+          ai_response?: string | null
+          duration_ms?: number | null
+          edge_function?: string
+          error_message?: string | null
+          executed_at?: string
+          filled_prompt?: string
+          id?: string
+          model?: string | null
+          parsed_data?: Json | null
+          prompt_name?: string
+          prompt_version?: number
+          provider?: string | null
+          success?: boolean
+          tokens_used?: number | null
+          user_id?: string | null
+          variables?: Json
         }
         Relationships: []
       }
@@ -462,6 +618,36 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_node_dependencies: {
+        Row: {
+          node_id: string
+          requires_node: string
+        }
+        Insert: {
+          node_id: string
+          requires_node: string
+        }
+        Update: {
+          node_id?: string
+          requires_node?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_node_dependencies_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "skill_nodes"
+            referencedColumns: ["node_id"]
+          },
+          {
+            foreignKeyName: "skill_node_dependencies_requires_node_fkey"
+            columns: ["requires_node"]
+            isOneToOne: false
+            referencedRelation: "skill_nodes"
+            referencedColumns: ["node_id"]
+          },
+        ]
+      }
       skill_nodes: {
         Row: {
           branch: Database["public"]["Enums"]["branch_type"]
@@ -471,6 +657,7 @@ export type Database = {
           quests_total: number
           sort_order: number
           tier: number
+          tier_order: number
           title: string
           xp_required: number
         }
@@ -482,6 +669,7 @@ export type Database = {
           quests_total?: number
           sort_order?: number
           tier: number
+          tier_order?: number
           title: string
           xp_required?: number
         }
@@ -493,8 +681,72 @@ export type Database = {
           quests_total?: number
           sort_order?: number
           tier?: number
+          tier_order?: number
           title?: string
           xp_required?: number
+        }
+        Relationships: []
+      }
+      stamina_history: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          source: string
+          stamina_after: number
+          stamina_before: number
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          source: string
+          stamina_after: number
+          stamina_before: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          source?: string
+          stamina_after?: number
+          stamina_before?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      streak_history: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          quests_completed: number
+          shield_used: boolean
+          streak_day: number
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          quests_completed?: number
+          shield_used?: boolean
+          streak_day: number
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          quests_completed?: number
+          shield_used?: boolean
+          streak_day?: number
+          user_id?: string
+          xp_earned?: number
         }
         Relationships: []
       }
@@ -612,7 +864,7 @@ export type Database = {
       }
       user_quests: {
         Row: {
-          completed_at: string
+          completed_at: string | null
           date: string
           id: string
           quest_id: string
@@ -620,7 +872,7 @@ export type Database = {
           xp_earned: number
         }
         Insert: {
-          completed_at?: string
+          completed_at?: string | null
           date?: string
           id?: string
           quest_id: string
@@ -628,7 +880,7 @@ export type Database = {
           xp_earned: number
         }
         Update: {
-          completed_at?: string
+          completed_at?: string | null
           date?: string
           id?: string
           quest_id?: string
@@ -686,16 +938,50 @@ export type Database = {
           },
         ]
       }
+      xp_history: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          multiplier: number
+          source: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          multiplier?: number
+          source: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          multiplier?: number
+          source?: string
+          source_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_node_unlocked: {
+        Args: { p_node_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       branch_type: "career" | "finance" | "softskills" | "wellbeing"
       difficulty_type: "easy" | "medium" | "hard"
+      generation_status: "pending" | "generating" | "completed" | "failed"
       node_status: "locked" | "in_progress" | "completed"
       notif_type:
         | "streak_reminder"
@@ -833,6 +1119,7 @@ export const Constants = {
     Enums: {
       branch_type: ["career", "finance", "softskills", "wellbeing"],
       difficulty_type: ["easy", "medium", "hard"],
+      generation_status: ["pending", "generating", "completed", "failed"],
       node_status: ["locked", "in_progress", "completed"],
       notif_type: [
         "streak_reminder",

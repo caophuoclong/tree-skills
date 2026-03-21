@@ -78,7 +78,7 @@ create table user_quests (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
   quest_id     text not null references quests(quest_id),
-  completed_at timestamptz not null default now(),
+  completed_at timestamptz default now(),
   xp_earned    int not null,
   date         date not null default current_date
 );

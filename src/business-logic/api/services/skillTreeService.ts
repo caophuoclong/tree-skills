@@ -9,40 +9,52 @@ async function getAuthUserId(): Promise<string | null> {
 }
 
 export const skillTreeService = {
+  /**
+   * Get user's personalized skill nodes
+   * Fetches from user_skill_nodes joined with skill_nodes
+   */
   async getNodes(): Promise<SkillNode[]> {
     const userId = await getAuthUserId();
     if (!userId) return [];
 
-    // Fetch all skill nodes (catalogue)
-    const { data: nodes, error: nodesErr } = await supabase
-      .from("skill_nodes")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (nodesErr) return [];
-
-    // Fetch this user's progress for each node
-    const { data: userNodes } = await supabase
+    // Fetch user's skill nodes with skill node details
+    const { data, error } = await supabase
       .from("user_skill_nodes")
-      .select("*")
-      .eq("user_id", userId);
-    const userNodeMap = new Map(
-      (userNodes ?? []).map((un) => [un.node_id, un]),
-    );
+      .select(`
+        node_id,
+        status,
+        quests_completed,
+        unlocked_at,
+        completed_at,
+        skill_nodes (
+          branch,
+          tier,
+          title,
+          description,
+          xp_required,
+          quests_total,
+          sort_order
+        )
+      `)
+      .eq("user_id", userId)
+      .order("skill_nodes(sort_order)", { ascending: true });
 
-    return (nodes ?? []).map((n) => {
-      const un = userNodeMap.get(n.node_id);
-      return {
-        node_id: n.node_id,
-        branch: n.branch,
-        tier: n.tier as SkillNode["tier"],
-        title: n.title,
-        description: n.description,
-        xp_required: n.xp_required,
-        quests_total: n.quests_total,
-        status: un?.status ?? "locked",
-        quests_completed: un?.quests_completed ?? 0,
-      };
-    });
+    if (error) {
+      console.error("Error fetching user skill nodes:", error);
+      return [];
+    }
+
+    return (data ?? []).map((row: any) => ({
+      node_id: row.node_id,
+      branch: row.skill_nodes.branch,
+      tier: row.skill_nodes.tier as SkillNode["tier"],
+      title: row.skill_nodes.title,
+      description: row.skill_nodes.description,
+      xp_required: row.skill_nodes.xp_required,
+      quests_total: row.skill_nodes.quests_total,
+      status: row.status,
+      quests_completed: row.quests_completed,
+    }));
   },
 
   async updateNode(
@@ -68,7 +80,7 @@ export const skillTreeService = {
       );
     if (error) throw error;
 
-    // Return the full merged node
+    // Return the updated node
     const nodes = await skillTreeService.getNodes();
     const updated = nodes.find((n) => n.node_id === nodeId);
     return updated ?? null;

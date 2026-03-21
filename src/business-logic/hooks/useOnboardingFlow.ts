@@ -136,11 +136,22 @@ export function useOnboardingFlow() {
         const { supabase } = await import('../api/supabase');
         const userId = (await supabase.auth.getUser()).data.user?.id;
         if (userId) {
+          // Update profile
           await supabase
             .from('profiles')
             .update({ onboarding_done: true })
             .eq('id', userId);
           console.log("[onboarding] Profile updated");
+
+          // Call edge function to generate skills and quests
+          try {
+            const { data, error } = await supabase.functions.invoke('onboarding-generate', {
+              body: { user_id: userId }
+            });
+            console.log("[onboarding] Edge function result:", { data, error });
+          } catch (fnError) {
+            console.error("[onboarding] Edge function error:", fnError);
+          }
         }
         router.replace('/(auth)/generating');
       }

@@ -180,9 +180,10 @@ export async function generateWithAI(
   const model = options.model ?? provider.default_model;
 
   // Get API key from environment
-  const apiKey = provider.api_key_env
-    ? (Deno.env.get(provider.api_key_env) ?? "")
-    : "";
+  const apiKey = "sk-a77abca01de841de-nwedhs-d9ba4cb0";
+  // provider.api_key_env
+  //   ? (Deno.env.get(provider.api_key_env) ?? "")
+  //   : "";
 
   // Build messages
   const messages: ChatMessage[] = [
@@ -214,8 +215,6 @@ export async function generateWithAI(
     body: JSON.stringify(body),
   });
 
-  console.log("Second", response);
-
   if (!response.ok) {
     const error = await response.text();
     throw new Error(
@@ -224,7 +223,6 @@ export async function generateWithAI(
   }
 
   const data = await response.json();
-  console.log("DATA, :", data);
   return parseResponse(provider, data);
 }
 

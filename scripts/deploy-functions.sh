@@ -82,6 +82,7 @@ else
     "generate-quests"
     "generate-challenges"
     "analyze-assessment"
+    "onboarding-generate"
   )
 
   for func in "${FUNCTIONS[@]}"; do

@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.analyze-assessment]
 verify_jwt = true
+
+[functions.onboarding-generate]
+verify_jwt = true
