@@ -16,15 +16,11 @@ import { useTheme } from '@/src/ui/tokens';
 import { SkillBuilderClusterCard } from '@/src/ui/organisms/SkillBuilderClusterCard';
 import { useSkillBuilderEditor } from '@/src/hooks/useSkillBuilderEditor';
 
-const BRANCH_CONFIG: Record<Branch, { label: string; color: string; emoji: string }> = {
-  career: { label: 'Sự nghiệp', color: '#7C6AF7', emoji: '💼' },
-  finance: { label: 'Tài chính', color: '#22C55E', emoji: '💰' },
-  softskills: { label: 'Kỹ năng mềm', color: '#F59E0B', emoji: '💬' },
-  wellbeing: { label: 'Sức khỏe', color: '#EC4899', emoji: '🧘' },
-};
+import { useBranches } from '@/src/business-logic/hooks/useBranches';
 
 export default function EditorScreen() {
   const { colors } = useTheme();
+  const { branchMeta: BRANCH_CONFIG } = useBranches();
   const {
     currentDraft,
     addCluster,

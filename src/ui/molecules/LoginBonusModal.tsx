@@ -7,8 +7,9 @@
  */
 import { NeoBrutalAccent, NeoBrutalBox } from '@/src/ui/atoms';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
+import { dailyBonusService } from '@/src/business-logic/api/services/dailyBonusService';
 import { useTheme } from '@/src/ui/tokens';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
   Modal,
@@ -59,13 +60,17 @@ export function LoginBonusModal() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reward]);
 
-  const handleClaim = () => {
+  const handleClaim = useCallback(() => {
     if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
     if (reward !== null) {
       updateXP(reward);
+      // Persist to Supabase (fire-and-forget)
+      dailyBonusService.recordBonus(reward, streak).catch((err) => {
+        if (__DEV__) console.warn("[dailyBonusService.recordBonus]", err);
+      });
       setReward(null);
     }
-  };
+  }, [reward, streak, updateXP, setReward]);
 
   if (reward === null) return null;
 

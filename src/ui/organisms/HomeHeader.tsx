@@ -12,15 +12,16 @@ import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export interface HomeHeaderProps {
-  name: string;
-  level: number;
+  name: string | null;
+  level: number | null;
   unreadCount?: number;
   onNotifications: () => void;
   onSettings: () => void;
   streakAtRisk?: boolean;
 }
 
-function getInitials(name: string): string {
+function getInitials(name: string | null): string {
+  if (!name) return '?';
   return name
     .split(' ')
     .map((w) => w[0] ?? '')
@@ -48,8 +49,8 @@ export function HomeHeader({
           <Text style={styles.avatarInitials}>{getInitials(name)}</Text>
         </View>
         <View style={styles.avatarMeta}>
-          <Text style={styles.levelLabel}>CẤP {level}</Text>
-          <Text style={styles.userName}>{name}</Text>
+          <Text style={styles.levelLabel}>CẤP {level ?? '?'}</Text>
+          <Text style={styles.userName}>{name ?? ''}</Text>
         </View>
       </View>
 

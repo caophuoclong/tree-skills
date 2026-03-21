@@ -7,13 +7,7 @@ import type { Branch, CustomCluster, CustomSkillItem } from '@/src/business-logi
 import { useTheme } from '@/src/ui/tokens';
 import { SkillBuilderSkillRow } from './SkillBuilderSkillRow';
 
-const BRANCH_CONFIG: Record<Branch, { label: string; color: string; emoji: string }> = {
-  career: { label: 'Sự nghiệp', color: '#7C6AF7', emoji: '💼' },
-  finance: { label: 'Tài chính', color: '#22C55E', emoji: '💰' },
-  softskills: { label: 'Kỹ năng mềm', color: '#F59E0B', emoji: '💬' },
-  wellbeing: { label: 'Sức khỏe', color: '#EC4899', emoji: '🧘' },
-};
-const BRANCHES = Object.keys(BRANCH_CONFIG) as Branch[];
+import { useBranches } from '@/src/business-logic/hooks/useBranches';
 
 interface SkillBuilderClusterCardProps {
   cluster: CustomCluster;
@@ -26,7 +20,8 @@ export function SkillBuilderClusterCard({ cluster, onRemove }: SkillBuilderClust
   const [collapsed, setCollapsed] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(cluster.title);
-  const cfg = BRANCH_CONFIG[cluster.branch];
+  const { branchMeta } = useBranches();
+  const cfg = branchMeta[cluster.branch];
   const branchColor = cfg.color;
 
   const commitTitle = () => {
@@ -121,11 +116,12 @@ export function SkillBuilderClusterCard({ cluster, onRemove }: SkillBuilderClust
 
 function BranchPicker({ value, onChange }: { value: Branch; onChange: (b: Branch) => void }) {
   const { colors } = useTheme();
+  const { branches, branchMeta } = useBranches();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', gap: 6, paddingBottom: 2, paddingHorizontal: 1 }}>
-        {BRANCHES.map((b) => {
-          const cfg = BRANCH_CONFIG[b];
+        {branches.map(({ id: b }) => {
+          const cfg = branchMeta[b];
           const active = value === b;
           return (
             <TouchableOpacity

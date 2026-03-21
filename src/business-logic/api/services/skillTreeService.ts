@@ -1,25 +1,24 @@
 import type { SkillNode } from "../../types";
 import { supabase } from "../supabase";
 
-async function getAuthUserId(): Promise<string> {
+async function getAuthUserId(): Promise<string | null> {
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
-  return user.id;
+  return user?.id ?? null;
 }
 
 export const skillTreeService = {
   async getNodes(): Promise<SkillNode[]> {
     const userId = await getAuthUserId();
+    if (!userId) return [];
 
     // Fetch all skill nodes (catalogue)
     const { data: nodes, error: nodesErr } = await supabase
       .from("skill_nodes")
       .select("*")
       .order("sort_order", { ascending: true });
-    if (nodesErr) throw nodesErr;
+    if (nodesErr) return [];
 
     // Fetch this user's progress for each node
     const { data: userNodes } = await supabase
@@ -49,8 +48,9 @@ export const skillTreeService = {
   async updateNode(
     nodeId: string,
     patch: Partial<SkillNode>,
-  ): Promise<SkillNode> {
+  ): Promise<SkillNode | null> {
     const userId = await getAuthUserId();
+    if (!userId) return null;
     const dbPatch: Record<string, unknown> = {};
     if (patch.status !== undefined) dbPatch.status = patch.status;
     if (patch.quests_completed !== undefined)
@@ -71,7 +71,6 @@ export const skillTreeService = {
     // Return the full merged node
     const nodes = await skillTreeService.getNodes();
     const updated = nodes.find((n) => n.node_id === nodeId);
-    if (!updated) throw new Error(`Node ${nodeId} not found`);
-    return updated;
+    return updated ?? null;
   },
 };

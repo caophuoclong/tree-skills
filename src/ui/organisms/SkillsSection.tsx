@@ -22,12 +22,12 @@ interface SkillsSectionProps {
   financePct: number;
   softskillsPct: number;
   wellbeingPct: number;
-  streak: number;
+  streak: number | null;
   stamina: number;
   pendingCount: number;
-  level: number;
-  currentXP: number;
-  targetXP: number;
+  level: number | null;
+  currentXP: number | null;
+  targetXP: number | null;
   xpPercent: number;
   streakShield: StreakShield;
   isStreakProtectedToday: boolean;
@@ -115,7 +115,7 @@ export function SkillsSection({
                   onActivate={onShieldModal}
                 />
               </View>
-              <Text style={styles.streakNumber}>{streak || 12}</Text>
+              <Text style={styles.streakNumber}>{streak ?? 0}</Text>
               <Text style={styles.streakLabel}>DAYS STREAK</Text>
             </View>
           </NeoBrutalCard>
@@ -184,7 +184,7 @@ export function SkillsSection({
         >
           <View style={[styles.bentoCard, { height: 140 }]}>
             <Text style={styles.card2Label}>NHIỆM VỤ</Text>
-            <Text style={styles.card2Number}>{pendingCount || 3}</Text>
+            <Text style={styles.card2Number}>{pendingCount}</Text>
             <Text style={styles.card2Sub}>Đang chờ</Text>
             <View style={styles.dotRow}>
               <View
@@ -230,18 +230,18 @@ export function SkillsSection({
                 borderRadius={4}
                 contentStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
               >
-                <Text style={styles.levelPillText}>LVL {level}</Text>
+                <Text style={styles.levelPillText}>LVL {level ?? '?'}</Text>
               </NeoBrutalAccent>
             </View>
             <Text style={styles.xpValue}>
-              {currentXP.toLocaleString()} / {targetXP.toLocaleString()} XP
+              {currentXP != null ? currentXP.toLocaleString() : '—'} / {targetXP != null ? targetXP.toLocaleString() : '—'} XP
             </Text>
             <Text style={styles.xpNextLabel}>
-              TIẾP THEO: CẤP {level + 1}
+              TIẾP THEO: CẤP {(level ?? 0) + 1}
             </Text>
             <XPShimmerBar percent={xpPercent} color={colors.brandPrimary} />
             <Text style={styles.xpUntilLabel}>
-              Còn {targetXP - currentXP} XP nữa để lên cấp
+              Còn {(targetXP ?? 0) - (currentXP ?? 0)} XP nữa để lên cấp
             </Text>
           </View>
         </NeoBrutalCard>

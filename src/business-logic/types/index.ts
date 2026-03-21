@@ -41,6 +41,7 @@ export interface UserProgress {
   last_active_date: string | null;
   last_login_at: string | null;
   onboarding_done: boolean;
+  primary_branch: Branch | null;
 }
 
 export interface DailyStats {

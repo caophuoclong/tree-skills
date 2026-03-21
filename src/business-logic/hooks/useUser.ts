@@ -8,11 +8,12 @@ import { useUserStore } from '../stores/userStore';
  * Mount this once at the app root (e.g. _layout.tsx).
  */
 export function useUser() {
-  const { setUser, isAuthenticated } = useUserStore();
+  const { setUser, isAuthenticated, sessionReady } = useUserStore();
 
   const { data: user, isLoading, isError } = useQuery({
     queryKey: ['user', 'me'],
     queryFn: () => userService.getMe(),
+    enabled: isAuthenticated && sessionReady,
     staleTime: 1000 * 60 * 5, // 5 min
     retry: 2,
   });

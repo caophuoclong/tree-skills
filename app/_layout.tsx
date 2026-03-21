@@ -11,18 +11,19 @@ import {
 } from "@expo-google-fonts/space-mono";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AppState, Text, View } from "react-native";
 import "react-native-reanimated";
 
 import { queryClient } from "@/src/business-logic/api/query-client";
 import { useAuth } from "@/src/business-logic/auth";
+import { useAppData } from "@/src/business-logic/hooks/useAppData";
 import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useRef } from "react";
 
 // Network mocks are disabled — the app now uses Supabase directly.
 // To re-enable local mocks: uncomment the block below.
@@ -59,7 +60,11 @@ function App() {
   const { addNotification } = useNotificationStore();
 
   // Supabase auth — listens to session + syncs profile → userStore
-  useAuth();
+  const { isAuthenticated } = useAuth();
+  const { isAuthLoading } = useUserStore();
+
+  // Fetch all app data from Supabase → Zustand stores
+  const { isLoading: isDataLoading } = useAppData();
 
   const [fontsLoaded] = useFonts({
     "SpaceGrotesk-Light": SpaceGrotesk_300Light,
@@ -71,14 +76,27 @@ function App() {
     "SpaceMono-Bold": SpaceMono_700Bold,
   });
 
+  // Redirect to auth screen when not authenticated
+  const hasRedirected = useRef(false);
+  useEffect(() => {
+    if (!fontsLoaded || isAuthLoading) return;
+    if (isAuthenticated) {
+      hasRedirected.current = false; // Reset when authenticated
+    } else if (!hasRedirected.current) {
+      hasRedirected.current = true;
+      console.log("[App] Not authenticated — redirecting to welcome");
+      router.replace("/(auth)/welcome");
+    }
+  }, [fontsLoaded, isAuthenticated, isAuthLoading]);
+
   // ── E2: Daily login bonus ──────────────────────────────────────────────────
-  // Fire once after fonts are ready, and again whenever the app foregrounds.
+  // Fire once after fonts are ready AND user is authenticated.
   // checkDailyLogin is idempotent — only triggers reward when date changes.
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsLoaded || !isAuthenticated) return;
     checkDailyLogin();
     const sub = AppState.addEventListener("change", (appState) => {
-      if (appState === "active") {
+      if (appState === "active" && isAuthenticated) {
         checkDailyLogin();
 
         // ── E7: Generate notifications ───────────────────────────────────────
@@ -115,7 +133,7 @@ function App() {
     });
     return () => sub.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fontsLoaded]);
+  }, [fontsLoaded, isAuthenticated]);
 
   // Hold render until fonts are loaded to prevent flash of unstyled text
   if (!fontsLoaded) {

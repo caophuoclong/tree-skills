@@ -3,9 +3,9 @@ import { NeoBrutalBox } from '@/src/ui/atoms';
 import { IColors, useTheme } from '@/src/ui/tokens';
 
 interface ProfileHeaderProps {
-  name: string;
-  level: number;
-  totalXP: number;
+  name: string | null;
+  level: number | null;
+  totalXP: number | null;
   initials: string;
 }
 
@@ -55,16 +55,16 @@ export function ProfileHeader({
           contentStyle={{ paddingHorizontal: 8, paddingVertical: 3 }}
         >
           <Text style={[styles.levelBadgeText, { color: colors.brandPrimary }]}>
-            LVL {level}
+            LVL {level ?? '?'}
           </Text>
         </NeoBrutalBox>
       </View>
 
       <Text style={[styles.userName, { color: colors.textPrimary }]}>
-        {name}
+        {name ?? ''}
       </Text>
       <Text style={[styles.userSubtitle, { color: colors.textSecondary }]}>
-        Level {level} · {totalXP.toLocaleString()} XP
+        Level {level ?? '?'} · {totalXP != null ? totalXP.toLocaleString() : '—'} XP
       </Text>
     </View>
   );

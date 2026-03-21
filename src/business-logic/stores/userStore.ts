@@ -7,8 +7,12 @@ interface UserStore {
   dailyStats: DailyStats;
   weeklyActivity: WeeklyDay[];
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  sessionReady: boolean;
   streakShield: StreakShield;
   setUser: (user: UserProgress) => void;
+  setAuthLoading: (loading: boolean) => void;
+  setSessionReady: (ready: boolean) => void;
   updateXP: (amount: number) => void;
   updateStamina: (value: number) => void;
   updateStreak: (streak: number) => void;
@@ -47,11 +51,25 @@ export const useUserStore = create<UserStore>((set) => ({
   dailyStats: DEFAULT_DAILY_STATS,
   weeklyActivity: getLast7Days(),
   isAuthenticated: false,
+  isAuthLoading: true,
+  sessionReady: false,
   levelUpReward: null,
   lastLoginDate: null,
   streakShield: { activatedDate: null, shieldsRemaining: 2 },
 
-  setUser: (user) => set({ user, isAuthenticated: true }),
+  setUser: (user) => {
+    console.log("[userStore] setUser called with:", user);
+    set({ user, isAuthenticated: true, isAuthLoading: false });
+    console.log("[userStore] After setUser, store state:", useUserStore.getState());
+  },
+
+  setAuthLoading: (loading) => set({ isAuthLoading: loading }),
+
+  setSessionReady: (ready) => {
+    console.log("[userStore] setSessionReady:", ready);
+    set({ sessionReady: ready });
+  },
+
   loginBonusReward: null,
 
   updateXP: (amount) =>
@@ -127,6 +145,9 @@ export const useUserStore = create<UserStore>((set) => ({
 
   checkDailyLogin: () =>
     set((state) => {
+      // Only show bonus when authenticated
+      if (!state.isAuthenticated || !state.user) return state;
+
       const today = new Date().toISOString().split('T')[0];
 
       // Already claimed today — skip
@@ -167,5 +188,5 @@ export const useUserStore = create<UserStore>((set) => ({
     return state.streakShield.activatedDate === today;
   },
 
-  logout: () => set({ user: null, isAuthenticated: false, dailyStats: DEFAULT_DAILY_STATS, weeklyActivity: getLast7Days(), levelUpReward: null, loginBonusReward: null, lastLoginDate: null, streakShield: { activatedDate: null, shieldsRemaining: 2 } }),
+  logout: () => set({ user: null, isAuthenticated: false, sessionReady: false, dailyStats: DEFAULT_DAILY_STATS, weeklyActivity: getLast7Days(), levelUpReward: null, loginBonusReward: null, lastLoginDate: null, streakShield: { activatedDate: null, shieldsRemaining: 2 } }),
 }));

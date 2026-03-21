@@ -3,7 +3,7 @@ import { NeoBrutalThemed } from '@/src/ui/atoms';
 import { IColors, useTheme } from '@/src/ui/tokens';
 
 interface Stat {
-  value: string | number;
+  value: string | number | null;
   label: string;
 }
 
@@ -28,7 +28,7 @@ export function ProfileStatsRow({ stats }: ProfileStatsRowProps) {
           contentStyle={styles.statContent}
         >
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-            {stat.value}
+            {stat.value ?? '—'}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>
             {stat.label}

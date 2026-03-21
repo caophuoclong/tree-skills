@@ -1,13 +1,11 @@
 import type { Branch, Quest } from "../../types";
 import { supabase } from "../supabase";
 
-async function getAuthUserId(): Promise<string> {
+async function getAuthUserId(): Promise<string | null> {
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
-  return user.id;
+  return user?.id ?? null;
 }
 
 /** Number of daily quests offered, scaled by stamina */
@@ -20,6 +18,8 @@ function dailyLimit(stamina: number): number {
 export const questService = {
   async getDaily(branch: Branch, stamina: number): Promise<Quest[]> {
     const userId = await getAuthUserId();
+    if (!userId) return [];
+
     const today = new Date().toISOString().split("T")[0];
     const limit = dailyLimit(stamina);
 
@@ -29,7 +29,7 @@ export const questService = {
       .select("*")
       .eq("branch", branch)
       .limit(limit * 3); // fetch extra pool so we can sample
-    if (qErr) throw qErr;
+    if (qErr) return [];
 
     // Fetch today's completions for this user
     const { data: completions } = await supabase
@@ -63,6 +63,7 @@ export const questService = {
 
   async complete(questId: string, xpEarned: number): Promise<void> {
     const userId = await getAuthUserId();
+    if (!userId) return;
     const today = new Date().toISOString().split("T")[0];
     await supabase.from("user_quests").insert({
       quest_id: questId,

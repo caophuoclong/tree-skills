@@ -1,9 +1,8 @@
 import { router } from "expo-router";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useChallenges } from "@/src/business-logic/hooks/useChallenges";
 import { useChallengeStore } from "@/src/business-logic/stores/challengeStore";
 import { useQuestsScreen } from "@/src/hooks/useQuestsScreen";
 import { Emoji, NeoBrutalAccent } from "@/src/ui/atoms";
@@ -28,17 +27,8 @@ export default function QuestsScreen() {
     handleComplete,
     setWellbeingDismissedDate,
   } = useQuestsScreen();
-  const { challenges: storeoChallenges, setChallenges } = useChallengeStore();
-  const { challenges: fetchedChallenges } = useChallenges();
-
-  // Sync fetched challenges into store
-  useEffect(() => {
-    if (fetchedChallenges.length > 0) {
-      setChallenges(fetchedChallenges);
-    }
-  }, [fetchedChallenges, setChallenges]);
-
-  const challenges = storeoChallenges;
+  // Challenges are fetched by useAppData at root — just read from store
+  const challenges = useChallengeStore((s) => s.challenges);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>

@@ -28,7 +28,8 @@ import {
 } from '@/src/ui/organisms';
 import { IColors, useTheme } from '@/src/ui/tokens';
 
-function getInitials(name: string): string {
+function getInitials(name: string | null): string {
+  if (!name) return '?';
   return name
     .split(' ')
     .map((w) => w[0] ?? '')
@@ -136,10 +137,10 @@ export default function ProfileScreen() {
         >
           <View style={[styles.accentBar, { backgroundColor: colors.warning }]} />
           <Text style={[styles.streakTitle, { color: colors.textPrimary }]}>
-            <Emoji size={18}>🔥</Emoji> STREAK: {streak} DAYS
+            <Emoji size={18}>🔥</Emoji> STREAK: {streak ?? 0} DAYS
           </Text>
           <Text style={[styles.streakBest, { color: colors.textSecondary }]}>
-            Best record: {bestStreak} days
+            Best record: {bestStreak ?? 0} days
           </Text>
         </NeoBrutalBox>
 

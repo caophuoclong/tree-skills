@@ -1,24 +1,23 @@
 import type { UserProgress } from "../../types";
 import { supabase } from "../supabase";
 
-async function getAuthUserId(): Promise<string> {
+async function getAuthUserId(): Promise<string | null> {
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
-  return user.id;
+  return user?.id ?? null;
 }
 
 export const userService = {
-  async getMe(): Promise<UserProgress> {
+  async getMe(): Promise<UserProgress | null> {
     const userId = await getAuthUserId();
+    if (!userId) return null;
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
-    if (error) throw error;
+    if (error || !data) return null;
     return {
       user_id: data.id,
       name: data.name,
@@ -33,11 +32,13 @@ export const userService = {
       last_active_date: data.last_active_date,
       last_login_at: data.last_active_date,
       onboarding_done: data.onboarding_done,
+      primary_branch: data.primary_branch,
     };
   },
 
-  async update(patch: Partial<UserProgress>): Promise<UserProgress> {
+  async update(patch: Partial<UserProgress>): Promise<UserProgress | null> {
     const userId = await getAuthUserId();
+    if (!userId) return null;
     const dbPatch: Record<string, unknown> = {};
     if (patch.name !== undefined) dbPatch.name = patch.name;
     if (patch.avatar_url !== undefined) dbPatch.avatar_url = patch.avatar_url;
@@ -63,7 +64,7 @@ export const userService = {
       .eq("id", userId)
       .select()
       .single();
-    if (error) throw error;
+    if (error || !data) return null;
     return {
       user_id: data.id,
       name: data.name,
@@ -78,6 +79,7 @@ export const userService = {
       last_active_date: data.last_active_date,
       last_login_at: data.last_active_date,
       onboarding_done: data.onboarding_done,
+      primary_branch: data.primary_branch,
     };
   },
 };

@@ -1,52 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useMemo } from "react";
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import React, { useCallback, useMemo } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useBranches } from "@/src/business-logic/hooks/useBranches";
 import { useCustomSkillTreeStore } from "@/src/business-logic/stores/customSkillTreeStore";
 import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
-import { useSkillTree } from "@/src/business-logic/hooks/useSkillTree";
-import type { Branch, SkillNode } from "@/src/business-logic/types";
+import type { SkillNode } from "@/src/business-logic/types";
+import { useTreeLayout } from "@/src/hooks/useTreeLayout";
 import { Emoji, NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
+import { SkillTreeHeader } from "@/src/ui/molecules/SkillTreeHeader";
 import { GoalFilterSection } from "@/src/ui/organisms/GoalFilterSection";
-import { SkillTreeCanvas } from "@/src/ui/organisms/SkillTreeCanvas";
 import { GoalOverviewSheet } from "@/src/ui/organisms/GoalOverviewSheet";
 import { ProgressBar } from "@/src/ui/organisms/ProgressBar";
-import { SkillTreeHeader } from "@/src/ui/molecules/SkillTreeHeader";
+import { SkillTreeCanvas } from "@/src/ui/organisms/SkillTreeCanvas";
 import { useTheme } from "@/src/ui/tokens";
-import { useTreeLayout } from "@/src/hooks/useTreeLayout";
-
-const { width: SW } = Dimensions.get("window");
-
-// ─── Branch tabs ───────────────────────────────────────────────────────────────
-const BRANCHES: { id: Branch; label: string }[] = [
-  { id: "career", label: "Sự nghiệp" },
-  { id: "finance", label: "Tài chính" },
-  { id: "softskills", label: "Kỹ năng mềm" },
-  { id: "wellbeing", label: "Sức khỏe" },
-];
-
-const BRANCH_NAME: Record<Branch, string> = {
-  career: "Tech & Career",
-  finance: "Finance & Money",
-  softskills: "Communication",
-  wellbeing: "Health & Mind",
-};
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
 export default function TreeScreen() {
   const { colors } = useTheme();
-  const { nodes, activeBranch, setNodes, setActiveBranch } =
-    useSkillTreeStore();
+  const { nodes, activeBranch, setActiveBranch } = useSkillTreeStore();
   const { dailyQuests } = useQuestStore();
-  const { nodes: fetchedNodes } = useSkillTree(); // Fetch via service
+  // Data is fetched by useAppData at root — no need to call useSkillTree here
+  const { branches: BRANCHES, branchMeta: BRANCH_META } = useBranches();
   const [showOnlyCustom, setShowOnlyCustom] = React.useState(false);
   const [goalSheetId, setGoalSheetId] = React.useState<string | null>(null);
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(
@@ -58,12 +36,12 @@ export default function TreeScreen() {
     initWithDemoData,
   } = useCustomSkillTreeStore();
 
-  // useSkillTree already syncs fetchedNodes → skillTreeStore via setNodes()
-  // initWithDemoData seeds the custom tree store on first mount
-  useEffect(() => {
-    initWithDemoData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // // useSkillTree already syncs fetchedNodes → skillTreeStore via setNodes()
+  // // initWithDemoData seeds the custom tree store on first mount
+  // useEffect(() => {
+  //   initWithDemoData();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   const colorMap = useMemo(
     () => ({
@@ -199,9 +177,9 @@ export default function TreeScreen() {
       <ProgressBar
         branchName={
           goalFilterActive
-            ? customTrees.find((t) => t.id === selectedGoalId)?.goal ??
-              "Lộ trình"
-            : BRANCH_NAME[activeBranch]
+            ? (customTrees.find((t) => t.id === selectedGoalId)?.goal ??
+              "Lộ trình")
+            : BRANCH_META[activeBranch].labelEn
         }
         done={done}
         total={countBase.length}

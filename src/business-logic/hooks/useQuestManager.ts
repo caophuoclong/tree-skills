@@ -33,22 +33,23 @@ export function useQuestManager(): QuestManagerResult {
     completeQuest: storeComplete,
     resetQuests,
   } = useQuestStore();
-  const { user, incrementDailyQuestCount } = useUserStore();
+  const { user, incrementDailyQuestCount, isAuthenticated, sessionReady } = useUserStore();
   const { addXP } = useXPEngine();
   const { xpMultiplier, canComplete, onQuestComplete } = useStaminaSystem();
   const { recordActivity } = useGrowthStreak();
 
   // Determine primary branch and stamina
-  const primaryBranch = user
-    ? ((user as unknown as { primaryBranch?: Branch }).primaryBranch ??
-      "career")
-    : "career";
+  const primaryBranch = user?.primary_branch ?? "career";
   const stamina = user?.stamina ?? 100;
+
+  // Only fetch when authenticated and session ready
+  const canFetch = isAuthenticated && sessionReady;
 
   // Fetch quests from API via service
   const { data: fetchedQuests, isLoading } = useQuery({
     queryKey: ["quests", "daily", primaryBranch, stamina],
     queryFn: () => questService.getDaily(primaryBranch, stamina),
+    enabled: canFetch,
     staleTime: 1000 * 60 * 5, // 5 min cache
   });
 

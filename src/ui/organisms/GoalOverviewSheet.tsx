@@ -2,27 +2,7 @@ import React from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import type { Branch } from "@/src/business-logic/types";
 import type { CustomSkillTree } from "@/src/business-logic/stores/customSkillTreeStore";
-
-const BRANCH_COLOR: Record<Branch, string> = {
-  career: "#7C6AF7",
-  finance: "#22C55E",
-  softskills: "#F59E0B",
-  wellbeing: "#EC4899",
-};
-
-const BRANCH_LABEL: Record<Branch, string> = {
-  career: "Sự nghiệp",
-  finance: "Tài chính",
-  softskills: "Kỹ năng mềm",
-  wellbeing: "Sức khỏe",
-};
-
-const BRANCH_EMOJI_MAP: Record<Branch, string> = {
-  career: "💼",
-  finance: "💰",
-  softskills: "💬",
-  wellbeing: "🧘",
-};
+import { useBranches } from "@/src/business-logic/hooks/useBranches";
 
 interface GoalOverviewSheetProps {
   visible: boolean;
@@ -39,6 +19,7 @@ export function GoalOverviewSheet({
   onClose,
   onBranchSelect,
 }: GoalOverviewSheetProps) {
+  const { branchMeta } = useBranches();
   if (!goalTree) return null;
 
   // Group clusters by branch
@@ -84,7 +65,7 @@ export function GoalOverviewSheet({
                 typeof goalTree.clusters,
               ][]
             ).map(([branch, clusters]) => {
-              const col = BRANCH_COLOR[branch];
+              const col = branchMeta[branch].color;
               const totalSkills = clusters.reduce(
                 (s, c) => s + c.skills.length,
                 0,
@@ -105,10 +86,10 @@ export function GoalOverviewSheet({
                     ]}
                   >
                     <Text style={{ fontSize: 16 }}>
-                      {BRANCH_EMOJI_MAP[branch]}
+                      {branchMeta[branch].emoji}
                     </Text>
                     <Text style={[styles.goalBranchLabel, { color: col }]}>
-                      {BRANCH_LABEL[branch]}
+                      {branchMeta[branch].label}
                     </Text>
                     <Text
                       style={[

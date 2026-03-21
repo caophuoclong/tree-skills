@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { NeoBrutalBox } from '@/src/ui/atoms';
+import { useBranches } from '@/src/business-logic/hooks/useBranches';
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import { useTheme } from '@/src/ui/tokens';
 import type { RoadmapMilestone, TimeHorizon, Branch } from '@/src/business-logic/types';
@@ -20,14 +21,6 @@ interface RoadmapHorizonSectionProps {
   onDelete: (id: string) => void;
   onAddMilestone: (title: string, branch: Branch) => void;
 }
-
-// Branch emoji and color mapping
-const BRANCH_CONFIG: Record<Branch, { emoji: string; icon: string }> = {
-  career: { emoji: '💼', icon: 'briefcase' },
-  finance: { emoji: '💰', icon: 'wallet' },
-  softskills: { emoji: '🧠', icon: 'bulb' },
-  wellbeing: { emoji: '🌱', icon: 'leaf' },
-};
 
 // Horizon labels
 const HORIZON_LABELS: Record<TimeHorizon, string> = {
@@ -44,6 +37,7 @@ export function RoadmapHorizonSection({
   onAddMilestone,
 }: RoadmapHorizonSectionProps) {
   const { colors } = useTheme();
+  const { branchMeta, branches: branchList } = useBranches();
   const [showAddForm, setShowAddForm] = useState(false);
   const [formTitle, setFormTitle] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<Branch>('career');
@@ -90,7 +84,7 @@ export function RoadmapHorizonSection({
           milestones.map((milestone) => {
             const branchColor =
               colors[milestone.branch as keyof typeof colors] || colors.brandPrimary;
-            const branchEmoji = BRANCH_CONFIG[milestone.branch].emoji;
+            const branchEmoji = branchMeta[milestone.branch as keyof typeof branchMeta]?.emoji ?? '📌';
 
             return (
               <NeoBrutalBox
@@ -206,9 +200,9 @@ export function RoadmapHorizonSection({
 
           {/* Branch selector (4 pills) */}
           <View style={styles.branchSelector}>
-            {(Object.keys(BRANCH_CONFIG) as Branch[]).map((branch) => {
+            {branchList.map(({ id: branch }) => {
               const isSelected = selectedBranch === branch;
-              const branchEmoji = BRANCH_CONFIG[branch].emoji;
+              const branchEmoji = branchMeta[branch].emoji;
               const branchColor = colors[branch as keyof typeof colors];
 
               return (

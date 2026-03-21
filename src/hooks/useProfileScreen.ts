@@ -13,11 +13,11 @@ export function useProfileScreen() {
   const nodes = useSkillTreeStore((s) => s.nodes);
   const premiumShimmer = useRef(new Animated.Value(-1)).current;
 
-  const name = user?.name ?? 'Alex Kim';
-  const level = user?.level ?? 4;
-  const currentXP = user?.current_xp_in_level ?? 1240;
-  const streak = user?.streak ?? 12;
-  const bestStreak = user?.best_streak ?? 19;
+  const name = user?.name ?? null;
+  const level = user?.level ?? null;
+  const currentXP = user?.current_xp_in_level ?? null;
+  const streak = user?.streak ?? null;
+  const bestStreak = user?.best_streak ?? null;
 
   const getBranchPercent = (branch: Branch): number => {
     const bn = nodes.filter((n) => n.branch === branch);
@@ -25,10 +25,12 @@ export function useProfileScreen() {
     return Math.round((bn.filter((n) => n.status === 'completed').length / bn.length) * 100);
   };
 
-  const careerPct = getBranchPercent('career') || 80;
-  const financePct = getBranchPercent('finance') || 60;
-  const softPct = getBranchPercent('softskills') || 40;
-  const wellPct = getBranchPercent('wellbeing') || 30;
+  const careerPct = getBranchPercent('career');
+  const financePct = getBranchPercent('finance');
+  const softPct = getBranchPercent('softskills');
+  const wellPct = getBranchPercent('wellbeing');
+
+  const streakValue = streak ?? 0;
 
   const milestones = useMemo(
     () => [
@@ -37,7 +39,7 @@ export function useProfileScreen() {
         title: 'Tân binh',
         description: 'Đạt 3 ngày liên tiếp',
         icon: 'medal-outline',
-        unlocked: streak >= 3,
+        unlocked: streakValue >= 3,
         color: colors.career,
       },
       {
@@ -45,7 +47,7 @@ export function useProfileScreen() {
         title: 'Kiên trì',
         description: 'Đạt 7 ngày liên tiếp',
         icon: 'ribbon-outline',
-        unlocked: streak >= 7,
+        unlocked: streakValue >= 7,
         color: colors.finance,
       },
       {
@@ -53,7 +55,7 @@ export function useProfileScreen() {
         title: 'Kỷ luật',
         description: 'Đạt 14 ngày liên tiếp',
         icon: 'shield-checkmark-outline',
-        unlocked: streak >= 14,
+        unlocked: streakValue >= 14,
         color: colors.softskills,
       },
       {
@@ -61,7 +63,7 @@ export function useProfileScreen() {
         title: 'Huyền thoại',
         description: 'Đạt 30 ngày liên tiếp',
         icon: 'star-outline',
-        unlocked: streak >= 30,
+        unlocked: streakValue >= 30,
         color: colors.wellbeing,
       },
       {
@@ -97,17 +99,20 @@ export function useProfileScreen() {
         color: colors.wellbeing,
       },
     ],
-    [streak, careerPct, financePct, softPct, wellPct, colors],
+    [streakValue, careerPct, financePct, softPct, wellPct, colors],
   );
+
+  // Count completed branches
+  const branchesCompleted = [careerPct, financePct, softPct, wellPct].filter(p => p >= 100).length;
 
   const stats = useMemo(
     () => [
-      { value: '47', label: 'QUESTS\nDONE' },
-      { value: '23', label: 'ACTIVE\nDAYS' },
+      { value: null, label: 'QUESTS\nDONE' },
+      { value: null, label: 'ACTIVE\nDAYS' },
       { value: bestStreak, label: 'BEST\nSTREAK' },
-      { value: '3/4', label: 'BRANCHES\nDONE' },
+      { value: branchesCompleted > 0 ? `${branchesCompleted}/4` : null, label: 'BRANCHES\nDONE' },
     ],
-    [bestStreak],
+    [bestStreak, branchesCompleted],
   );
 
   useEffect(() => {

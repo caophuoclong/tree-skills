@@ -1,0 +1,11 @@
+[functions.generate-skills]
+verify_jwt = true
+
+[functions.generate-quests]
+verify_jwt = true
+
+[functions.generate-challenges]
+verify_jwt = true
+
+[functions.analyze-assessment]
+verify_jwt = true

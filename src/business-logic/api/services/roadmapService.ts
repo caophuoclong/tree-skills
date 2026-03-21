@@ -1,13 +1,11 @@
 import type { Branch, RoadmapMilestone, TimeHorizon } from "../../types";
 import { supabase } from "../supabase";
 
-async function getAuthUserId(): Promise<string> {
+async function getAuthUserId(): Promise<string | null> {
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
-  return user.id;
+  return user?.id ?? null;
 }
 
 function toHorizonDate(horizon: TimeHorizon): string {
@@ -38,12 +36,13 @@ function toMilestone(row: {
 export const roadmapService = {
   async getAll(): Promise<RoadmapMilestone[]> {
     const userId = await getAuthUserId();
+    if (!userId) return [];
     const { data, error } = await supabase
       .from("roadmap_milestones")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
-    if (error) throw error;
+    if (error) return [];
     return (data ?? []).map(toMilestone);
   },
 
@@ -51,8 +50,9 @@ export const roadmapService = {
     title: string,
     branch: Branch,
     horizon: TimeHorizon,
-  ): Promise<RoadmapMilestone> {
+  ): Promise<RoadmapMilestone | null> {
     const userId = await getAuthUserId();
+    if (!userId) return null;
     const { data, error } = await supabase
       .from("roadmap_milestones")
       .insert({
@@ -65,14 +65,14 @@ export const roadmapService = {
       })
       .select()
       .single();
-    if (error) throw error;
+    if (error || !data) return null;
     return toMilestone(data);
   },
 
   async update(
     id: string,
     patch: Partial<RoadmapMilestone>,
-  ): Promise<RoadmapMilestone> {
+  ): Promise<RoadmapMilestone | null> {
     const dbPatch: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
@@ -87,15 +87,16 @@ export const roadmapService = {
       .eq("id", id)
       .select()
       .single();
-    if (error) throw error;
+    if (error || !data) return null;
     return toMilestone(data);
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
+    const userId = await getAuthUserId();
+    if (!userId) return;
+    await supabase
       .from("roadmap_milestones")
       .delete()
       .eq("id", id);
-    if (error) throw error;
   },
 };

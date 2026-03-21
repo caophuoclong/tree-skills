@@ -91,14 +91,15 @@ export function useHomeScreen() {
     });
   })();
 
-  // Derived values
-  const name = user?.name ?? "Alex Kim";
-  const level = user?.level ?? 4;
-  const currentXP = user?.current_xp_in_level ?? 1240;
-  const targetXP = user?.xp_to_next_level ?? 1500;
-  const xpPercent = (currentXP / targetXP) * 100;
+  // Derived values — no hardcoded fallbacks, use null when data isn't loaded
+  const name = user?.name ?? null;
+  const level = user?.level ?? null;
+  const currentXP = user?.current_xp_in_level ?? null;
+  const targetXP = user?.xp_to_next_level ?? null;
+  const xpPercent = currentXP !== null && targetXP !== null ? (currentXP / targetXP) * 100 : 0;
   const pendingCount = quests.filter((q) => q.completed_at === null).length;
 
+  // Branch progress — 0% when no nodes loaded yet
   const careerPct =
     branchProgress.find((b) => b.branch === "career")?.percent ?? 0;
   const financePct =

@@ -2,15 +2,18 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roadmapService } from '../api/services/roadmapService';
 import { useRoadmapStore } from '../stores/roadmapStore';
+import { useUserStore } from '../stores/userStore';
 import type { Branch, TimeHorizon } from '../types';
 
 export function useRoadmap() {
   const { setMilestones, toggleMilestone, deleteMilestone } = useRoadmapStore();
+  const { isAuthenticated, sessionReady } = useUserStore();
   const queryClient = useQueryClient();
 
   const { data: milestones = [], isLoading } = useQuery({
     queryKey: ['roadmap', 'milestones'],
     queryFn: () => roadmapService.getAll(),
+    enabled: isAuthenticated && sessionReady,
     staleTime: 1000 * 60 * 5,
   });
 

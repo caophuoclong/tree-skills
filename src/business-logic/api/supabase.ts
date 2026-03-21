@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import "react-native-url-polyfill/auto";
 import type { Database } from "./supabase/database.types";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
@@ -19,6 +21,7 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      storage: AsyncStorage,
     },
   },
 );

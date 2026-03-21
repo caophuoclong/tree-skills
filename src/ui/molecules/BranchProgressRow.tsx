@@ -7,12 +7,7 @@ import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 import type { Branch } from '@/src/business-logic/types';
 
-const BRANCH_LABELS: Record<Branch, string> = {
-  career: 'Career',
-  finance: 'Finance',
-  softskills: 'Soft Skills',
-  wellbeing: 'Well-being',
-};
+import { useBranches } from '@/src/business-logic/hooks/useBranches';
 
 interface BranchProgressRowProps {
   branch: Branch;
@@ -28,6 +23,7 @@ const getBranchColors = (colors: any): Record<string, string> => ({
 
 export function BranchProgressRow({ branch, percent }: BranchProgressRowProps) {
   const { colors } = useTheme();
+  const { branchMeta } = useBranches();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const color = BranchColors[branch as string];
@@ -37,7 +33,7 @@ export function BranchProgressRow({ branch, percent }: BranchProgressRowProps) {
       <View style={styles.labelRow}>
         <View style={[styles.dot, { backgroundColor: color }]} />
         <AppText variant="caption" color={colors.textSecondary}>
-          {BRANCH_LABELS[branch]}
+          {branchMeta[branch]?.label ?? branch}
         </AppText>
         <AppText variant="caption" color={color} style={styles.percent}>
           {percent}%
