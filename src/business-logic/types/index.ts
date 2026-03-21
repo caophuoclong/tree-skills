@@ -15,6 +15,7 @@ export interface SkillNode {
   quests_total: number;
   quests_completed: number;
   isLocked: boolean;
+  tier_order?: number;
 }
 
 export interface Quest {

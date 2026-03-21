@@ -11,10 +11,10 @@ import {
 } from "@expo-google-fonts/space-mono";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { AppState, Text, View } from "react-native";
+import { AppState, Text } from "react-native";
 import "react-native-reanimated";
 
 import { queryClient } from "@/src/business-logic/api/query-client";
@@ -60,6 +60,8 @@ export const unstable_settings = {
 function App() {
   const { isDark, colors } = useTheme();
   const checkDailyLogin = useUserStore((s) => s.checkDailyLogin);
+  const splashHidden = useRef(false);
+
   const { user } = useUserStore();
   const { addNotification } = useNotificationStore();
 
@@ -126,9 +128,10 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fontsLoaded, isAuthenticated]);
 
-  // Hide splash screen once fonts and data are ready
+  // Hide splash screen once fonts and data are ready (only once)
   useEffect(() => {
-    if (fontsLoaded && !isDataLoading) {
+    if (fontsLoaded && !isDataLoading && !splashHidden.current) {
+      splashHidden.current = true;
       SplashScreen.hide();
     }
   }, [fontsLoaded, isDataLoading]);

@@ -1,13 +1,13 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { skillTreeService } from "../api/services/skillTreeService";
-import { questService } from "../api/services/questService";
-import { challengeService } from "../api/services/challengeService";
+import { useEffect } from "react";
 import { branchService } from "../api/services/branchService";
-import { useSkillTreeStore } from "../stores/skillTreeStore";
-import { useQuestStore } from "../stores/questStore";
+import { challengeService } from "../api/services/challengeService";
+import { questService } from "../api/services/questService";
+import { skillTreeService } from "../api/services/skillTreeService";
 import { useChallengeStore } from "../stores/challengeStore";
+import { useQuestStore } from "../stores/questStore";
+import { useSkillTreeStore } from "../stores/skillTreeStore";
 import { useUserStore } from "../stores/userStore";
 
 function isAuthError(error: unknown): boolean {
@@ -42,8 +42,6 @@ export function useAppData() {
 
   // Only enable queries when auth is complete AND session is ready
   const canFetchData = sessionReady && isAuthenticated && !isAuthLoading;
-
-  console.log("[useAppData] isAuthLoading:", isAuthLoading, "isAuthenticated:", isAuthenticated, "sessionReady:", sessionReady, "user:", user?.user_id, "canFetchData:", canFetchData);
 
   // Fetch skill tree nodes
   const skillTreeQuery = useQuery({
@@ -80,25 +78,32 @@ export function useAppData() {
     retry: false,
   });
 
-  console.log("[useAppData] Query states:", {
-    skillTree: { isLoading: skillTreeQuery.isLoading, isError: skillTreeQuery.isError, dataLen: skillTreeQuery.data?.length },
-    quests: { isLoading: questsQuery.isLoading, isError: questsQuery.isError, dataLen: questsQuery.data?.length },
-    challenges: { isLoading: challengesQuery.isLoading, isError: challengesQuery.isError, dataLen: challengesQuery.data?.length },
-    branches: { isLoading: branchesQuery.isLoading, isError: branchesQuery.isError, dataLen: branchesQuery.data?.length },
-  });
-
   // Handle auth errors — redirect to login
   useEffect(() => {
-    if (skillTreeQuery.isError && isAuthError(skillTreeQuery.error)) handleAuthError();
-    if (questsQuery.isError && isAuthError(questsQuery.error)) handleAuthError();
-    if (challengesQuery.isError && isAuthError(challengesQuery.error)) handleAuthError();
-  }, [skillTreeQuery.isError, skillTreeQuery.error, questsQuery.isError, questsQuery.error, challengesQuery.isError, challengesQuery.error]);
+    if (skillTreeQuery.isError && isAuthError(skillTreeQuery.error))
+      handleAuthError();
+    if (questsQuery.isError && isAuthError(questsQuery.error))
+      handleAuthError();
+    if (challengesQuery.isError && isAuthError(challengesQuery.error))
+      handleAuthError();
+  }, [
+    skillTreeQuery.isError,
+    skillTreeQuery.error,
+    questsQuery.isError,
+    questsQuery.error,
+    challengesQuery.isError,
+    challengesQuery.error,
+  ]);
 
   // Log errors
-  if (skillTreeQuery.isError) console.error("[useAppData] skillTree error:", skillTreeQuery.error);
-  if (questsQuery.isError) console.error("[useAppData] quests error:", questsQuery.error);
-  if (challengesQuery.isError) console.error("[useAppData] challenges error:", challengesQuery.error);
-  if (branchesQuery.isError) console.error("[useAppData] branches error:", branchesQuery.error);
+  if (skillTreeQuery.isError)
+    console.error("[useAppData] skillTree error:", skillTreeQuery.error);
+  if (questsQuery.isError)
+    console.error("[useAppData] quests error:", questsQuery.error);
+  if (challengesQuery.isError)
+    console.error("[useAppData] challenges error:", challengesQuery.error);
+  if (branchesQuery.isError)
+    console.error("[useAppData] branches error:", branchesQuery.error);
 
   // Sync skill tree nodes → Zustand store
   useEffect(() => {
@@ -122,7 +127,6 @@ export function useAppData() {
   useEffect(() => {
     const challenges = challengesQuery.data;
     if (challenges && challenges.length > 0) {
-      console.log("[useAppData] Syncing challenges to store:", challenges.length);
       setChallenges(challenges);
     }
   }, [challengesQuery.data, setChallenges]);

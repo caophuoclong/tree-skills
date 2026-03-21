@@ -1,9 +1,10 @@
 import type { Session, User } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { supabase } from "../api/supabase";
 import type { Tables } from "../api/supabase/database.types";
 import { useUserStore } from "../stores/userStore";
+import { computeLevel } from "../hooks/useXPEngine";
 
 type ProfileRow = Tables<"profiles">;
 
@@ -57,10 +58,15 @@ export function useAuth(): AuthState {
 
       setSession(data.session);
       if (data.session?.user) {
-        console.log("[useAuth] Session found on mount, user:", data.session.user.id);
+        console.log(
+          "[useAuth] Session found on mount, user:",
+          data.session.user.id,
+        );
         fetchProfile(data.session.user.id);
       } else {
-        console.log("[useAuth] No session found on mount — user needs to login");
+        console.log(
+          "[useAuth] No session found on mount — user needs to login",
+        );
         setSessionReady(false);
         setIsLoading(false);
         setAuthLoading(false);
@@ -70,7 +76,12 @@ export function useAuth(): AuthState {
     // 2. Subscribe to auth state changes (sign in, sign out, token refresh)
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("[useAuth] Auth state change:", event, "hasSession:", !!newSession);
+        console.log(
+          "[useAuth] Auth state change:",
+          event,
+          "hasSession:",
+          !!newSession,
+        );
         setSession(newSession);
 
         if (event === "SIGNED_OUT") {
@@ -84,7 +95,9 @@ export function useAuth(): AuthState {
 
         if (event === "TOKEN_REFRESHED") {
           if (!newSession) {
-            console.warn("[useAuth] Token refresh failed — redirecting to login");
+            console.warn(
+              "[useAuth] Token refresh failed — redirecting to login",
+            );
             handleAuthFailure();
             return;
           }
@@ -117,15 +130,17 @@ export function useAuth(): AuthState {
     console.log("[useAuth] Profile fetch result:", { data, error });
     if (data && !error) {
       setProfile(data);
+      // Recompute level from total_xp to ensure consistency
+      const { level, currentXP, xpToNext } = computeLevel(data.total_xp);
       // Sync Supabase profile → Zustand userStore
       const userData = {
         user_id: data.id,
         name: data.name,
         avatar_url: data.avatar_url,
-        level: data.level,
+        level,
         total_xp: data.total_xp,
-        current_xp_in_level: data.current_xp_in_level,
-        xp_to_next_level: data.xp_to_next_level,
+        current_xp_in_level: currentXP,
+        xp_to_next_level: xpToNext,
         streak: data.streak,
         best_streak: data.best_streak,
         stamina: data.stamina,
@@ -134,21 +149,18 @@ export function useAuth(): AuthState {
         onboarding_done: data.onboarding_done,
         primary_branch: data.primary_branch,
       };
-      console.log("[useAuth] Setting user in store:", userData);
       setUser(userData);
       // Mark session as ready for data fetching
       setSessionReady(true);
 
       // Redirect based on onboarding status
       if (!data.onboarding_done) {
-        console.log("[useAuth] Onboarding not done — redirecting to onboarding");
         try {
           router.replace("/(auth)/onboarding");
         } catch {
           // Router might not be ready yet
         }
       } else {
-        console.log("[useAuth] Onboarding done — redirecting to tabs");
         try {
           router.replace("/(tabs)");
         } catch {

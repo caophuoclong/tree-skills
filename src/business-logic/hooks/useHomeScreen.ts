@@ -94,9 +94,15 @@ export function useHomeScreen() {
   // Derived values — no hardcoded fallbacks, use null when data isn't loaded
   const name = user?.name ?? null;
   const level = user?.level ?? null;
-  const currentXP = user?.current_xp_in_level ?? null;
+  // Clamp currentXP so it never exceeds targetXP in display
+  const rawCurrentXP = user?.current_xp_in_level ?? null;
   const targetXP = user?.xp_to_next_level ?? null;
-  const xpPercent = currentXP !== null && targetXP !== null ? (currentXP / targetXP) * 100 : 0;
+  const currentXP = rawCurrentXP !== null && targetXP !== null
+    ? Math.min(rawCurrentXP, targetXP)
+    : rawCurrentXP;
+  const xpPercent = currentXP !== null && targetXP !== null && targetXP > 0
+    ? Math.min((currentXP / targetXP) * 100, 100)
+    : 0;
   const pendingCount = quests.filter((q) => q.completed_at === null).length;
 
   // Branch progress — 0% when no nodes loaded yet

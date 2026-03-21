@@ -8,6 +8,7 @@
 import { NeoBrutalAccent, NeoBrutalBox } from '@/src/ui/atoms';
 import { useUserStore } from '@/src/business-logic/stores/userStore';
 import { dailyBonusService } from '@/src/business-logic/api/services/dailyBonusService';
+import { userService } from '@/src/business-logic/api/services/userService';
 import { useTheme } from '@/src/ui/tokens';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
@@ -64,10 +65,22 @@ export function LoginBonusModal() {
     if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
     if (reward !== null) {
       updateXP(reward);
-      // Persist to Supabase (fire-and-forget)
+      // Persist to Supabase
       dailyBonusService.recordBonus(reward, streak).catch((err) => {
         if (__DEV__) console.warn("[dailyBonusService.recordBonus]", err);
       });
+      // Persist updated profile XP/level to Supabase
+      const updatedUser = useUserStore.getState().user;
+      if (updatedUser) {
+        userService.update({
+          total_xp: updatedUser.total_xp,
+          level: updatedUser.level,
+          current_xp_in_level: updatedUser.current_xp_in_level,
+          xp_to_next_level: updatedUser.xp_to_next_level,
+        }).catch((err) => {
+          if (__DEV__) console.warn("[userService.update bonus]", err);
+        });
+      }
       setReward(null);
     }
   }, [reward, streak, updateXP, setReward]);

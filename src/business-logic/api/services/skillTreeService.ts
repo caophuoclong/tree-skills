@@ -43,6 +43,7 @@ export const skillTreeService = {
       status: row.status,
       quests_completed: row.quests_completed,
       isLocked: row.is_locked,
+      tier_order: row.tier_order ?? 0,
     }));
   },
 
@@ -104,6 +105,7 @@ export const skillTreeService = {
         status: userNode?.status ?? "locked",
         quests_completed: userNode?.quests_completed ?? 0,
         isLocked,
+        tier_order: node.tier_order ?? 0,
       };
     });
   },

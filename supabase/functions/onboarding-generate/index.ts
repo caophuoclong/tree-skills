@@ -444,6 +444,9 @@ Return JSON: { "nodes": [{ "node_id", "branch", "tier", "title", "description", 
         })),
       );
 
+      // Regenerate tier dependencies to include new nodes
+      await (supabase as any).rpc("generate_tier_dependencies");
+
       // Create user_skill_nodes for first 3 nodes (unlock them)
       const nodesToUnlock = skillsToInsert.slice(0, 3);
       await supabase.from("user_skill_nodes").upsert(

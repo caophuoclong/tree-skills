@@ -1,5 +1,6 @@
 import type { UserProgress } from "../../types";
 import { supabase } from "../supabase";
+import { computeLevel } from "../../hooks/useXPEngine";
 
 async function getAuthUserId(): Promise<string | null> {
   const {
@@ -18,14 +19,15 @@ export const userService = {
       .eq("id", userId)
       .single();
     if (error || !data) return null;
+    const { level, currentXP, xpToNext } = computeLevel(data.total_xp);
     return {
       user_id: data.id,
       name: data.name,
       avatar_url: data.avatar_url,
-      level: data.level,
+      level,
       total_xp: data.total_xp,
-      current_xp_in_level: data.current_xp_in_level,
-      xp_to_next_level: data.xp_to_next_level,
+      current_xp_in_level: currentXP,
+      xp_to_next_level: xpToNext,
       streak: data.streak,
       best_streak: data.best_streak,
       stamina: data.stamina,
@@ -65,14 +67,15 @@ export const userService = {
       .select()
       .single();
     if (error || !data) return null;
+    const { level: lvl, currentXP: cxp, xpToNext: xpn } = computeLevel(data.total_xp);
     return {
       user_id: data.id,
       name: data.name,
       avatar_url: data.avatar_url,
-      level: data.level,
+      level: lvl,
       total_xp: data.total_xp,
-      current_xp_in_level: data.current_xp_in_level,
-      xp_to_next_level: data.xp_to_next_level,
+      current_xp_in_level: cxp,
+      xp_to_next_level: xpn,
       streak: data.streak,
       best_streak: data.best_streak,
       stamina: data.stamina,

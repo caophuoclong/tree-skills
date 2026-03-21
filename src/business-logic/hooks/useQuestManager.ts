@@ -8,6 +8,7 @@ import type { Branch, Quest } from "../types";
 import { useGrowthStreak } from "./useGrowthStreak";
 import { useStaminaSystem } from "./useStaminaSystem";
 import { useXPEngine } from "./useXPEngine";
+import { queryClient } from "../api/query-client";
 
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
@@ -76,7 +77,11 @@ export function useQuestManager(): QuestManagerResult {
       storeComplete(questId);
 
       // Persist quest completion to Supabase (fire-and-forget)
-      questService.complete(questId, xpEarned).catch((err) => {
+      questService.complete(questId, xpEarned).then(() => {
+        // After DB write completes, invalidate queries so home screen data refreshes
+        queryClient.invalidateQueries({ queryKey: ["skill-tree"] });
+        queryClient.invalidateQueries({ queryKey: ["quests"] });
+      }).catch((err) => {
         if (__DEV__) console.warn("[questService.complete]", err);
       });
 

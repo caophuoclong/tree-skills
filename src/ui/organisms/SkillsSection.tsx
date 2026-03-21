@@ -3,19 +3,14 @@
  * Extracted from index.tsx for maintainability
  */
 
-import {
-  Emoji,
-  NeoBrutalAccent,
-  NeoBrutalCard,
-} from "@/src/ui/atoms";
+import type { StreakShield } from "@/src/business-logic/types";
+import { Emoji, NeoBrutalAccent, NeoBrutalCard } from "@/src/ui/atoms";
 import { ProgressRing } from "@/src/ui/molecules/ProgressRing";
-import { XPShimmerBar } from "@/src/ui/molecules/XPShimmerBar";
 import { StreakShieldBadge } from "@/src/ui/molecules/StreakShieldBadge";
+import { XPShimmerBar } from "@/src/ui/molecules/XPShimmerBar";
 import { useTheme } from "@/src/ui/tokens";
 import { router } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import type { StreakShield } from "@/src/business-logic/types";
+import { StyleSheet, Text, View } from "react-native";
 
 interface SkillsSectionProps {
   careerPct: number;
@@ -53,7 +48,6 @@ export function SkillsSection({
   styles,
 }: SkillsSectionProps) {
   const { colors } = useTheme();
-  const localStyles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.section}>
@@ -187,12 +181,8 @@ export function SkillsSection({
             <Text style={styles.card2Number}>{pendingCount}</Text>
             <Text style={styles.card2Sub}>Đang chờ</Text>
             <View style={styles.dotRow}>
-              <View
-                style={[styles.dot, { backgroundColor: colors.career }]}
-              />
-              <View
-                style={[styles.dot, { backgroundColor: colors.finance }]}
-              />
+              <View style={[styles.dot, { backgroundColor: colors.career }]} />
+              <View style={[styles.dot, { backgroundColor: colors.finance }]} />
               <View
                 style={[styles.dot, { backgroundColor: colors.wellbeing }]}
               />
@@ -207,11 +197,7 @@ export function SkillsSection({
           style={styles.bentoCard2Right}
         >
           <View
-            style={[
-              styles.bentoCard,
-              styles.bentoCard2Right,
-              { height: 140 },
-            ]}
+            style={[styles.bentoCard, styles.bentoCard2Right, { height: 140 }]}
           >
             <View
               style={[
@@ -230,18 +216,20 @@ export function SkillsSection({
                 borderRadius={4}
                 contentStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
               >
-                <Text style={styles.levelPillText}>LVL {level ?? '?'}</Text>
+                <Text style={styles.levelPillText}>LVL {level ?? "?"}</Text>
               </NeoBrutalAccent>
             </View>
             <Text style={styles.xpValue}>
-              {currentXP != null ? currentXP.toLocaleString() : '—'} / {targetXP != null ? targetXP.toLocaleString() : '—'} XP
+              {currentXP != null ? currentXP.toLocaleString() : "—"} /{" "}
+              {targetXP != null ? targetXP.toLocaleString() : "—"} XP
             </Text>
             <Text style={styles.xpNextLabel}>
               TIẾP THEO: CẤP {(level ?? 0) + 1}
             </Text>
             <XPShimmerBar percent={xpPercent} color={colors.brandPrimary} />
             <Text style={styles.xpUntilLabel}>
-              Còn {(targetXP ?? 0) - (currentXP ?? 0)} XP nữa để lên cấp
+              Còn {Math.max(0, (targetXP ?? 0) - (currentXP ?? 0))} XP nữa để
+              lên cấp
             </Text>
           </View>
         </NeoBrutalCard>

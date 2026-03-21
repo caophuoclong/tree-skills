@@ -41,7 +41,10 @@ interface TreeLayout {
  * with tier-based vertical spacing.
  */
 function buildTreeLayout(nodes: SkillNode[]): TreeLayout {
-  const sorted = [...nodes].sort((a, b) => a.tier - b.tier);
+  const sorted = [...nodes].sort((a, b) => {
+    if (a.tier !== b.tier) return a.tier - b.tier;
+    return (a.tier_order ?? 0) - (b.tier_order ?? 0);
+  });
   const placed: Placed[] = [];
   const banners: Banner[] = [];
   let y = 24,
@@ -53,6 +56,7 @@ function buildTreeLayout(nodes: SkillNode[]): TreeLayout {
       banners.push({ tier: node.tier, label: TIER_LABEL[node.tier] ?? "", y });
       y += HEADER_H;
       lastTier = node.tier;
+      posIdx = 0; // Reset zigzag position for each tier
     }
     const key = ZIGZAG[posIdx % ZIGZAG.length];
     const xVal = X[key];

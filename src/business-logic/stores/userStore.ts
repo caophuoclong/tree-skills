@@ -1,6 +1,12 @@
-import { create } from 'zustand';
-import type { UserProgress, DailyStats, WeeklyDay, StreakShield } from '../types';
-import type { LevelUpReward } from '../hooks/useXPEngine';
+import { create } from "zustand";
+import type { LevelUpReward } from "../hooks/useXPEngine";
+import { computeLevel } from "../hooks/useXPEngine";
+import type {
+  DailyStats,
+  StreakShield,
+  UserProgress,
+  WeeklyDay,
+} from "../types";
 
 interface UserStore {
   user: UserProgress | null;
@@ -42,7 +48,11 @@ function getLast7Days(): WeeklyDay[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    return { date: d.toISOString().split('T')[0], questsCompleted: 0, xpEarned: 0 };
+    return {
+      date: d.toISOString().split("T")[0],
+      questsCompleted: 0,
+      xpEarned: 0,
+    };
   });
 }
 
@@ -58,15 +68,12 @@ export const useUserStore = create<UserStore>((set) => ({
   streakShield: { activatedDate: null, shieldsRemaining: 2 },
 
   setUser: (user) => {
-    console.log("[userStore] setUser called with:", user);
     set({ user, isAuthenticated: true, isAuthLoading: false });
-    console.log("[userStore] After setUser, store state:", useUserStore.getState());
   },
 
   setAuthLoading: (loading) => set({ isAuthLoading: loading }),
 
   setSessionReady: (ready) => {
-    console.log("[userStore] setSessionReady:", ready);
     set({ sessionReady: ready });
   },
 
@@ -75,12 +82,15 @@ export const useUserStore = create<UserStore>((set) => ({
   updateXP: (amount) =>
     set((state) => {
       if (!state.user) return state;
-      const newXP = state.user.current_xp_in_level + amount;
+      const newTotalXP = state.user.total_xp + amount;
+      const { level, currentXP, xpToNext } = computeLevel(newTotalXP);
       return {
         user: {
           ...state.user,
-          total_xp: state.user.total_xp + amount,
-          current_xp_in_level: newXP,
+          total_xp: newTotalXP,
+          level,
+          current_xp_in_level: currentXP,
+          xp_to_next_level: xpToNext,
         },
       };
     }),
@@ -88,7 +98,9 @@ export const useUserStore = create<UserStore>((set) => ({
   updateStamina: (value) =>
     set((state) => {
       if (!state.user) return state;
-      return { user: { ...state.user, stamina: Math.max(0, Math.min(100, value)) } };
+      return {
+        user: { ...state.user, stamina: Math.max(0, Math.min(100, value)) },
+      };
     }),
 
   updateStreak: (streak) =>
@@ -96,17 +108,19 @@ export const useUserStore = create<UserStore>((set) => ({
       if (!state.user) return state;
 
       const bestStreak = Math.max(state.user.best_streak, streak);
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
 
       // Persist to Supabase (fire-and-forget)
-      import('../api/services/userService').then(({ userService }) => {
-        userService.update({
-          streak,
-          best_streak: bestStreak,
-          last_active_date: today,
-        }).catch((err) => {
-          if (__DEV__) console.warn('[updateStreak] Failed to persist:', err);
-        });
+      import("../api/services/userService").then(({ userService }) => {
+        userService
+          .update({
+            streak,
+            best_streak: bestStreak,
+            last_active_date: today,
+          })
+          .catch((err) => {
+            if (__DEV__) console.warn("[updateStreak] Failed to persist:", err);
+          });
       });
 
       return {
@@ -121,8 +135,8 @@ export const useUserStore = create<UserStore>((set) => ({
 
   incrementDailyQuestCount: (branch) =>
     set((state) => {
-      const isWellbeing = branch === 'wellbeing';
-      const isCareerFinance = branch === 'career' || branch === 'finance';
+      const isWellbeing = branch === "wellbeing";
+      const isCareerFinance = branch === "career" || branch === "finance";
       const newCombo = state.dailyStats.session_combo + 1;
       return {
         dailyStats: {
@@ -146,7 +160,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
   recordActivity: (xp) =>
     set((state) => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const activity = [...state.weeklyActivity];
       const todayIdx = activity.findIndex((d) => d.date === today);
       if (todayIdx >= 0) {
@@ -164,17 +178,14 @@ export const useUserStore = create<UserStore>((set) => ({
       // Only show bonus when authenticated
       if (!state.isAuthenticated || !state.user) return state;
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
 
       // Already claimed today — skip
       if (state.lastLoginDate === today) return state;
 
       // Bonus XP scales with streak (more consecutive days = bigger reward)
       const streak = state.user?.streak ?? 0;
-      const bonusXP =
-        streak >= 7  ? 50 :
-        streak >= 3  ? 30 :
-                       20;
+      const bonusXP = streak >= 7 ? 50 : streak >= 3 ? 30 : 20;
 
       return {
         lastLoginDate: today,
@@ -189,20 +200,34 @@ export const useUserStore = create<UserStore>((set) => ({
 
   activateStreakShield: () =>
     set((state) => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       return {
         streakShield: {
           activatedDate: today,
-          shieldsRemaining: Math.max(0, state.streakShield.shieldsRemaining - 1),
+          shieldsRemaining: Math.max(
+            0,
+            state.streakShield.shieldsRemaining - 1,
+          ),
         },
       };
     }),
 
   isStreakProtectedToday: (): boolean => {
     const state = useUserStore.getState();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     return state.streakShield.activatedDate === today;
   },
 
-  logout: () => set({ user: null, isAuthenticated: false, sessionReady: false, dailyStats: DEFAULT_DAILY_STATS, weeklyActivity: getLast7Days(), levelUpReward: null, loginBonusReward: null, lastLoginDate: null, streakShield: { activatedDate: null, shieldsRemaining: 2 } }),
+  logout: () =>
+    set({
+      user: null,
+      isAuthenticated: false,
+      sessionReady: false,
+      dailyStats: DEFAULT_DAILY_STATS,
+      weeklyActivity: getLast7Days(),
+      levelUpReward: null,
+      loginBonusReward: null,
+      lastLoginDate: null,
+      streakShield: { activatedDate: null, shieldsRemaining: 2 },
+    }),
 }));
