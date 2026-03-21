@@ -48,7 +48,12 @@ async function generateQuestsForNode(
   if (!questPrompt) throw new Error("Quest generation prompt not found");
 
   const variables = {
+    node_id: node.node_id,
+    skill_title: node.title,
+    skill_description: node.description,
     branch: node.branch,
+    tier: String(node.tier),
+    quests_total: String(node.quests_total),
     stamina: String(profile.stamina || 100),
     level: String(profile.level || 1),
     current_node: node.node_id,
@@ -214,23 +219,29 @@ Deno.serve(async (req) => {
     const skillPrompt = await getSystemPrompt("skill_generation");
     if (!skillPrompt) throw new Error("Skill generation prompt not found");
 
+    const branchWeights = {
+      career:
+        userNodes?.filter((n: any) => n.node_id.startsWith("career"))
+          .length || 0,
+      finance:
+        userNodes?.filter((n: any) => n.node_id.startsWith("finance"))
+          .length || 0,
+      softskills:
+        userNodes?.filter((n: any) => n.node_id.startsWith("softskills"))
+          .length || 0,
+      wellbeing:
+        userNodes?.filter((n: any) => n.node_id.startsWith("wellbeing"))
+          .length || 0,
+    };
+
     const skillVariables = {
       user_level: String(profile.level || 1),
       primary_branch: primaryBranch,
-      branch_weights: JSON.stringify({
-        career:
-          userNodes?.filter((n: any) => n.node_id.startsWith("career"))
-            .length || 0,
-        finance:
-          userNodes?.filter((n: any) => n.node_id.startsWith("finance"))
-            .length || 0,
-        softskills:
-          userNodes?.filter((n: any) => n.node_id.startsWith("softskills"))
-            .length || 0,
-        wellbeing:
-          userNodes?.filter((n: any) => n.node_id.startsWith("wellbeing"))
-            .length || 0,
-      }),
+      branch_weights: JSON.stringify(branchWeights),
+      branch_weights_career: String(branchWeights.career),
+      branch_weights_finance: String(branchWeights.finance),
+      branch_weights_softskills: String(branchWeights.softskills),
+      branch_weights_wellbeing: String(branchWeights.wellbeing),
       streak: String(profile.streak || 0),
       completed_nodes: JSON.stringify(completedNodes),
     };

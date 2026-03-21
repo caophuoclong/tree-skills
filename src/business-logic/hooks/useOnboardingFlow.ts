@@ -143,16 +143,20 @@ export function useOnboardingFlow() {
             .eq('id', userId);
           console.log("[onboarding] Profile updated");
 
-          // Call edge function to generate skills and quests
-          try {
-            const { data, error } = await supabase.functions.invoke('onboarding-generate', {
-              body: { user_id: userId }
-            });
+          // Fire and forget - don't wait for edge function
+          const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+          supabase.functions.invoke('onboarding-generate', {
+            body: { user_id: userId },
+            headers: {
+              'Authorization': `Bearer ${anonKey}`,
+            }
+          }).then(({ data, error }) => {
             console.log("[onboarding] Edge function result:", { data, error });
-          } catch (fnError) {
+          }).catch((fnError) => {
             console.error("[onboarding] Edge function error:", fnError);
-          }
+          });
         }
+        // Navigate immediately - don't wait for generation
         router.replace('/(auth)/generating');
       }
     } catch (error) {

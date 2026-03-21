@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -13,17 +13,32 @@ import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
 import { useTheme } from '@/src/ui/tokens';
 import { Spacing } from '@/src/ui/tokens/spacing';
 
-const STATUS_MESSAGES = [
-  'Phân tích kết quả...',
-  'Xây dựng cây kỹ năng...',
-  'Cá nhân hóa lộ trình...',
-];
+interface GenerationStatus {
+  status: string;
+  progress: number;
+  current_step: string;
+  skills_done: boolean;
+  quests_done: boolean;
+  skills_count: number;
+  quests_count: number;
+  error_message: string | null;
+}
 
 export default function GeneratingScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [statusIndex, setStatusIndex] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState<GenerationStatus>({
+    status: 'pending',
+    progress: 0,
+    current_step: 'Starting...',
+    skills_done: false,
+    quests_done: false,
+    skills_count: 0,
+    quests_count: 0,
+    error_message: null,
+  });
   const [progressValue, setProgressValue] = useState(0);
+  const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const treeScale = useSharedValue(0.3);
   const treeOpacity = useSharedValue(0);
@@ -33,30 +48,64 @@ export default function GeneratingScreen() {
     treeOpacity.value = withTiming(1, { duration: 400 });
     treeScale.value = withSpring(1, { stiffness: 80, damping: 14 });
 
-    // Progress bar over 3 seconds
-    const progressStart = Date.now();
-    const progressDuration = 3000;
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - progressStart;
-      const pct = Math.min(100, (elapsed / progressDuration) * 100);
-      setProgressValue(pct);
-      if (pct >= 100) clearInterval(progressInterval);
-    }, 30);
+    // Start polling generation status
+    const startPolling = async () => {
+      const { supabase } = await import('@/src/business-logic/api/supabase');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
 
-    // Cycle status messages every 1 second
-    const msg1 = setTimeout(() => setStatusIndex(1), 1000);
-    const msg2 = setTimeout(() => setStatusIndex(2), 2000);
+      // Cast for new table
+      const db = supabase as any;
 
-    // Navigate after 3.5 seconds
-    const nav = setTimeout(() => {
+      const pollStatus = async () => {
+        try {
+          const { data, error } = await db
+            .from('generation_tracking')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+          if (error) {
+            console.log('[generating] Poll error:', error);
+            return;
+          }
+
+          if (data) {
+            setGenerationStatus(data);
+            setProgressValue(data.progress || 0);
+
+            // If completed or failed, navigate
+            if (data.status === 'completed') {
+              if (pollInterval.current) clearInterval(pollInterval.current);
+              setTimeout(() => router.replace('/(auth)/reveal'), 500);
+            } else if (data.status === 'failed') {
+              console.error('[generating] Generation failed:', data.error_message);
+              // Still navigate but user will see empty state
+              if (pollInterval.current) clearInterval(pollInterval.current);
+              setTimeout(() => router.replace('/(auth)/reveal'), 1000);
+            }
+          }
+        } catch (err) {
+          console.error('[generating] Poll exception:', err);
+        }
+      };
+
+      // Poll immediately then every 1.5 seconds
+      await pollStatus();
+      pollInterval.current = setInterval(pollStatus, 1500);
+    };
+
+    startPolling();
+
+    // Fallback timeout - navigate after 30 seconds max
+    const timeout = setTimeout(() => {
+      if (pollInterval.current) clearInterval(pollInterval.current);
       router.replace('/(auth)/reveal');
-    }, 3500);
+    }, 30000);
 
     return () => {
-      clearInterval(progressInterval);
-      clearTimeout(msg1);
-      clearTimeout(msg2);
-      clearTimeout(nav);
+      if (pollInterval.current) clearInterval(pollInterval.current);
+      clearTimeout(timeout);
     };
   }, []);
 
@@ -74,7 +123,7 @@ export default function GeneratingScreen() {
         </Animated.View>
 
         <AppText variant="displayLG" style={styles.headline}>
-          Đang tạo cây kỹ năng...
+          Creating your skill tree...
         </AppText>
 
         {/* Progress */}
@@ -87,7 +136,7 @@ export default function GeneratingScreen() {
           />
           <View style={styles.progressRow}>
             <AppText variant="body" color={colors.textSecondary}>
-              {STATUS_MESSAGES[statusIndex]}
+              {generationStatus.current_step}
             </AppText>
             <AppText variant="caption" color={colors.textMuted}>
               {Math.round(progressValue)}%
@@ -95,8 +144,24 @@ export default function GeneratingScreen() {
           </View>
         </View>
 
+        {/* Stats */}
+        {(generationStatus.skills_done || generationStatus.quests_done) && (
+          <View style={styles.statsRow}>
+            {generationStatus.skills_done && (
+              <AppText variant="caption" color={colors.textMuted}>
+                ✅ {generationStatus.skills_count} skills generated
+              </AppText>
+            )}
+            {generationStatus.quests_done && (
+              <AppText variant="caption" color={colors.textMuted}>
+                ✅ {generationStatus.quests_count} quests generated
+              </AppText>
+            )}
+          </View>
+        )}
+
         <AppText variant="body" color={colors.textMuted} style={styles.hint}>
-          Chỉ mất vài giây thôi...
+          This may take a moment...
         </AppText>
       </View>
     </SafeAreaView>
@@ -133,6 +198,10 @@ const createStyles = (colors: any) => StyleSheet.create({
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statsRow: {
+    gap: 4,
     alignItems: 'center',
   },
   hint: {
