@@ -1,8 +1,15 @@
-import React from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import type { Branch } from "@/src/business-logic/types";
-import type { CustomSkillTree } from "@/src/business-logic/stores/customSkillTreeStore";
 import { useBranches } from "@/src/business-logic/hooks/useBranches";
+import type { CustomSkillTree } from "@/src/business-logic/stores/customSkillTreeStore";
+import type { Branch } from "@/src/business-logic/types";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface GoalOverviewSheetProps {
   visible: boolean;
@@ -55,10 +62,14 @@ export function GoalOverviewSheet({
             🎯 {goalTree.goal}
           </Text>
           <Text style={[styles.goalSheetSub, { color: colors.textMuted }]}>
-            Lộ trình này trải đều trên {Object.keys(branchGroups).length} danh mục
+            Lộ trình này trải đều trên {Object.keys(branchGroups).length} danh
+            mục
           </Text>
 
-          <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 16 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ marginTop: 16 }}
+          >
             {(
               Object.entries(branchGroups) as [
                 Branch,
@@ -109,9 +120,7 @@ export function GoalOverviewSheet({
                         { borderColor: `${col}60` },
                       ]}
                     >
-                      <Text
-                        style={[styles.goalBranchBtnText, { color: col }]}
-                      >
+                      <Text style={[styles.goalBranchBtnText, { color: col }]}>
                         Xem →
                       </Text>
                     </TouchableOpacity>

@@ -1,18 +1,21 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useBranches } from "@/src/business-logic/hooks/useBranches";
+import type {
+  Branch,
+  RoadmapMilestone,
+  TimeHorizon,
+} from "@/src/business-logic/types";
+import { NeoBrutalBox } from "@/src/ui/atoms";
+import { useTheme } from "@/src/ui/tokens";
+import { Radius, Spacing } from "@/src/ui/tokens/spacing";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import {
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { NeoBrutalBox } from '@/src/ui/atoms';
-import { useBranches } from '@/src/business-logic/hooks/useBranches';
-import { Spacing, Radius } from '@/src/ui/tokens/spacing';
-import { useTheme } from '@/src/ui/tokens';
-import type { RoadmapMilestone, TimeHorizon, Branch } from '@/src/business-logic/types';
+} from "react-native";
 
 interface RoadmapHorizonSectionProps {
   horizon: TimeHorizon;
@@ -24,9 +27,9 @@ interface RoadmapHorizonSectionProps {
 
 // Horizon labels
 const HORIZON_LABELS: Record<TimeHorizon, string> = {
-  short: '🎯 3 Tháng Tới',
-  mid: '📈 1 Năm Tới',
-  long: '🚀 3–5 Năm Tới',
+  short: "🎯 3 Tháng Tới",
+  mid: "📈 1 Năm Tới",
+  long: "🚀 3–5 Năm Tới",
 };
 
 export function RoadmapHorizonSection({
@@ -39,14 +42,14 @@ export function RoadmapHorizonSection({
   const { colors } = useTheme();
   const { branchMeta, branches: branchList } = useBranches();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formTitle, setFormTitle] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState<Branch>('career');
+  const [formTitle, setFormTitle] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState<Branch>("career");
 
   const handleAddMilestone = () => {
     if (formTitle.trim()) {
       onAddMilestone(formTitle, selectedBranch);
-      setFormTitle('');
-      setSelectedBranch('career');
+      setFormTitle("");
+      setSelectedBranch("career");
       setShowAddForm(false);
     }
   };
@@ -67,7 +70,9 @@ export function RoadmapHorizonSection({
         <Text style={[styles.horizonLabel, { color: colors.textPrimary }]}>
           {HORIZON_LABELS[horizon]}
         </Text>
-        <View style={[styles.countBadge, { backgroundColor: colors.brandPrimary }]}>
+        <View
+          style={[styles.countBadge, { backgroundColor: colors.brandPrimary }]}
+        >
           <Text style={[styles.countBadgeText, { color: colors.bgBase }]}>
             {milestones.length}
           </Text>
@@ -83,8 +88,11 @@ export function RoadmapHorizonSection({
         ) : (
           milestones.map((milestone) => {
             const branchColor =
-              colors[milestone.branch as keyof typeof colors] || colors.brandPrimary;
-            const branchEmoji = branchMeta[milestone.branch as keyof typeof branchMeta]?.emoji ?? '📌';
+              colors[milestone.branch as keyof typeof colors] ||
+              colors.brandPrimary;
+            const branchEmoji =
+              branchMeta[milestone.branch as keyof typeof branchMeta]?.emoji ??
+              "📌";
 
             return (
               <NeoBrutalBox
@@ -142,7 +150,9 @@ export function RoadmapHorizonSection({
                       styles.checkbox,
                       {
                         borderColor: branchColor,
-                        backgroundColor: milestone.isCompleted ? branchColor : 'transparent',
+                        backgroundColor: milestone.isCompleted
+                          ? branchColor
+                          : "transparent",
                       },
                     ]}
                     onPress={() => onToggle(milestone.id)}
@@ -211,7 +221,9 @@ export function RoadmapHorizonSection({
                   style={[
                     styles.branchPill,
                     {
-                      backgroundColor: isSelected ? branchColor : colors.bgElevated,
+                      backgroundColor: isSelected
+                        ? branchColor
+                        : colors.bgElevated,
                       borderColor: branchColor,
                       borderWidth: isSelected ? 0 : 1.5,
                     },
@@ -230,11 +242,13 @@ export function RoadmapHorizonSection({
               style={[styles.formBtn, styles.cancelBtn]}
               onPress={() => {
                 setShowAddForm(false);
-                setFormTitle('');
-                setSelectedBranch('career');
+                setFormTitle("");
+                setSelectedBranch("career");
               }}
             >
-              <Text style={[styles.formBtnText, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.formBtnText, { color: colors.textSecondary }]}
+              >
                 Hủy
               </Text>
             </TouchableOpacity>
@@ -283,14 +297,14 @@ const createStyles = (colors: any) =>
 
     // Header
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: Spacing.md,
       gap: Spacing.sm,
     },
     horizonLabel: {
       fontSize: 15,
-      fontWeight: '900',
+      fontWeight: "900",
       letterSpacing: 0.5,
     },
     countBadge: {
@@ -298,13 +312,13 @@ const createStyles = (colors: any) =>
       paddingVertical: 3,
       borderRadius: Radius.full,
       minWidth: 28,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     countBadgeText: {
       fontSize: 11,
-      fontWeight: '700',
-      fontFamily: 'SpaceGrotesk-Bold',
+      fontWeight: "700",
+      fontFamily: "SpaceGrotesk-Bold",
     },
 
     // Milestone list
@@ -314,9 +328,9 @@ const createStyles = (colors: any) =>
     },
     emptyText: {
       fontSize: 13,
-      fontFamily: 'SpaceGrotesk-Medium',
-      fontWeight: '500',
-      textAlign: 'center',
+      fontFamily: "SpaceGrotesk-Medium",
+      fontWeight: "500",
+      textAlign: "center",
       paddingVertical: Spacing.md,
     },
 
@@ -325,8 +339,8 @@ const createStyles = (colors: any) =>
       marginBottom: 0,
     },
     milestoneContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.md,
       gap: Spacing.sm,
@@ -337,15 +351,15 @@ const createStyles = (colors: any) =>
       marginBottom: -Spacing.md,
       borderTopLeftRadius: Radius.md - 2,
       borderBottomLeftRadius: Radius.md - 2,
-      height: '100%',
+      height: "100%",
     },
     cardBody: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: "center",
     },
     titleRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
+      flexDirection: "row",
+      alignItems: "flex-start",
       gap: Spacing.xs,
       marginBottom: Spacing.xs,
     },
@@ -355,26 +369,26 @@ const createStyles = (colors: any) =>
     },
     milestoneTitle: {
       fontSize: 13,
-      fontWeight: '600',
-      fontFamily: 'SpaceGrotesk-SemiBold',
+      fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
       flex: 1,
       lineHeight: 18,
     },
     completedTitle: {
-      textDecorationLine: 'line-through',
+      textDecorationLine: "line-through",
       opacity: 0.7,
     },
     dateLabel: {
       fontSize: 11,
-      fontFamily: 'SpaceGrotesk-Medium',
-      fontWeight: '500',
+      fontFamily: "SpaceGrotesk-Medium",
+      fontWeight: "500",
       marginTop: Spacing.xs,
     },
 
     // Right actions (checkbox + delete)
     rightActions: {
-      flexDirection: 'column',
-      alignItems: 'center',
+      flexDirection: "column",
+      alignItems: "center",
       gap: Spacing.xs,
     },
     checkbox: {
@@ -382,8 +396,8 @@ const createStyles = (colors: any) =>
       height: 20,
       borderRadius: Radius.sm,
       borderWidth: 1.5,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     deleteBtn: {
       padding: Spacing.xs,
@@ -399,42 +413,42 @@ const createStyles = (colors: any) =>
     },
     titleInput: {
       fontSize: 13,
-      fontFamily: 'SpaceGrotesk-Medium',
-      fontWeight: '500',
+      fontFamily: "SpaceGrotesk-Medium",
+      fontWeight: "500",
       minHeight: 60,
       paddingVertical: Spacing.sm,
       paddingHorizontal: Spacing.xs,
       borderRadius: Radius.sm,
       borderWidth: 1,
       borderColor: colors.glassBorder,
-      textAlignVertical: 'top',
+      textAlignVertical: "top",
     },
     branchSelector: {
-      flexDirection: 'row',
-      justifyContent: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
       gap: Spacing.sm,
     },
     branchPill: {
       width: 44,
       height: 44,
       borderRadius: Radius.md,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     branchPillEmoji: {
       fontSize: 20,
     },
     formActions: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: Spacing.sm,
-      justifyContent: 'flex-end',
+      justifyContent: "flex-end",
     },
     formBtn: {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
       borderRadius: Radius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       minWidth: 70,
     },
     cancelBtn: {
@@ -447,20 +461,20 @@ const createStyles = (colors: any) =>
     },
     formBtnText: {
       fontSize: 12,
-      fontWeight: '600',
-      fontFamily: 'SpaceGrotesk-SemiBold',
+      fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
       letterSpacing: 0.3,
     },
 
     // Add button
     addBtn: {
       paddingVertical: Spacing.md,
-      alignItems: 'center',
+      alignItems: "center",
     },
     addBtnText: {
       fontSize: 13,
-      fontWeight: '600',
-      fontFamily: 'SpaceGrotesk-SemiBold',
+      fontWeight: "600",
+      fontFamily: "SpaceGrotesk-SemiBold",
       letterSpacing: 0.3,
     },
   });

@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { branchService } from '../api/services/branchService';
+import { useQuery } from "@tanstack/react-query";
+import { branchService } from "../api/services/branchService";
 import {
   BRANCH_META as BRANCH_META_FALLBACK,
   type BranchMeta,
-} from '../config/branch-config';
-import type { Branch } from '../types';
+} from "../config/branch-config";
+import type { Branch } from "../types";
 
 /**
  * Fetches branch master data from the database.
@@ -27,7 +27,7 @@ export function useBranches() {
   }));
 
   const { data = placeholderRows } = useQuery({
-    queryKey: ['branches'],
+    queryKey: ["branches"],
     queryFn: branchService.getAll,
     staleTime: Infinity,
     placeholderData: placeholderRows,

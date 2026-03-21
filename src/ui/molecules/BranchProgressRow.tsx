@@ -1,13 +1,13 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { AppText } from '@/src/ui/atoms/Text';
-import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
-import { useTheme } from '@/src/ui/tokens';
+import { ProgressBar } from "@/src/ui/atoms/ProgressBar";
+import { AppText } from "@/src/ui/atoms/Text";
+import { useTheme } from "@/src/ui/tokens";
+import { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { Spacing } from '@/src/ui/tokens/spacing';
-import type { Branch } from '@/src/business-logic/types';
+import type { Branch } from "@/src/business-logic/types";
+import { Spacing } from "@/src/ui/tokens/spacing";
 
-import { useBranches } from '@/src/business-logic/hooks/useBranches';
+import { useBranches } from "@/src/business-logic/hooks/useBranches";
 
 interface BranchProgressRowProps {
   branch: Branch;
@@ -44,23 +44,25 @@ export function BranchProgressRow({ branch, percent }: BranchProgressRowProps) {
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
-  row: {
-    gap: 6,
-    marginBottom: Spacing.sm,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  percent: {
-    marginLeft: 'auto',
-    fontFamily: 'SpaceGrotesk-SemiBold', fontWeight: '600',
-  },
-});
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    row: {
+      gap: 6,
+      marginBottom: Spacing.sm,
+    },
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.xs,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    percent: {
+      marginLeft: "auto",
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
+    },
+  });

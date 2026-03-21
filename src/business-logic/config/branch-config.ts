@@ -10,7 +10,7 @@
  * ⚠️  Do NOT add business logic here — use `useBranches()` in components.
  */
 
-import type { Branch } from '../types';
+import type { Branch } from "../types";
 
 export interface BranchMeta {
   /** Vietnamese display label */
@@ -27,32 +27,32 @@ export interface BranchMeta {
 
 export const BRANCH_META: Record<Branch, BranchMeta> = {
   career: {
-    label: 'Sự nghiệp',
-    labelEn: 'Tech & Career',
-    color: '#7C6AF7',
-    emoji: '💼',
-    icon: 'briefcase',
+    label: "Sự nghiệp",
+    labelEn: "Tech & Career",
+    color: "#7C6AF7",
+    emoji: "💼",
+    icon: "briefcase",
   },
   finance: {
-    label: 'Tài chính',
-    labelEn: 'Finance & Money',
-    color: '#22C55E',
-    emoji: '💰',
-    icon: 'wallet',
+    label: "Tài chính",
+    labelEn: "Finance & Money",
+    color: "#22C55E",
+    emoji: "💰",
+    icon: "wallet",
   },
   softskills: {
-    label: 'Kỹ năng mềm',
-    labelEn: 'Communication',
-    color: '#F59E0B',
-    emoji: '💬',
-    icon: 'bulb',
+    label: "Kỹ năng mềm",
+    labelEn: "Communication",
+    color: "#F59E0B",
+    emoji: "💬",
+    icon: "bulb",
   },
   wellbeing: {
-    label: 'Sức khỏe',
-    labelEn: 'Health & Mind',
-    color: '#EC4899',
-    emoji: '🧘',
-    icon: 'leaf',
+    label: "Sức khỏe",
+    labelEn: "Health & Mind",
+    color: "#EC4899",
+    emoji: "🧘",
+    icon: "leaf",
   },
 };
 
@@ -63,5 +63,8 @@ export const BRANCHES: { id: Branch; label: string }[] = (
 
 /** Convenience: branch color map (used for chart/progress tinting) */
 export const BRANCH_COLORS: Record<Branch, string> = Object.fromEntries(
-  (Object.entries(BRANCH_META) as [Branch, BranchMeta][]).map(([id, m]) => [id, m.color]),
+  (Object.entries(BRANCH_META) as [Branch, BranchMeta][]).map(([id, m]) => [
+    id,
+    m.color,
+  ]),
 ) as Record<Branch, string>;
