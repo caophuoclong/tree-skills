@@ -31,7 +31,7 @@ export const dailyBonusService = {
 
     if (existing) return false;
 
-    // Insert new bonus record
+    // Insert daily bonus record
     const { error } = await db.from("daily_bonuses").insert({
       user_id: userId,
       bonus_date: today,
@@ -39,7 +39,18 @@ export const dailyBonusService = {
       streak_day: streakDay,
     });
 
-    return !error;
+    if (error) return false;
+
+    // Insert into xp_history — DB trigger auto-updates profile
+    await db.from("xp_history").insert({
+      user_id: userId,
+      amount: xpEarned,
+      source: "daily_bonus",
+      source_id: today,
+      multiplier: 1.0,
+    });
+
+    return true;
   },
 
   /**

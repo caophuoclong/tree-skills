@@ -22,9 +22,11 @@ export const skillTreeService = {
     if (!userId) return [];
 
     // Use the database function to get unlocked nodes
-    const { data, error } = await db.rpc("get_unlocked_nodes", {
-      p_user_id: userId,
-    });
+    const { data, error } = await db
+      .from("user_skill_nodes")
+      .select("*, skill_nodes(*)")
+      .eq("user_id", userId);
+    console.log("🚀 ~ data:", data);
 
     if (error) {
       console.error("Error fetching unlocked nodes:", error);
@@ -34,16 +36,16 @@ export const skillTreeService = {
 
     return (data ?? []).map((row: any) => ({
       node_id: row.node_id,
-      branch: row.branch,
-      tier: row.tier as SkillNode["tier"],
-      title: row.title,
-      description: row.description,
-      xp_required: row.xp_required,
-      quests_total: row.quests_total,
+      branch: row.skill_nodes.branch,
+      tier: row.skill_nodes.tier as SkillNode["tier"],
+      title: row.skill_nodes.title,
+      description: row.skill_nodes.description,
+      xp_required: row.skill_nodes.xp_required,
+      quests_total: row.skill_nodes.quests_total,
       status: row.status,
       quests_completed: row.quests_completed,
-      isLocked: row.is_locked,
-      tier_order: row.tier_order ?? 0,
+      isLocked: row.status === "locked",
+      tier_order: row.skill_nodes.tier_order ?? 0,
     }));
   },
 

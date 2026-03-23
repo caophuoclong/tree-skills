@@ -5,19 +5,12 @@
  * on a new calendar day. Dismisses on "NHẬN NGAY" tap or auto-dismisses
  * after 4 seconds. Bonus XP scales with the user's current streak.
  */
-import { NeoBrutalAccent, NeoBrutalBox } from '@/src/ui/atoms';
-import { useUserStore } from '@/src/business-logic/stores/userStore';
-import { dailyBonusService } from '@/src/business-logic/api/services/dailyBonusService';
-import { userService } from '@/src/business-logic/api/services/userService';
-import { useTheme } from '@/src/ui/tokens';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Animated,
-  Modal,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { dailyBonusService } from "@/src/business-logic/api/services/dailyBonusService";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
+import { NeoBrutalAccent, NeoBrutalBox } from "@/src/ui/atoms";
+import { useTheme } from "@/src/ui/tokens";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 
 // Auto-dismiss delay in ms
 const AUTO_DISMISS_MS = 4000;
@@ -26,12 +19,12 @@ export function LoginBonusModal() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const reward    = useUserStore((s) => s.loginBonusReward);
+  const reward = useUserStore((s) => s.loginBonusReward);
   const setReward = useUserStore((s) => s.setLoginBonusReward);
-  const updateXP  = useUserStore((s) => s.updateXP);
-  const streak    = useUserStore((s) => s.user?.streak ?? 0);
+  const updateXP = useUserStore((s) => s.updateXP);
+  const streak = useUserStore((s) => s.user?.streak ?? 0);
 
-  const scaleAnim   = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -50,7 +43,10 @@ export function LoginBonusModal() {
           useNativeDriver: true,
         }),
       ]).start();
-      autoDismissTimer.current = setTimeout(() => handleClaim(), AUTO_DISMISS_MS);
+      autoDismissTimer.current = setTimeout(
+        () => handleClaim(),
+        AUTO_DISMISS_MS,
+      );
     } else {
       scaleAnim.setValue(0);
       opacityAnim.setValue(0);
@@ -58,29 +54,18 @@ export function LoginBonusModal() {
     return () => {
       if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reward]);
 
   const handleClaim = useCallback(() => {
     if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
     if (reward !== null) {
+      // Local store update for immediate UI
       updateXP(reward);
-      // Persist to Supabase
+      // Record bonus + xp_history — DB trigger auto-updates profile XP
       dailyBonusService.recordBonus(reward, streak).catch((err) => {
         if (__DEV__) console.warn("[dailyBonusService.recordBonus]", err);
       });
-      // Persist updated profile XP/level to Supabase
-      const updatedUser = useUserStore.getState().user;
-      if (updatedUser) {
-        userService.update({
-          total_xp: updatedUser.total_xp,
-          level: updatedUser.level,
-          current_xp_in_level: updatedUser.current_xp_in_level,
-          xp_to_next_level: updatedUser.xp_to_next_level,
-        }).catch((err) => {
-          if (__DEV__) console.warn("[userService.update bonus]", err);
-        });
-      }
       setReward(null);
     }
   }, [reward, streak, updateXP, setReward]);
@@ -88,10 +73,13 @@ export function LoginBonusModal() {
   if (reward === null) return null;
 
   const streakLabel =
-    streak >= 7 ? `🏆 Streak ${streak} ngày!` :
-    streak >= 3 ? `🔥 Streak ${streak} ngày!` :
-    streak > 0  ? `⚡ Ngày thứ ${streak}`      :
-                  '🎁 Ngày đầu tiên';
+    streak >= 7
+      ? `🏆 Streak ${streak} ngày!`
+      : streak >= 3
+        ? `🔥 Streak ${streak} ngày!`
+        : streak > 0
+          ? `⚡ Ngày thứ ${streak}`
+          : "🎁 Ngày đầu tiên";
 
   return (
     <Modal transparent visible animationType="none">
@@ -110,11 +98,16 @@ export function LoginBonusModal() {
             shadowOffsetY={6}
             borderWidth={2.5}
             borderRadius={20}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
             contentStyle={styles.card}
           >
             {/* Accent strip */}
-            <View style={[styles.accentStrip, { backgroundColor: colors.brandPrimary }]} />
+            <View
+              style={[
+                styles.accentStrip,
+                { backgroundColor: colors.brandPrimary },
+              ]}
+            />
 
             <View style={styles.iconRow}>
               <Text style={styles.iconEmoji}>🎁</Text>
@@ -122,7 +115,8 @@ export function LoginBonusModal() {
 
             <Text style={styles.title}>Quà tặng hằng ngày!</Text>
             <Text style={styles.subtitle}>
-              Chào mừng bạn đã quay trở lại. Nhận phần thưởng để bắt đầu ngày mới!
+              Chào mừng bạn đã quay trở lại. Nhận phần thưởng để bắt đầu ngày
+              mới!
             </Text>
 
             {/* Streak badge */}
@@ -130,7 +124,7 @@ export function LoginBonusModal() {
               accentColor={streak >= 7 ? colors.warning : colors.brandPrimary}
               strokeColor={colors.textPrimary}
               borderRadius={10}
-              style={{ alignSelf: 'center', marginVertical: 16 }}
+              style={{ alignSelf: "center", marginVertical: 16 }}
               contentStyle={styles.streakBadge}
             >
               <Text style={styles.streakText}>{streakLabel}</Text>
@@ -145,11 +139,15 @@ export function LoginBonusModal() {
               shadowOffsetY={4}
               borderWidth={2}
               borderRadius={16}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
               contentStyle={styles.xpCard}
             >
-              <Text style={[styles.xpAmount, { color: colors.softskills }]}>+{reward}</Text>
-              <Text style={[styles.xpUnit, { color: colors.softskills }]}>XP</Text>
+              <Text style={[styles.xpAmount, { color: colors.softskills }]}>
+                +{reward}
+              </Text>
+              <Text style={[styles.xpUnit, { color: colors.softskills }]}>
+                XP
+              </Text>
             </NeoBrutalBox>
 
             {/* CTA */}
@@ -159,7 +157,7 @@ export function LoginBonusModal() {
               shadowOffsetX={4}
               shadowOffsetY={4}
               borderRadius={12}
-              style={{ width: '100%', marginTop: 20 }}
+              style={{ width: "100%", marginTop: 20 }}
               contentStyle={styles.claimBtn}
               onPress={handleClaim}
             >
@@ -176,15 +174,15 @@ const createStyles = (colors: any) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.75)',
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: "rgba(0,0,0,0.75)",
+      alignItems: "center",
+      justifyContent: "center",
       padding: 24,
     },
-    wrapper: { width: '100%' },
-    card: { padding: 24, alignItems: 'center' },
+    wrapper: { width: "100%" },
+    card: { padding: 24, alignItems: "center" },
     accentStrip: {
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       right: 0,
@@ -196,47 +194,51 @@ const createStyles = (colors: any) =>
     iconEmoji: { fontSize: 52 },
     title: {
       fontSize: 22,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700' as const,
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700" as const,
       color: colors.textPrimary,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: 6,
     },
     subtitle: {
       fontSize: 13,
-      fontFamily: 'SpaceGrotesk-Regular',
+      fontFamily: "SpaceGrotesk-Regular",
       color: colors.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
       lineHeight: 19,
       paddingHorizontal: 8,
     },
     streakBadge: { paddingHorizontal: 16, paddingVertical: 6 },
     streakText: {
       fontSize: 13,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700' as const,
-      color: '#fff',
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700" as const,
+      color: "#fff",
       letterSpacing: 0.3,
     },
-    xpCard: { alignItems: 'center', paddingVertical: 20, gap: 2 },
+    xpCard: { alignItems: "center", paddingVertical: 20, gap: 2 },
     xpAmount: {
       fontSize: 42,
-      fontFamily: 'SpaceMono-Bold',
-      fontWeight: '700' as const,
+      fontFamily: "SpaceMono-Bold",
+      fontWeight: "700" as const,
       lineHeight: 46,
     },
     xpUnit: {
       fontSize: 14,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700' as const,
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700" as const,
       letterSpacing: 2,
     },
-    claimBtn: { alignItems: 'center', justifyContent: 'center', paddingVertical: 14 },
+    claimBtn: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 14,
+    },
     claimBtnText: {
       fontSize: 15,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700' as const,
-      color: '#fff',
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700" as const,
+      color: "#fff",
       letterSpacing: 1.5,
     },
   });

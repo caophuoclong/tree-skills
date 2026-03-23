@@ -601,7 +601,10 @@ Deno.serve(async (req) => {
             completed_at: null,
           }),
         );
-        await supabase.from("user_quests").insert(userQuestsToInsert);
+        await supabase.from("user_quests").upsert(userQuestsToInsert, {
+          onConflict: "user_id,quest_id",
+          ignoreDuplicates: true,
+        });
         await supabase.from("user_skill_nodes").insert(nodesToInsert);
       }
     }

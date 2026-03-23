@@ -183,18 +183,15 @@ export const useUserStore = create<UserStore>((set) => ({
       // Already claimed today — skip
       if (state.lastLoginDate === today) return state;
 
-      // Bonus XP scales with streak (more consecutive days = bigger reward)
-      const streak = state.user?.streak ?? 0;
+      // Bonus XP scales with current streak
+      const streak = state.user.streak;
       const bonusXP = streak >= 7 ? 50 : streak >= 3 ? 30 : 20;
 
       return {
         lastLoginDate: today,
         loginBonusReward: bonusXP,
         dailyStats: { ...state.dailyStats, session_combo: 0 },
-        // Mirror into user.last_login_at if user exists
-        ...(state.user
-          ? { user: { ...state.user, last_login_at: today } }
-          : {}),
+        user: { ...state.user, last_login_at: today },
       };
     }),
 

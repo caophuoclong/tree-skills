@@ -1019,6 +1019,7 @@ export type Database = {
           type: string
         }[]
       }
+      recalc_user_xp: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       branch_type: "career" | "finance" | "softskills" | "wellbeing"

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
+import { queryClient } from "../api/query-client";
 import { questService } from "../api/services/questService";
 import { userService } from "../api/services/userService";
 import { useQuestStore } from "../stores/questStore";
@@ -8,7 +9,6 @@ import type { Branch, Quest } from "../types";
 import { useGrowthStreak } from "./useGrowthStreak";
 import { useStaminaSystem } from "./useStaminaSystem";
 import { useXPEngine } from "./useXPEngine";
-import { queryClient } from "../api/query-client";
 
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
@@ -34,7 +34,8 @@ export function useQuestManager(): QuestManagerResult {
     completeQuest: storeComplete,
     resetQuests,
   } = useQuestStore();
-  const { user, incrementDailyQuestCount, isAuthenticated, sessionReady } = useUserStore();
+  const { user, incrementDailyQuestCount, isAuthenticated, sessionReady } =
+    useUserStore();
   const { addXP } = useXPEngine();
   const { xpMultiplier, canComplete, onQuestComplete } = useStaminaSystem();
   const { recordActivity } = useGrowthStreak();
@@ -76,25 +77,48 @@ export function useQuestManager(): QuestManagerResult {
       recordActivity();
       storeComplete(questId);
 
-      // Persist quest completion to Supabase (fire-and-forget)
-      questService.complete(questId, xpEarned).then(() => {
-        // After DB write completes, invalidate queries so home screen data refreshes
-        queryClient.invalidateQueries({ queryKey: ["skill-tree"] });
-        queryClient.invalidateQueries({ queryKey: ["quests"] });
-      }).catch((err) => {
-        if (__DEV__) console.warn("[questService.complete]", err);
-      });
+      // Update streak on first activity of the day
+      const today = new Date().toISOString().split("T")[0];
+      const currentUser = useUserStore.getState().user;
+      if (currentUser && currentUser.last_active_date !== today) {
+        const yesterday = new Date(Date.now() - 86400000)
+          .toISOString()
+          .split("T")[0];
+        const wasYesterday = currentUser.last_active_date === yesterday;
+        const newStreak = wasYesterday ? currentUser.streak + 1 : 1;
+        const bestStreak = Math.max(currentUser.best_streak, newStreak);
 
-      // Persist updated profile XP/level to Supabase
+        // Update local store
+        useUserStore.setState({
+          user: {
+            ...currentUser,
+            streak: newStreak,
+            best_streak: bestStreak,
+            last_active_date: today,
+          },
+        });
+      }
+
+      // Persist quest completion to Supabase (fire-and-forget)
+      questService
+        .complete(questId, xpEarned)
+        .then(() => {
+          // After DB write completes, invalidate queries so home screen data refreshes
+          queryClient.invalidateQueries({ queryKey: ["skill-tree"] });
+          queryClient.invalidateQueries({ queryKey: ["quests"] });
+        })
+        .catch((err) => {
+          if (__DEV__) console.warn("[questService.complete]", err);
+        });
+
+      // Persist streak to Supabase (XP is handled by DB trigger on xp_history)
       const updatedUser = useUserStore.getState().user;
       if (updatedUser) {
         userService
           .update({
-            total_xp: updatedUser.total_xp,
-            level: updatedUser.level,
-            current_xp_in_level: updatedUser.current_xp_in_level,
-            xp_to_next_level: updatedUser.xp_to_next_level,
-            last_active_date: new Date().toISOString().split("T")[0],
+            streak: updatedUser.streak,
+            best_streak: updatedUser.best_streak,
+            last_active_date: updatedUser.last_active_date,
           })
           .catch((err) => {
             if (__DEV__) console.warn("[userService.update]", err);

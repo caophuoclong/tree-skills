@@ -2,7 +2,7 @@ import type { Branch, Quest } from "../../types";
 import { supabase } from "../supabase";
 
 // Cast for tables not in generated types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const db = supabase as any;
 
 async function getAuthUserId(): Promise<string | null> {
@@ -33,9 +33,11 @@ export const questService = {
 
     // Fetch user's quests for today with quest details
     // Only include quests from unlocked nodes
+    console.log("🚀 ~ userId:", userId);
     const { data, error } = await supabase
       .from("user_quests")
-      .select(`
+      .select(
+        `
         quest_id,
         completed_at,
         date,
@@ -49,9 +51,10 @@ export const questService = {
           xp_reward,
           node_id
         )
-      `)
+      `,
+      )
       .eq("user_id", userId)
-      .eq("date", today)
+      // .eq("date", today)
       .limit(limit);
 
     if (error) {
@@ -101,14 +104,22 @@ export const questService = {
       if (quest.branch === "wellbeing") {
         staminaChange = 15; // Wellbeing restores stamina
       } else if (quest.branch === "career" || quest.branch === "finance") {
-        staminaChange = quest.difficulty === "hard" ? -10 : quest.difficulty === "medium" ? -7 : -5;
+        staminaChange =
+          quest.difficulty === "hard"
+            ? -10
+            : quest.difficulty === "medium"
+              ? -7
+              : -5;
       }
     }
 
-    const staminaAfter = Math.max(0, Math.min(100, staminaBefore + staminaChange));
+    const staminaAfter = Math.max(
+      0,
+      Math.min(100, staminaBefore + staminaChange),
+    );
 
     // Update quest completion
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("user_quests")
       .update({
         completed_at: new Date().toISOString(),
@@ -116,11 +127,17 @@ export const questService = {
       })
       .eq("user_id", userId)
       .eq("quest_id", questId)
-      .is("completed_at", null);
+      .is("completed_at", null)
+      .select();
 
     if (error) {
       console.error("Error completing quest:", error);
       throw error;
+    }
+
+    if (!updated || updated.length === 0) {
+      console.error("No quest row updated — quest_id:", questId, "user_id:", userId);
+      throw new Error("Quest not found or already completed");
     }
 
     // Record XP history
@@ -150,7 +167,9 @@ export const questService = {
     // Update daily stats
     const { data: existingStats } = await db
       .from("daily_stats")
-      .select("id, quests_completed, xp_earned, wellbeing_quests, career_finance_quests")
+      .select(
+        "id, quests_completed, xp_earned, wellbeing_quests, career_finance_quests",
+      )
       .eq("user_id", userId)
       .eq("date", new Date().toISOString().split("T")[0])
       .single();
@@ -161,8 +180,12 @@ export const questService = {
         .update({
           quests_completed: (existingStats.quests_completed || 0) + 1,
           xp_earned: (existingStats.xp_earned || 0) + xpEarned,
-          wellbeing_quests: (existingStats.wellbeing_quests || 0) + (quest?.branch === "wellbeing" ? 1 : 0),
-          career_finance_quests: (existingStats.career_finance_quests || 0) + ((quest?.branch === "career" || quest?.branch === "finance") ? 1 : 0),
+          wellbeing_quests:
+            (existingStats.wellbeing_quests || 0) +
+            (quest?.branch === "wellbeing" ? 1 : 0),
+          career_finance_quests:
+            (existingStats.career_finance_quests || 0) +
+            (quest?.branch === "career" || quest?.branch === "finance" ? 1 : 0),
           stamina_end: staminaAfter,
         })
         .eq("id", existingStats.id);
@@ -173,7 +196,8 @@ export const questService = {
         quests_completed: 1,
         xp_earned: xpEarned,
         wellbeing_quests: quest?.branch === "wellbeing" ? 1 : 0,
-        career_finance_quests: (quest?.branch === "career" || quest?.branch === "finance") ? 1 : 0,
+        career_finance_quests:
+          quest?.branch === "career" || quest?.branch === "finance" ? 1 : 0,
         stamina_start: staminaBefore,
         stamina_end: staminaAfter,
       });
@@ -192,7 +216,8 @@ export const questService = {
 
     const { data, error } = await supabase
       .from("user_quests")
-      .select(`
+      .select(
+        `
         quest_id,
         completed_at,
         quests (
@@ -205,7 +230,8 @@ export const questService = {
           xp_reward,
           node_id
         )
-      `)
+      `,
+      )
       .eq("user_id", userId)
       .eq("quests.node_id", nodeId);
 
