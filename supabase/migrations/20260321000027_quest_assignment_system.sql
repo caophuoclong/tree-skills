@@ -125,7 +125,7 @@ begin
       select q.quest_id, q.xp_reward, q.difficulty
       from quests q
       join skill_nodes sn on sn.node_id = q.node_id
-      where sn.branch = v_branch::branch_type
+      where sn.branch::branch_type = v_branch::branch_type
         -- Node must be in user's unlocked nodes
         and exists (
           select 1 from user_skill_nodes usn
