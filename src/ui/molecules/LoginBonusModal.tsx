@@ -43,23 +43,28 @@ export function LoginBonusModal() {
           useNativeDriver: true,
         }),
       ]).start();
-      autoDismissTimer.current = setTimeout(
-        () => handleClaim(),
-        AUTO_DISMISS_MS,
-      );
+
+      // Auto-dismiss after 10 seconds (hide without claiming)
+      autoDismissTimer.current = setTimeout(() => {
+        useUserStore.setState({ loginBonusReward: null });
+      }, 10000);
     } else {
       scaleAnim.setValue(0);
       opacityAnim.setValue(0);
+      if (autoDismissTimer.current) {
+        clearTimeout(autoDismissTimer.current);
+        autoDismissTimer.current = null;
+      }
     }
-    return () => {
-      if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reward]);
 
   const handleClaim = useCallback(() => {
     if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
     if (reward !== null) {
+      // Mark as claimed today
+      useUserStore.setState({
+        dailyBonusClaimedDate: new Date().toISOString().split("T")[0],
+      });
       // Local store update for immediate UI
       updateXP(reward);
       // Record bonus + xp_history — DB trigger auto-updates profile XP

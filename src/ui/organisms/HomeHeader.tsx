@@ -5,28 +5,30 @@
  * icon buttons for Notifications and Settings.
  * Extracted from index.tsx for maintainability.
  */
-import { NeoBrutalBox } from '@/src/ui/atoms';
-import { useTheme } from '@/src/ui/tokens';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { NeoBrutalBox } from "@/src/ui/atoms";
+import { useTheme } from "@/src/ui/tokens";
+import { Ionicons } from "@expo/vector-icons";
+import { useMemo } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 export interface HomeHeaderProps {
   name: string | null;
   level: number | null;
   unreadCount?: number;
+  dailyBonusAvailable?: boolean;
   onNotifications: () => void;
   onSettings: () => void;
+  onDailyBonus: () => void;
   streakAtRisk?: boolean;
 }
 
 function getInitials(name: string | null): string {
-  if (!name) return '?';
+  if (!name) return "?";
   return name
-    .split(' ')
-    .map((w) => w[0] ?? '')
+    .split(" ")
+    .map((w) => w[0] ?? "")
     .slice(0, 2)
-    .join('')
+    .join("")
     .toUpperCase();
 }
 
@@ -34,8 +36,10 @@ export function HomeHeader({
   name,
   level,
   unreadCount = 0,
+  dailyBonusAvailable = false,
   onNotifications,
   onSettings,
+  onDailyBonus,
   streakAtRisk = false,
 }: HomeHeaderProps) {
   const { colors } = useTheme();
@@ -49,13 +53,30 @@ export function HomeHeader({
           <Text style={styles.avatarInitials}>{getInitials(name)}</Text>
         </View>
         <View style={styles.avatarMeta}>
-          <Text style={styles.levelLabel}>CẤP {level ?? '?'}</Text>
-          <Text style={styles.userName}>{name ?? ''}</Text>
+          <Text style={styles.levelLabel}>CẤP {level ?? "?"}</Text>
+          <Text style={styles.userName}>{name ?? ""}</Text>
         </View>
       </View>
 
       {/* ── Right: icon buttons ── */}
       <View style={styles.icons}>
+        {/* Daily Bonus */}
+        {dailyBonusAvailable && (
+          <NeoBrutalBox
+            borderColor={colors.warning}
+            backgroundColor={colors.bgElevated}
+            shadowColor="#000"
+            shadowOffsetX={2}
+            shadowOffsetY={2}
+            borderWidth={1.5}
+            borderRadius={18}
+            onPress={onDailyBonus}
+            contentStyle={styles.iconBtn}
+          >
+            <Ionicons name="gift" size={22} color={colors.warning} />
+          </NeoBrutalBox>
+        )}
+
         {/* Notifications */}
         <NeoBrutalBox
           borderColor={colors.glassBorder}
@@ -75,13 +96,10 @@ export function HomeHeader({
           />
           {unreadCount > 0 && (
             <View
-              style={[
-                styles.badge,
-                { backgroundColor: colors.brandPrimary },
-              ]}
+              style={[styles.badge, { backgroundColor: colors.brandPrimary }]}
             >
               <Text style={styles.badgeText}>
-                {unreadCount > 9 ? '9+' : unreadCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
               </Text>
             </View>
           )}
@@ -113,16 +131,16 @@ export function HomeHeader({
 const createStyles = (colors: any) =>
   StyleSheet.create({
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingTop: 8,
       paddingBottom: 12,
     },
     avatarRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 10,
     },
     avatarCircle: {
@@ -130,58 +148,58 @@ const createStyles = (colors: any) =>
       height: 42,
       borderRadius: 21,
       backgroundColor: colors.brandPrimary,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       borderWidth: 2,
       borderColor: colors.textPrimary,
     },
     avatarInitials: {
       fontSize: 14,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700',
-      color: '#fff',
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
+      color: "#fff",
     },
     avatarMeta: {
       gap: 1,
     },
     levelLabel: {
       fontSize: 10,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700',
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
       color: colors.brandPrimary,
       letterSpacing: 1,
     },
     userName: {
       fontSize: 15,
-      fontFamily: 'SpaceGrotesk-SemiBold',
-      fontWeight: '600',
+      fontFamily: "SpaceGrotesk-SemiBold",
+      fontWeight: "600",
       color: colors.textPrimary,
     },
     icons: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 8,
     },
     iconBtn: {
       width: 36,
       height: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     badge: {
-      position: 'absolute',
+      position: "absolute",
       top: -4,
       right: -4,
       minWidth: 16,
       height: 16,
       borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       paddingHorizontal: 3,
     },
     badgeText: {
       fontSize: 9,
-      fontFamily: 'SpaceGrotesk-Bold',
-      fontWeight: '700',
-      color: '#fff',
+      fontFamily: "SpaceGrotesk-Bold",
+      fontWeight: "700",
+      color: "#fff",
     },
   });

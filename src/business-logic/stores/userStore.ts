@@ -32,6 +32,8 @@ interface UserStore {
   setLoginBonusReward: (amount: number | null) => void;
   /** ISO date string (YYYY-MM-DD) of last bonus claim — independent of user object */
   lastLoginDate: string | null;
+  /** ISO date of when daily bonus was actually claimed */
+  dailyBonusClaimedDate: string | null;
   checkDailyLogin: () => void;
   activateStreakShield: () => void;
   isStreakProtectedToday: () => boolean;
@@ -65,6 +67,7 @@ export const useUserStore = create<UserStore>((set) => ({
   sessionReady: false,
   levelUpReward: null,
   lastLoginDate: null,
+  dailyBonusClaimedDate: null,
   streakShield: { activatedDate: null, shieldsRemaining: 2 },
 
   setUser: (user) => {
@@ -110,6 +113,8 @@ export const useUserStore = create<UserStore>((set) => ({
       const bestStreak = Math.max(state.user.best_streak, streak);
       const today = new Date().toISOString().split("T")[0];
 
+      console.log("[updateStreak]", { streak, bestStreak, today });
+
       // Persist to Supabase (fire-and-forget)
       import("../api/services/userService").then(({ userService }) => {
         userService
@@ -121,6 +126,22 @@ export const useUserStore = create<UserStore>((set) => ({
           .catch((err) => {
             if (__DEV__) console.warn("[updateStreak] Failed to persist:", err);
           });
+      });
+
+      // Record streak history
+      import("../api/supabase").then(async ({ supabase }) => {
+        const { error } = await (supabase as any).from("streak_history").upsert(
+          {
+            user_id: state.user!.user_id,
+            date: today,
+            streak_day: streak,
+            quests_completed: state.dailyStats.quests_completed_today,
+            xp_earned: 0,
+          },
+          { onConflict: "user_id,date" },
+        );
+        if (error && __DEV__)
+          console.warn("[updateStreak] Failed to record history:", error);
       });
 
       return {
@@ -173,27 +194,48 @@ export const useUserStore = create<UserStore>((set) => ({
       return { weeklyActivity: activity };
     }),
 
-  checkDailyLogin: () =>
-    set((state) => {
-      // Only show bonus when authenticated
-      if (!state.isAuthenticated || !state.user) return state;
+  checkDailyLogin: () => {
+    const state = useUserStore.getState();
+    if (!state.user) {
+      setTimeout(() => useUserStore.getState().checkDailyLogin(), 500);
+      return;
+    }
 
-      const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
-      // Already claimed today — skip
-      if (state.lastLoginDate === today) return state;
+    // Already claimed today locally — skip
+    if (state.dailyBonusClaimedDate === today) return;
 
-      // Bonus XP scales with current streak
-      const streak = state.user.streak;
-      const bonusXP = streak >= 7 ? 50 : streak >= 3 ? 30 : 20;
-
-      return {
-        lastLoginDate: today,
-        loginBonusReward: bonusXP,
-        dailyStats: { ...state.dailyStats, session_combo: 0 },
-        user: { ...state.user, last_login_at: today },
-      };
-    }),
+    // Check DB first before showing modal
+    import("../api/supabase").then(({ supabase }) => {
+      (supabase as any)
+        .from("daily_bonuses")
+        .select("id")
+        .eq("user_id", useUserStore.getState().user?.user_id)
+        .eq("bonus_date", today)
+        .maybeSingle()
+        .then(({ data }: any) => {
+          if (data) {
+            // Already claimed in DB — mark locally, don't show modal
+            useUserStore.setState({ dailyBonusClaimedDate: today });
+            return;
+          }
+          // Not claimed — show bonus modal
+          const currentUser = useUserStore.getState().user;
+          if (!currentUser) return;
+          const streak = currentUser.streak;
+          const bonusXP = streak >= 7 ? 50 : streak >= 3 ? 30 : 20;
+          useUserStore.setState({
+            loginBonusReward: bonusXP,
+            dailyStats: {
+              ...useUserStore.getState().dailyStats,
+              session_combo: 0,
+            },
+            user: { ...currentUser, last_login_at: today },
+          });
+        });
+    });
+  },
 
   activateStreakShield: () =>
     set((state) => {

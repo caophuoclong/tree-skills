@@ -1,4 +1,5 @@
 import { useHomeScreen } from "@/src/business-logic/hooks/useHomeScreen";
+import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { StreakToast } from "@/src/ui/atoms";
 import { StreakShieldModal } from "@/src/ui/molecules/StreakShieldModal";
 import { HomeHeader } from "@/src/ui/organisms/HomeHeader";
@@ -45,6 +46,7 @@ export default function HomeScreen() {
     stamina,
     pendingCount,
     unreadCount,
+    dailyBonusAvailable,
     handleShieldActivate,
   } = useHomeScreen();
 
@@ -70,8 +72,10 @@ export default function HomeScreen() {
           name={name}
           level={level}
           unreadCount={unreadCount}
+          dailyBonusAvailable={dailyBonusAvailable}
           onNotifications={() => router.push("/notifications")}
           onSettings={() => router.push("/settings")}
+          onDailyBonus={() => useUserStore.getState().checkDailyLogin()}
           streakAtRisk={streakAtRisk}
         />
 

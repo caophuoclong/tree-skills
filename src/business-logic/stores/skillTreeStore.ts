@@ -25,8 +25,15 @@ export const useSkillTreeStore = create<SkillTreeStore>((set) => ({
 
   incrementNodeQuests: (nodeId) =>
     set((state) => ({
-      nodes: state.nodes.map((n) =>
-        n.node_id === nodeId ? { ...n, quests_completed: n.quests_completed + 1 } : n
-      ),
+      nodes: state.nodes.map((n) => {
+        if (n.node_id !== nodeId) return n;
+        const newCompleted = n.quests_completed + 1;
+        const isDone = newCompleted >= n.quests_total;
+        return {
+          ...n,
+          quests_completed: newCompleted,
+          status: isDone ? 'completed' as const : n.status,
+        };
+      }),
     })),
 }));

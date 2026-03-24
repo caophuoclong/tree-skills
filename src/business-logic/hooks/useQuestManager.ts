@@ -92,28 +92,6 @@ export function useQuestManager(): QuestManagerResult {
       recordActivity();
       storeComplete(questId);
 
-      // Update streak on first activity of the day
-      const today = new Date().toISOString().split("T")[0];
-      const currentUser = useUserStore.getState().user;
-      if (currentUser && currentUser.last_active_date !== today) {
-        const yesterday = new Date(Date.now() - 86400000)
-          .toISOString()
-          .split("T")[0];
-        const wasYesterday = currentUser.last_active_date === yesterday;
-        const newStreak = wasYesterday ? currentUser.streak + 1 : 1;
-        const bestStreak = Math.max(currentUser.best_streak, newStreak);
-
-        // Update local store
-        useUserStore.setState({
-          user: {
-            ...currentUser,
-            streak: newStreak,
-            best_streak: bestStreak,
-            last_active_date: today,
-          },
-        });
-      }
-
       // Persist quest completion to Supabase (fire-and-forget)
       questService
         .complete(questId, xpEarned)

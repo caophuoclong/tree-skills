@@ -38,38 +38,42 @@ export function useGrowthStreak(): StreakInfo {
   const isMilestone = STREAK_MILESTONES.includes(streak as StreakMilestone);
 
   const recordActivity = useCallback(() => {
+    // Read fresh data from store (avoid stale closures)
+    const currentUser = useUserStore.getState().user;
+    if (!currentUser) return;
+
     const today = formatDate(new Date());
     const yesterday = formatDate(new Date(Date.now() - 86400000));
+    const currentStreak = currentUser.streak;
+    const currentLastActive = currentUser.last_active_date;
 
-    console.log('[recordActivity] lastActive:', lastActive, 'today:', today, 'yesterday:', yesterday);
-
-    if (lastActive === today) {
-      console.log('[recordActivity] Already recorded today');
-      return; // already recorded today
+    // Only skip if we already have a streak for today
+    if (currentLastActive === today && currentStreak > 0) {
+      console.log("[streak] Already recorded today with streak", currentStreak);
+      return;
     }
 
     let newStreak: number;
-    if (lastActive === yesterday) {
-      newStreak = streak + 1;
-      console.log('[recordActivity] Consecutive day, streak:', newStreak);
-    } else if (!lastActive) {
+    if (currentLastActive === yesterday) {
+      newStreak = currentStreak + 1;
+      console.log("[streak] Consecutive day →", newStreak);
+    } else if (!currentLastActive || currentStreak === 0) {
       newStreak = 1;
-      console.log('[recordActivity] First activity, streak:', newStreak);
+      console.log("[streak] First activity → 1");
     } else {
-      // Streak broken — reset to 1
       newStreak = 1;
-      console.log('[recordActivity] Streak broken, resetting to 1');
+      console.log("[streak] Broken (last:", currentLastActive, ") → 1");
     }
 
     updateStreak(newStreak);
 
-    const milestone = getMilestoneReached(newStreak, streak);
+    const milestone = getMilestoneReached(newStreak, currentStreak);
     if (milestone) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else if (newStreak > 1) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  }, [streak, lastActive, updateStreak]);
+  }, [updateStreak]);
 
   const getStreakLabel = useCallback((): string => {
     if (streak === 0) return 'Chưa bắt đầu';

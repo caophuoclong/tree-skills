@@ -34,6 +34,7 @@ export function useHomeScreen() {
   const { nodes } = useSkillTreeStore();
   const { streakShield, activateStreakShield, isStreakProtectedToday } =
     useUserStore();
+  const dailyBonusClaimedDate = useUserStore((s) => s.dailyBonusClaimedDate);
   const unreadCount = useNotificationStore(
     (s) => s.notifications.filter((n) => !n.read).length,
   );
@@ -101,6 +102,10 @@ export function useHomeScreen() {
       : 0;
   const pendingCount = quests.filter((q) => q.completed_at === null).length;
 
+  // Daily bonus availability
+  const today = new Date().toISOString().split("T")[0];
+  const dailyBonusAvailable = dailyBonusClaimedDate !== today;
+
   // Branch progress — 0% when no nodes loaded yet
   const careerPct =
     branchProgress.find((b) => b.branch === "career")?.percent ?? 0;
@@ -152,6 +157,9 @@ export function useHomeScreen() {
 
     // Notifications
     unreadCount,
+
+    // Daily bonus
+    dailyBonusAvailable,
 
     // Handlers
     handleShieldActivate,

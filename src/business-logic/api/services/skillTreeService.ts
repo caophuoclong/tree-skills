@@ -26,7 +26,6 @@ export const skillTreeService = {
       .from("user_skill_nodes")
       .select("*, skill_nodes(*)")
       .eq("user_id", userId);
-    console.log("🚀 ~ data:", data);
 
     if (error) {
       console.error("Error fetching unlocked nodes:", error);

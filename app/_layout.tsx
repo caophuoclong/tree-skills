@@ -20,7 +20,6 @@ import "react-native-reanimated";
 import { queryClient } from "@/src/business-logic/api/query-client";
 import { useAuth } from "@/src/business-logic/auth";
 import { useAppData } from "@/src/business-logic/hooks/useAppData";
-import { useNotificationStore } from "@/src/business-logic/stores/notificationStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import { LevelUpModal, LoginBonusModal } from "@/src/ui/molecules";
 import { useTheme } from "@/src/ui/tokens";
@@ -62,12 +61,8 @@ function App() {
   const checkDailyLogin = useUserStore((s) => s.checkDailyLogin);
   const splashHidden = useRef(false);
 
-  const { user } = useUserStore();
-  const { addNotification } = useNotificationStore();
-
   // Supabase auth — listens to session + syncs profile → userStore
   const { isAuthenticated } = useAuth();
-  const { isAuthLoading } = useUserStore();
 
   // Fetch all app data from Supabase → Zustand stores
   const { isLoading: isDataLoading } = useAppData();
@@ -83,58 +78,29 @@ function App() {
   });
 
   // ── E2: Daily login bonus ──────────────────────────────────────────────────
-  // Fire once after fonts are ready AND user is authenticated.
-  // checkDailyLogin is idempotent — only triggers reward when date changes.
-  useEffect(() => {
-    if (!fontsLoaded || !isAuthenticated) return;
-    checkDailyLogin();
-    const sub = AppState.addEventListener("change", (appState) => {
-      if (appState === "active" && isAuthenticated) {
-        checkDailyLogin();
-
-        // ── E7: Generate notifications ───────────────────────────────────────
-        const today = new Date().toISOString().split("T")[0];
-        const yesterday = new Date(Date.now() - 86400000)
-          .toISOString()
-          .split("T")[0];
-        const lastLoginDate = user?.last_login_at?.split("T")[0];
-
-        // Streak reminder: if streak exists and last login was yesterday
-        if (user?.streak && user.streak > 0 && lastLoginDate === yesterday) {
-          addNotification({
-            type: "streak",
-            title: "🔥 Keep your streak!",
-            body: `Don't break your ${user.streak}-day streak! Complete a quest today.`,
-            targetRoute: "/(tabs)/quests",
-          });
-        }
-
-        // Quest suggestion: if no quests completed yet today
-        // (This would need dailyStats from userStore if available)
-        // For now, we'll just add it once per session
-        const lastSuggestion = sessionStorage?.getItem?.("lastQuestSuggestion");
-        if (!lastSuggestion || lastSuggestion !== today) {
-          addNotification({
-            type: "suggestion",
-            title: "💡 Start your day",
-            body: "Try a 5-min quest to kick off your learning session.",
-            targetRoute: "/(tabs)/quests",
-          });
-          sessionStorage?.setItem?.("lastQuestSuggestion", today);
-        }
-      }
-    });
-    return () => sub.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fontsLoaded, isAuthenticated]);
-
   // Hide splash screen once fonts and data are ready (only once)
   useEffect(() => {
     if (fontsLoaded && !isDataLoading && !splashHidden.current) {
       splashHidden.current = true;
-      SplashScreen.hide();
+      // Supress splash screen errors (may already be hidden by native side)
+      (SplashScreen.hide as any)()?.catch?.(() => {});
+      // Show daily bonus AFTER splash is hidden
+      if (isAuthenticated) {
+        setTimeout(() => checkDailyLogin(), 1000);
+      }
     }
-  }, [fontsLoaded, isDataLoading]);
+  }, [fontsLoaded, isDataLoading, isAuthenticated, checkDailyLogin]);
+
+  // Handle app coming to foreground
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const sub = AppState.addEventListener("change", (appState) => {
+      if (appState === "active") {
+        checkDailyLogin();
+      }
+    });
+    return () => sub.remove();
+  }, [isAuthenticated, checkDailyLogin]);
 
   // Hold render until fonts are loaded to prevent flash of unstyled text
   if (!fontsLoaded) {
