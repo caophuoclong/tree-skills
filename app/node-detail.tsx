@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
-  Pressable,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -59,7 +59,8 @@ export default function NodeDetailScreen() {
 
   const node = nodes.find((n) => n.node_id === node_id) ?? null;
 
-  useEffect(() => {
+  // Fetch quests when screen focuses (re-fetch after completing a quest)
+  const fetchQuests = useCallback(() => {
     if (!node_id || !node || node.status === "locked") return;
     setLoadingQuests(true);
     questService
@@ -68,29 +69,59 @@ export default function NodeDetailScreen() {
       .finally(() => setLoadingQuests(false));
   }, [node_id, node?.status]);
 
+  useEffect(() => { fetchQuests(); }, [fetchQuests]);
+  useFocusEffect(useCallback(() => { fetchQuests(); }, [fetchQuests]));
+
+  // Persist quest to DB + add to local store
+  const handleAddToToday = async (quest: Quest) => {
+    addQuestToDaily(quest);
+    try {
+      await questService.selectForToday([quest.quest_id]);
+    } catch (err) {
+      if (__DEV__) console.warn("[node-detail] selectForToday failed:", err);
+    }
+  };
+
+  // Remove from DB + remove from local store
+  const handleRemoveFromToday = async (questId: string) => {
+    removeQuestFromDaily(questId);
+    try {
+      await questService.removeFromToday(questId);
+    } catch (err) {
+      if (__DEV__) console.warn("[node-detail] removeFromToday failed:", err);
+    }
+  };
+
   if (!node) {
     return (
-      <Pressable style={styles.overlay} onPress={() => router.back()}>
-        <View
-          style={[
-            styles.sheet,
-            {
-              height: SHEET_HEIGHT,
-              backgroundColor: colors.bgElevated,
-              paddingBottom: insets.bottom,
-            },
-          ]}
-        >
-          <View
-            style={[styles.handle, { backgroundColor: colors.textMuted }]}
+      <Modal transparent animationType="slide" visible>
+        <View style={styles.overlay}>
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => router.back()}
           />
-          <View style={styles.notFound}>
-            <Text style={[styles.notFoundText, { color: colors.textMuted }]}>
-              Node not found
-            </Text>
+          <View
+            style={[
+              styles.sheet,
+              {
+                height: SHEET_HEIGHT,
+                backgroundColor: colors.bgElevated,
+                paddingBottom: insets.bottom,
+              },
+            ]}
+          >
+            <View
+              style={[styles.handle, { backgroundColor: colors.textMuted }]}
+            />
+            <View style={styles.notFound}>
+              <Text style={[styles.notFoundText, { color: colors.textMuted }]}>
+                Node not found
+              </Text>
+            </View>
           </View>
         </View>
-      </Pressable>
+      </Modal>
     );
   }
 
@@ -109,20 +140,26 @@ export default function NodeDetailScreen() {
   const totalNodeCount = nodeQuests.length;
 
   return (
-    <Pressable style={styles.overlay} onPress={() => router.back()}>
-      <Pressable
-        style={[
-          styles.sheet,
-          {
-            height: SHEET_HEIGHT,
-            backgroundColor: colors.bgElevated,
-            paddingBottom: insets.bottom,
-          },
-        ]}
-        onPress={(e) => e.stopPropagation()}
-      >
-        {/* Accent bar */}
-        <View style={[styles.accentBar, { backgroundColor: branchColor }]} />
+    <Modal transparent animationType="slide" visible>
+      <View style={styles.overlay}>
+        {/* Tap above sheet to dismiss */}
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          activeOpacity={1}
+          onPress={() => router.back()}
+        />
+        <View
+          style={[
+            styles.sheet,
+            {
+              height: SHEET_HEIGHT,
+              backgroundColor: colors.bgElevated,
+              paddingBottom: insets.bottom,
+            },
+          ]}
+        >
+          {/* Accent bar */}
+          <View style={[styles.accentBar, { backgroundColor: branchColor }]} />
 
         {/* Handle */}
         <View style={[styles.handle, { backgroundColor: colors.textMuted }]} />
@@ -303,7 +340,7 @@ export default function NodeDetailScreen() {
                         ) : isInDaily ? (
                           <TouchableOpacity
                             style={[styles.pillBtn, { backgroundColor: `${colors.warning}22`, borderColor: colors.warning }]}
-                            onPress={() => removeQuestFromDaily(quest.quest_id)}
+                            onPress={() => handleRemoveFromToday(quest.quest_id)}
                           >
                             <Text style={[styles.pillBtnText, { color: colors.warning }]}>
                               Hôm nay ✕
@@ -312,7 +349,7 @@ export default function NodeDetailScreen() {
                         ) : canAddMore ? (
                           <TouchableOpacity
                             style={[styles.pillBtn, { backgroundColor: `${colors.brandPrimary}22`, borderColor: colors.brandPrimary }]}
-                            onPress={() => addQuestToDaily(quest)}
+                            onPress={() => handleAddToToday(quest)}
                           >
                             <Text style={[styles.pillBtnText, { color: colors.brandPrimary }]}>
                               + Hôm nay
@@ -371,8 +408,9 @@ export default function NodeDetailScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </Pressable>
-    </Pressable>
+        </View>
+      </View>
+    </Modal>
   );
 }
 

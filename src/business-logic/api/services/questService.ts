@@ -53,8 +53,7 @@ export const questService = {
       `,
       )
       .eq("user_id", userId)
-      // .eq("date", today)
-      .limit(limit);
+      .eq("date", today);
 
     if (error) {
       console.error("Error fetching user quests:", error);
@@ -70,6 +69,7 @@ export const questService = {
       duration_min: row.quests.duration_min as Quest["duration_min"],
       xp_reward: row.quests.xp_reward as Quest["xp_reward"],
       completed_at: row.completed_at,
+      node_id: row.quests.node_id,
     }));
   },
 
@@ -225,44 +225,103 @@ export const questService = {
   },
 
   /**
-   * Get quests for a specific skill node
+   * Get all quests for a specific skill node
+   * Returns all quests from the node, regardless of user_quests status
    */
   async getQuestsForNode(nodeId: string): Promise<Quest[]> {
     const userId = await getAuthUserId();
     if (!userId) return [];
 
-    const { data, error } = await supabase
-      .from("user_quests")
+    // Get all quests for this node
+    const { data: nodeQuests, error } = await supabase
+      .from("quests")
       .select(
         `
         quest_id,
-        completed_at,
-        quests (
-          quest_id,
-          title,
-          description,
-          branch,
-          difficulty,
-          duration_min,
-          xp_reward,
-          node_id
-        )
+        title,
+        description,
+        branch,
+        difficulty,
+        duration_min,
+        xp_reward,
+        node_id
       `,
       )
+      .eq("node_id", nodeId);
+
+    if (error || !nodeQuests) return [];
+
+    // Get user's completion status for these quests
+    const questIds = nodeQuests.map((q: any) => q.quest_id);
+    const { data: userQuests } = await supabase
+      .from("user_quests")
+      .select("quest_id, completed_at")
       .eq("user_id", userId)
-      .eq("quests.node_id", nodeId);
+      .in("quest_id", questIds);
 
-    if (error) return [];
+    const completionMap = new Map(
+      (userQuests ?? []).map((uq: any) => [uq.quest_id, uq.completed_at]),
+    );
 
-    return (data ?? []).map((row: any) => ({
-      quest_id: row.quest_id,
-      title: row.quests.title,
-      description: row.quests.description,
-      branch: row.quests.branch,
-      difficulty: row.quests.difficulty,
-      duration_min: row.quests.duration_min as Quest["duration_min"],
-      xp_reward: row.quests.xp_reward as Quest["xp_reward"],
-      completed_at: row.completed_at,
+    return nodeQuests.map((q: any) => ({
+      quest_id: q.quest_id,
+      title: q.title,
+      description: q.description,
+      branch: q.branch,
+      difficulty: q.difficulty,
+      duration_min: q.duration_min as Quest["duration_min"],
+      xp_reward: q.xp_reward as Quest["xp_reward"],
+      completed_at: completionMap.get(q.quest_id) ?? null,
+      node_id: q.node_id,
     }));
+  },
+
+  /**
+   * Select quests for today by inserting into user_quests
+   * Respects daily limit and unique constraint
+   */
+  async selectForToday(questIds: string[]): Promise<void> {
+    const userId = await getAuthUserId();
+    if (!userId || questIds.length === 0) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Get quest details for xp_reward
+    const { data: quests } = await supabase
+      .from("quests")
+      .select("quest_id, xp_reward")
+      .in("quest_id", questIds);
+
+    if (!quests) return;
+
+    const rows = quests.map((q: any) => ({
+      user_id: userId,
+      quest_id: q.quest_id,
+      date: today,
+      xp_earned: q.xp_reward,
+      completed_at: null,
+    }));
+
+    await supabase.from("user_quests").upsert(rows, {
+      onConflict: "user_id,quest_id",
+    });
+  },
+
+  /**
+   * Remove a quest from today's selection (only if not completed)
+   */
+  async removeFromToday(questId: string): Promise<void> {
+    const userId = await getAuthUserId();
+    if (!userId) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    await supabase
+      .from("user_quests")
+      .delete()
+      .eq("user_id", userId)
+      .eq("quest_id", questId)
+      .eq("date", today)
+      .is("completed_at", null);
   },
 };

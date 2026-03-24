@@ -27,6 +27,7 @@ export interface Quest {
   duration_min: QuestDuration;
   xp_reward: 10 | 25 | 50;
   completed_at: string | null;
+  node_id?: string;
 }
 
 export interface UserProgress {

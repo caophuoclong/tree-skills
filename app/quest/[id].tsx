@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useQuestManager } from "@/src/business-logic/hooks/useQuestManager";
 import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
+import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
 import type { Quest } from "@/src/business-logic/types";
 import { NeoBrutalBox } from "@/src/ui/atoms";
@@ -190,6 +191,11 @@ export default function QuestDetailScreen() {
 
     // Mark quest complete (internally handles XP with stamina multiplier)
     completeQuest(quest.quest_id);
+
+    // Increment node progress in local store
+    if (quest.node_id) {
+      useSkillTreeStore.getState().incrementNodeQuests(quest.node_id);
+    }
 
     // Auto-navigate back after animations finish
     setTimeout(() => router.back(), 1200);
