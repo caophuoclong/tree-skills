@@ -7,6 +7,8 @@ interface QuestStore {
   setDailyQuests: (quests: Quest[]) => void;
   completeQuest: (questId: string) => void;
   resetQuests: () => void;
+  addQuestToDaily: (quest: Quest) => void;
+  removeQuestFromDaily: (questId: string) => void;
 }
 
 export const useQuestStore = create<QuestStore>((set) => ({
@@ -38,4 +40,18 @@ export const useQuestStore = create<QuestStore>((set) => ({
     })),
 
   resetQuests: () => set({ dailyQuests: [], lastResetDate: null }),
+
+  addQuestToDaily: (quest) =>
+    set((state) => {
+      const alreadyIn = state.dailyQuests.some((q) => q.quest_id === quest.quest_id);
+      if (alreadyIn) return state;
+      return { dailyQuests: [...state.dailyQuests, quest] };
+    }),
+
+  removeQuestFromDaily: (questId) =>
+    set((state) => ({
+      dailyQuests: state.dailyQuests.filter(
+        (q) => !(q.quest_id === questId && q.completed_at === null),
+      ),
+    })),
 }));

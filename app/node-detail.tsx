@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Pressable,
   ScrollView,
@@ -11,7 +13,10 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { questService } from "@/src/business-logic/api/services/questService";
+import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
+import type { Quest } from "@/src/business-logic/types";
 import { useTheme } from "@/src/ui/tokens";
 
 const BRANCH_COLORS: Record<string, string> = {
@@ -19,6 +24,12 @@ const BRANCH_COLORS: Record<string, string> = {
   finance: "#34D399",
   softskills: "#FBBF24",
   wellbeing: "#F472B6",
+};
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  easy: "#34D399",
+  medium: "#FBBF24",
+  hard: "#F472B6",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -30,15 +41,32 @@ const STATUS_LABELS: Record<string, string> = {
 const TIER_LABELS = ["", "Beginner", "Intermediate", "Advanced"];
 
 const { height: SCREEN_H } = Dimensions.get("window");
-const SHEET_HEIGHT = (SCREEN_H * 2) / 3;
+const SHEET_HEIGHT = SCREEN_H * 0.85;
+
+const DAILY_LIMIT = 5;
 
 export default function NodeDetailScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { node_id } = useLocalSearchParams<{ node_id: string }>();
   const nodes = useSkillTreeStore((s) => s.nodes);
+  const dailyQuests = useQuestStore((s) => s.dailyQuests);
+  const addQuestToDaily = useQuestStore((s) => s.addQuestToDaily);
+  const removeQuestFromDaily = useQuestStore((s) => s.removeQuestFromDaily);
+
+  const [nodeQuests, setNodeQuests] = useState<Quest[]>([]);
+  const [loadingQuests, setLoadingQuests] = useState(false);
 
   const node = nodes.find((n) => n.node_id === node_id) ?? null;
+
+  useEffect(() => {
+    if (!node_id || !node || node.status === "locked") return;
+    setLoadingQuests(true);
+    questService
+      .getQuestsForNode(node_id)
+      .then((q) => setNodeQuests(q.filter((r) => r.title != null)))
+      .finally(() => setLoadingQuests(false));
+  }, [node_id, node?.status]);
 
   if (!node) {
     return (
@@ -72,6 +100,13 @@ export default function NodeDetailScreen() {
     (node.quests_completed / Math.max(node.quests_total, 1)) * 100,
     100,
   );
+
+  const dailyQuestIds = new Set(dailyQuests.map((q) => q.quest_id));
+  const activeDailyCount = dailyQuests.filter((q) => q.completed_at === null).length;
+  const canAddMore = activeDailyCount < DAILY_LIMIT;
+
+  const todayInNodeCount = nodeQuests.filter((q) => dailyQuestIds.has(q.quest_id)).length;
+  const totalNodeCount = nodeQuests.length;
 
   return (
     <Pressable style={styles.overlay} onPress={() => router.back()}>
@@ -196,6 +231,98 @@ export default function NodeDetailScreen() {
                     ✅ Node Complete! +{node.xp_required} XP earned
                   </Text>
                 </View>
+              )}
+            </View>
+          )}
+
+          {/* Quest list section — only for unlocked nodes */}
+          {node.status !== "locked" && (
+            <View style={styles.questSection}>
+              <View style={styles.questSectionHeader}>
+                <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>
+                  NHIỆM VỤ
+                </Text>
+                <Text style={[styles.questCountLabel, { color: colors.textMuted }]}>
+                  {todayInNodeCount}/{totalNodeCount} trong hôm nay
+                </Text>
+              </View>
+
+              {loadingQuests ? (
+                <ActivityIndicator size="small" color={branchColor} style={styles.loader} />
+              ) : nodeQuests.length === 0 ? (
+                <Text style={[styles.emptyQuestsText, { color: colors.textMuted }]}>
+                  Không có nhiệm vụ nào
+                </Text>
+              ) : (
+                nodeQuests.map((quest) => {
+                  const isCompleted = quest.completed_at !== null;
+                  const isInDaily = dailyQuestIds.has(quest.quest_id);
+                  const diffColor = DIFFICULTY_COLORS[quest.difficulty] ?? colors.brandPrimary;
+                  const questBranchColor = BRANCH_COLORS[quest.branch] ?? colors.brandPrimary;
+
+                  return (
+                    <View
+                      key={quest.quest_id}
+                      style={[
+                        styles.questRow,
+                        {
+                          backgroundColor: colors.bgSurface,
+                          borderColor: colors.glassBorder,
+                          opacity: !isCompleted && !isInDaily && !canAddMore ? 0.45 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={[styles.questAccentBar, { backgroundColor: questBranchColor }]} />
+                      <View style={styles.questContent}>
+                        <Text
+                          style={[
+                            styles.questTitle,
+                            { color: colors.textPrimary },
+                            isCompleted && styles.questTitleStrike,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {quest.title}
+                        </Text>
+                        <View style={styles.questBadges}>
+                          <View style={[styles.diffBadge, { backgroundColor: `${diffColor}22`, borderColor: diffColor }]}>
+                            <Text style={[styles.diffBadgeText, { color: diffColor }]}>
+                              {quest.difficulty}
+                            </Text>
+                          </View>
+                          <View style={[styles.xpBadge, { backgroundColor: `${colors.brandPrimary}22`, borderColor: colors.brandPrimary }]}>
+                            <Text style={[styles.xpBadgeText, { color: colors.brandPrimary }]}>
+                              +{quest.xp_reward} XP
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.questAction}>
+                        {isCompleted ? (
+                          <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+                        ) : isInDaily ? (
+                          <TouchableOpacity
+                            style={[styles.pillBtn, { backgroundColor: `${colors.warning}22`, borderColor: colors.warning }]}
+                            onPress={() => removeQuestFromDaily(quest.quest_id)}
+                          >
+                            <Text style={[styles.pillBtnText, { color: colors.warning }]}>
+                              Hôm nay ✕
+                            </Text>
+                          </TouchableOpacity>
+                        ) : canAddMore ? (
+                          <TouchableOpacity
+                            style={[styles.pillBtn, { backgroundColor: `${colors.brandPrimary}22`, borderColor: colors.brandPrimary }]}
+                            onPress={() => addQuestToDaily(quest)}
+                          >
+                            <Text style={[styles.pillBtnText, { color: colors.brandPrimary }]}>
+                              + Hôm nay
+                            </Text>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    </View>
+                  );
+                })
               )}
             </View>
           )}
@@ -331,6 +458,93 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   completedText: { fontSize: 14, fontFamily: "SpaceGrotesk-Bold" },
+  questSection: {
+    marginBottom: 20,
+    gap: 10,
+  },
+  questSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  questCountLabel: {
+    fontSize: 12,
+    fontFamily: "SpaceGrotesk-Regular",
+  },
+  loader: {
+    marginVertical: 12,
+  },
+  emptyQuestsText: {
+    fontSize: 13,
+    fontFamily: "SpaceGrotesk-Regular",
+    textAlign: "center",
+    paddingVertical: 12,
+  },
+  questRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  questAccentBar: {
+    width: 4,
+    alignSelf: "stretch",
+  },
+  questContent: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  questTitle: {
+    fontSize: 13,
+    fontFamily: "SpaceGrotesk-SemiBold",
+  },
+  questTitleStrike: {
+    textDecorationLine: "line-through",
+  },
+  questBadges: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  diffBadge: {
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+  },
+  diffBadgeText: {
+    fontSize: 9,
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  xpBadge: {
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+  },
+  xpBadgeText: {
+    fontSize: 9,
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
+  },
+  questAction: {
+    paddingHorizontal: 10,
+  },
+  pillBtn: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+  },
+  pillBtnText: {
+    fontSize: 10,
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
+  },
   statRow: {
     flexDirection: "row",
     borderWidth: 1,
