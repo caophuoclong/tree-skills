@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { questService } from "../api/services/questService";
 import { userService } from "../api/services/userService";
 import { useQuestStore } from "../stores/questStore";
@@ -45,12 +45,28 @@ export function useQuestManager(): QuestManagerResult {
 
   // Only fetch when authenticated and session ready
   const canFetch = isAuthenticated && sessionReady;
+  const hasAssigned = useRef(false);
+  const [assignmentDone, setAssignmentDone] = useState(false);
 
-  // Fetch quests from API via service
+  // Assign daily quests on first load (runs once per session)
+  useEffect(() => {
+    if (canFetch && !hasAssigned.current) {
+      hasAssigned.current = true;
+      questService.assignDaily()
+        .then(() => setAssignmentDone(true))
+        .catch((err) => {
+          if (__DEV__) console.warn("[assignDaily]", err);
+          hasAssigned.current = false;
+          setAssignmentDone(true); // fetch anyway
+        });
+    }
+  }, [canFetch]);
+
+  // Fetch quests from API via service (only after assignment is done)
   const { data: fetchedQuests, isLoading } = useQuery({
     queryKey: ["quests", "daily", primaryBranch, stamina],
     queryFn: () => questService.getDaily(primaryBranch, stamina),
-    enabled: canFetch,
+    enabled: canFetch && assignmentDone,
     staleTime: 1000 * 60 * 5, // 5 min cache
   });
 

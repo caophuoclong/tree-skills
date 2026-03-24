@@ -864,6 +864,7 @@ export type Database = {
       }
       user_quests: {
         Row: {
+          assigned: boolean
           completed_at: string | null
           date: string
           id: string
@@ -872,6 +873,7 @@ export type Database = {
           xp_earned: number
         }
         Insert: {
+          assigned?: boolean
           completed_at?: string | null
           date?: string
           id?: string
@@ -880,6 +882,7 @@ export type Database = {
           xp_earned: number
         }
         Update: {
+          assigned?: boolean
           completed_at?: string | null
           date?: string
           id?: string
@@ -973,6 +976,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_daily_quests: {
+        Args: { p_user_id: string }
+        Returns: {
+          branch: string
+          difficulty: string
+          quest_id: string
+          xp_reward: number
+        }[]
+      }
       can_unlock_node: {
         Args: { p_node_id: string; p_user_id: string }
         Returns: boolean

@@ -28,11 +28,7 @@ export const questService = {
     const userId = await getAuthUserId();
     if (!userId) return [];
 
-    const today = new Date().toISOString().split("T")[0];
-    const limit = dailyLimit(stamina);
-
-    // Fetch user's quests for today with quest details
-    // Only include quests from unlocked nodes
+    // Fetch user's assigned quests with quest details
     const { data, error } = await supabase
       .from("user_quests")
       .select(
@@ -53,7 +49,7 @@ export const questService = {
       `,
       )
       .eq("user_id", userId)
-      .eq("date", today);
+      .eq("assigned", true);
 
     if (error) {
       console.error("Error fetching user quests:", error);
@@ -277,8 +273,17 @@ export const questService = {
   },
 
   /**
-   * Select quests for today by inserting into user_quests
-   * Respects daily limit and unique constraint
+   * Call DB function to assign daily quests based on master_data rules
+   */
+  async assignDaily(): Promise<void> {
+    const userId = await getAuthUserId();
+    if (!userId) return;
+
+    await (supabase as any).rpc("assign_daily_quests", { p_user_id: userId });
+  },
+
+  /**
+   * Select a quest for today by setting assigned = true
    */
   async selectForToday(questIds: string[]): Promise<void> {
     const userId = await getAuthUserId();
@@ -299,6 +304,7 @@ export const questService = {
       quest_id: q.quest_id,
       date: today,
       xp_earned: q.xp_reward,
+      assigned: true,
       completed_at: null,
     }));
 
@@ -308,20 +314,17 @@ export const questService = {
   },
 
   /**
-   * Remove a quest from today's selection (only if not completed)
+   * Remove a quest from today's assigned list (set assigned = false)
    */
   async removeFromToday(questId: string): Promise<void> {
     const userId = await getAuthUserId();
     if (!userId) return;
 
-    const today = new Date().toISOString().split("T")[0];
-
-    await supabase
+    await (supabase as any)
       .from("user_quests")
-      .delete()
+      .update({ assigned: false })
       .eq("user_id", userId)
       .eq("quest_id", questId)
-      .eq("date", today)
       .is("completed_at", null);
   },
 };
