@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
-import { queryClient } from "../api/query-client";
 import { questService } from "../api/services/questService";
 import { userService } from "../api/services/userService";
 import { useQuestStore } from "../stores/questStore";
@@ -102,11 +101,6 @@ export function useQuestManager(): QuestManagerResult {
       // Persist quest completion to Supabase (fire-and-forget)
       questService
         .complete(questId, xpEarned)
-        .then(() => {
-          // After DB write completes, invalidate queries so home screen data refreshes
-          queryClient.invalidateQueries({ queryKey: ["skill-tree"] });
-          queryClient.invalidateQueries({ queryKey: ["quests"] });
-        })
         .catch((err) => {
           if (__DEV__) console.warn("[questService.complete]", err);
         });

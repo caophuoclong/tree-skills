@@ -33,7 +33,6 @@ export const questService = {
 
     // Fetch user's quests for today with quest details
     // Only include quests from unlocked nodes
-    console.log("🚀 ~ userId:", userId);
     const { data, error } = await supabase
       .from("user_quests")
       .select(
@@ -118,6 +117,25 @@ export const questService = {
       Math.min(100, staminaBefore + staminaChange),
     );
 
+    // Debug: check current row state before update
+    const { data: existingRow } = await supabase
+      .from("user_quests")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("quest_id", questId)
+      .maybeSingle();
+    console.log(
+      "[questService.complete] Existing row:",
+      JSON.stringify(existingRow, null, 2),
+    );
+    console.log("[questService.complete] Update params:", {
+      userId,
+      questId,
+      xpEarned,
+      completed_at_filter: "IS NULL",
+      userId_type: typeof userId,
+    });
+
     // Update quest completion
     const { data: updated, error } = await supabase
       .from("user_quests")
@@ -136,7 +154,6 @@ export const questService = {
     }
 
     if (!updated || updated.length === 0) {
-      console.error("No quest row updated — quest_id:", questId, "user_id:", userId);
       throw new Error("Quest not found or already completed");
     }
 

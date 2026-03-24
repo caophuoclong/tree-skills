@@ -1,9 +1,10 @@
-import { router } from "expo-router";
-import { useMemo } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useChallengeStore } from "@/src/business-logic/stores/challengeStore";
+import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useQuestsScreen } from "@/src/hooks/useQuestsScreen";
 import { Emoji, NeoBrutalAccent } from "@/src/ui/atoms";
 import { ChallengeCard, ComboBar } from "@/src/ui/molecules";
@@ -16,6 +17,7 @@ export default function QuestsScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     quests,
+    pendingQuests,
     completedCount,
     totalCount,
     stamina,
@@ -27,6 +29,13 @@ export default function QuestsScreen() {
     handleComplete,
     setWellbeingDismissedDate,
   } = useQuestsScreen();
+
+  // Subscribe directly to store so completed quests show strikethrough immediately
+  const dailyQuests = useQuestStore((s) => s.dailyQuests);
+
+  // Force re-render when screen gains focus (e.g., after closing quest modal)
+  const [, setTick] = useState(0);
+  useFocusEffect(useCallback(() => { setTick((t) => t + 1); }, []));
   // Challenges are fetched by useAppData at root — just read from store
   const challenges = useChallengeStore((s) => s.challenges);
 
@@ -92,7 +101,7 @@ export default function QuestsScreen() {
         )}
 
         <View style={styles.questList}>
-          {quests.length === 0 ? (
+          {dailyQuests.length === 0 ? (
             <View style={styles.emptyState}>
               <Emoji size={48}>🌱</Emoji>
               <Text style={styles.emptyText}>
@@ -100,7 +109,7 @@ export default function QuestsScreen() {
               </Text>
             </View>
           ) : (
-            quests.map((quest) => (
+            dailyQuests.map((quest) => (
               <QuestItem
                 key={quest.quest_id}
                 quest={quest}

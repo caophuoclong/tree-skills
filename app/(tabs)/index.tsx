@@ -9,8 +9,8 @@ import {
   getBranchColors,
 } from "@/src/ui/styles/homeScreenStyles";
 import { useTheme } from "@/src/ui/tokens";
-import { router } from "expo-router";
-import { useMemo } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,6 +18,10 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createHomeScreenStyles(colors), [colors]);
   const branchColors = useMemo(() => getBranchColors(colors), [colors]);
+
+  // Force re-render when screen gains focus (e.g., after closing quest modal)
+  const [, setTick] = useState(0);
+  useFocusEffect(useCallback(() => { setTick((t) => t + 1); }, []));
 
   const {
     name,
@@ -40,7 +44,6 @@ export default function HomeScreen() {
     wellbeingPct,
     stamina,
     pendingCount,
-    quests,
     unreadCount,
     handleShieldActivate,
   } = useHomeScreen();
@@ -91,7 +94,6 @@ export default function HomeScreen() {
         />
 
         <QuestPreviewSection
-          quests={quests}
           branchColors={branchColors}
           styles={styles}
         />

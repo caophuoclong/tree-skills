@@ -3,7 +3,7 @@ import { View, Animated, Dimensions } from 'react-native';
 import { useTheme } from '@/src/ui/tokens';
 
 const { width, height } = Dimensions.get('window');
-const PARTICLE_COUNT = 28;
+const PARTICLE_COUNT = 15;
 const ANIMATION_DURATION = 1500;
 
 interface Particle {

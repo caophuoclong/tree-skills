@@ -17,6 +17,9 @@ export function useQuestsScreen() {
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const today = new Date().toISOString().split('T')[0];
 
+  // Filter out completed quests for the active list
+  const pendingQuests = quests.filter((q) => q.completed_at === null);
+
   const showWellbeingBanner =
     dailyStats.wellbeing_quests_today === 0 &&
     dailyStats.quests_completed_today >= 3 &&
@@ -45,6 +48,7 @@ export function useQuestsScreen() {
 
   return {
     quests,
+    pendingQuests,
     completedCount,
     totalCount,
     stamina,

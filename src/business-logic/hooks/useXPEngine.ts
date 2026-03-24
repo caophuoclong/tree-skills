@@ -162,7 +162,10 @@ export function useXPEngine(): XPEngineResult {
       let levelReward: LevelUpReward | null = null;
       if (newLevel > prevLevel) {
         levelReward = getLevelUpReward(newLevel);
-        setLevelUpReward(levelReward);
+        // Defer level-up modal so it shows AFTER navigation back
+        setTimeout(() => {
+          setLevelUpReward(levelReward);
+        }, 1500);
       }
 
       return { reward: levelReward, bonusXP, multiplier };

@@ -14,7 +14,21 @@ export const useQuestStore = create<QuestStore>((set) => ({
   lastResetDate: null,
 
   setDailyQuests: (quests) =>
-    set({ dailyQuests: quests, lastResetDate: new Date().toISOString().split('T')[0] }),
+    set((state) => ({
+      // Merge server data with local state — preserve local completed_at so a
+      // background refetch (stamina key change) cannot un-complete a quest that
+      // was already marked done locally.
+      dailyQuests: quests.map((serverQuest) => {
+        const local = state.dailyQuests.find(
+          (q) => q.quest_id === serverQuest.quest_id,
+        );
+        return {
+          ...serverQuest,
+          completed_at: local?.completed_at ?? serverQuest.completed_at,
+        };
+      }),
+      lastResetDate: new Date().toISOString().split('T')[0],
+    })),
 
   completeQuest: (questId) =>
     set((state) => ({

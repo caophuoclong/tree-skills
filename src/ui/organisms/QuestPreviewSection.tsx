@@ -4,25 +4,40 @@
  */
 
 import { NeoBrutalBox } from "@/src/ui/atoms";
+import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useTheme } from "@/src/ui/tokens";
 import { router } from "expo-router";
 import { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import type { Quest } from "@/src/business-logic/types";
 
 interface QuestPreviewSectionProps {
-  quests: Quest[];
   branchColors: Record<string, string>;
   styles: any;
 }
 
 export function QuestPreviewSection({
-  quests,
   branchColors,
   styles,
 }: QuestPreviewSectionProps) {
   const { colors } = useTheme();
   const localStyles = useMemo(() => createStyles(colors), [colors]);
+
+  // Subscribe directly to store so any completion immediately removes the quest
+  const dailyQuests = useQuestStore((s) => s.dailyQuests);
+  const pendingQuests = dailyQuests.filter((q) => q.completed_at === null);
+
+  if (pendingQuests.length === 0) {
+    return (
+      <View style={styles.questPreviewSection}>
+        <Text style={styles.sectionLabel}>NHIỆM VỤ HÔM NAY</Text>
+        <View style={{ padding: 20, alignItems: "center" }}>
+          <Text style={[localStyles.miniQuestTitle, { textAlign: "center" }]}>
+            Bạn đã hoàn thành hết nhiệm vụ hôm nay!
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.questPreviewSection}>
@@ -33,7 +48,7 @@ export function QuestPreviewSection({
         </TouchableOpacity>
       </View>
 
-      {quests.slice(0, 3).map((quest) => (
+      {pendingQuests.slice(0, 3).map((quest) => (
         <NeoBrutalBox
           key={quest.quest_id}
           borderColor={colors.glassBorder}
