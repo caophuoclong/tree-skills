@@ -82,8 +82,8 @@ function App() {
   useEffect(() => {
     if (fontsLoaded && !isDataLoading && !splashHidden.current) {
       splashHidden.current = true;
-      // Supress splash screen errors (may already be hidden by native side)
-      (SplashScreen.hide as any)()?.catch?.(() => {});
+      // hideAsync can throw if the native splash was never registered (e.g. fast-refresh)
+      SplashScreen.hideAsync().catch(() => {});
       // Show daily bonus AFTER splash is hidden
       if (isAuthenticated) {
         setTimeout(() => checkDailyLogin(), 1000);
