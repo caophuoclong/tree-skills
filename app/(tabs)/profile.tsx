@@ -22,6 +22,7 @@ import {
   ProfileStatsRow,
   WeeklyChart,
 } from '@/src/ui/molecules';
+import { AchievementBadgesSection } from '@/src/ui/organisms/AchievementBadgesSection';
 import {
   ProfileMilestoneBadges,
   ProfileNavSection,
@@ -147,6 +148,8 @@ export default function ProfileScreen() {
         <ProfileStatsRow stats={stats} />
 
         <ProfileMilestoneBadges milestones={milestones} />
+
+        <AchievementBadgesSection />
 
         <View style={{ marginHorizontal: 20, marginTop: 24 }}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>

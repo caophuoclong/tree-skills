@@ -7,7 +7,7 @@ import { useUserStore } from "../stores/userStore";
 import type { Branch, Quest } from "../types";
 import { useGrowthStreak } from "./useGrowthStreak";
 import { useStaminaSystem } from "./useStaminaSystem";
-import { useXPEngine } from "./useXPEngine";
+import { getStreakMultiplier, useXPEngine } from "./useXPEngine";
 
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
@@ -84,7 +84,8 @@ export function useQuestManager(): QuestManagerResult {
       if (!quest || quest.completed_at) return;
       if (!canComplete(quest.branch)) return;
 
-      const xpEarned = Math.floor(quest.xp_reward * xpMultiplier);
+      const streakMult = getStreakMultiplier(user?.streak ?? 0);
+      const xpEarned = Math.floor(quest.xp_reward * xpMultiplier * streakMult);
       incrementDailyQuestCount(quest.branch);
       const result = addXP(xpEarned);
 

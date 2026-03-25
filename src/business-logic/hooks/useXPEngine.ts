@@ -102,6 +102,24 @@ export function getComboMultiplier(combo: number): number {
   return 1.0;
 }
 
+/**
+ * Returns an XP multiplier based on consecutive days of quest completion.
+ * 1-2 days: 1.0x, 3-6: 1.25x, 7-13: 1.5x, 14-29: 1.75x, 30+: 2.0x
+ */
+export function getStreakMultiplier(streak: number): number {
+  if (streak >= 30) return 2.0;
+  if (streak >= 14) return 1.75;
+  if (streak >= 7) return 1.5;
+  if (streak >= 3) return 1.25;
+  return 1.0;
+}
+
+export function getStreakMultiplierLabel(streak: number): string | null {
+  const m = getStreakMultiplier(streak);
+  if (m <= 1) return null;
+  return `${m}x 🔥`;
+}
+
 export interface XPEngineResult {
   addXP: (amount: number) => {
     reward: LevelUpReward | null;

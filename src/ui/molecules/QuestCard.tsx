@@ -10,6 +10,8 @@ import { AppText } from '@/src/ui/atoms/Text';
 import { Badge } from '@/src/ui/atoms/Badge';
 import { Checkbox } from '@/src/ui/atoms/Checkbox';
 import { useTheme } from '@/src/ui/tokens';
+import { getStreakMultiplierLabel } from '@/src/business-logic/hooks/useXPEngine';
+import { useUserStore } from '@/src/business-logic/stores/userStore';
 
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
 import type { Quest } from '@/src/business-logic/types';
@@ -34,6 +36,8 @@ export function QuestCard({ quest, onComplete, onPress }: QuestCardProps) {
   const BranchColors = useMemo(() => getBranchColors(colors), [colors]);
   const isCompleted = quest.completed_at !== null;
   const branchColor = BranchColors[quest.branch as string] ?? colors.brandPrimary;
+  const streak = useUserStore((s) => s.user?.streak ?? 0);
+  const streakLabel = getStreakMultiplierLabel(streak);
 
   const opacity = useSharedValue(isCompleted ? 0.5 : 1);
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -57,6 +61,13 @@ export function QuestCard({ quest, onComplete, onPress }: QuestCardProps) {
               <View style={styles.tags}>
                 <Badge variant="branch" value={quest.branch} branch={quest.branch as BranchColor} />
                 <Badge variant="duration" value={quest.duration_min} style={styles.tagGap} />
+                {streakLabel && !isCompleted && (
+                  <View style={[styles.streakBadge, { backgroundColor: colors.warning + '22', borderColor: colors.warning }]}>
+                    <AppText style={[styles.streakBadgeText, { color: colors.warning }]}>
+                      {streakLabel}
+                    </AppText>
+                  </View>
+                )}
               </View>
               <Badge variant="xp" value={quest.xp_reward} />
             </View>
@@ -120,5 +131,16 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   checkboxContainer: {
     paddingRight: Spacing.md,
+  },
+  streakBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  streakBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
 });

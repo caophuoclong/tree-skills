@@ -74,17 +74,25 @@ export function StreakBadge({
   const isGlowing = count >= 7;
   const isLarge = size === "lg";
 
+  // Tiered fire display
+  const fireEmoji = count >= 30 ? "🔥🔥🔥" : count >= 7 ? "🔥🔥" : "🔥";
+  const fireSize = count >= 30 ? (isLarge ? 32 : 18) : isLarge ? 28 : 16;
+
+  // Glow intensity grows with streak tier
+  const glowRadius = count >= 30 ? 16 : count >= 7 ? 8 : 0;
+  const glowOpacity = count >= 30 ? 0.85 : 0.6;
+
   return (
     <View style={streakAtRisk ? styles.riskBorderContainer : undefined}>
       <Animated.View
         style={[
           styles.container,
-          isGlowing && styles.glow,
+          isGlowing && { ...styles.glow, shadowRadius: glowRadius, shadowOpacity: glowOpacity },
           animatedStyle,
           streakAtRisk && { borderColor: colors.danger, borderWidth: 2 },
         ]}
       >
-        <Emoji size={isLarge ? 28 : 16}>🔥</Emoji>
+        <Emoji size={fireSize}>{fireEmoji}</Emoji>
         <AppText
           variant={isLarge ? "displayLG" : "title"}
           color={colors.warning}
