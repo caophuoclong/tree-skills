@@ -23,6 +23,7 @@ import {
   WeeklyChart,
 } from '@/src/ui/molecules';
 import { AchievementBadgesSection } from '@/src/ui/organisms/AchievementBadgesSection';
+import { HabitHeatmap } from '@/src/ui/organisms/HabitHeatmap';
 import {
   ProfileMilestoneBadges,
   ProfileNavSection,
@@ -146,6 +147,8 @@ export default function ProfileScreen() {
         </NeoBrutalBox>
 
         <ProfileStatsRow stats={stats} />
+
+        <HabitHeatmap />
 
         <ProfileMilestoneBadges milestones={milestones} />
 

@@ -9,8 +9,8 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/ui/atoms/Text';
+import { WarningIcon } from '@/src/ui/atoms';
 import { ProgressBar } from '@/src/ui/atoms/ProgressBar';
 import { useTheme } from '@/src/ui/tokens';
 
@@ -88,7 +88,7 @@ export function StaminaBar({ value }: StaminaBarProps) {
         <ProgressBar value={value} color={color} variant="thick" />
         {value === 0 && (
           <View style={styles.warningRow}>
-            <Ionicons name="warning" size={12} color={colors.danger} />
+            <WarningIcon size={12} color={colors.danger} />
             <AppText variant="micro" color={colors.danger} style={styles.warningText}>
               Hoàn thành Wellbeing quest để tiếp tục
             </AppText>

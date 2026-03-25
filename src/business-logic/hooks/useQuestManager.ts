@@ -5,6 +5,7 @@ import { userService } from "../api/services/userService";
 import { useQuestStore } from "../stores/questStore";
 import { useUserStore } from "../stores/userStore";
 import type { Branch, Quest } from "../types";
+import { useMoodStore } from "../stores/moodStore";
 import { useGrowthStreak } from "./useGrowthStreak";
 import { useStaminaSystem } from "./useStaminaSystem";
 import { getStreakMultiplier, useXPEngine } from "./useXPEngine";
@@ -85,7 +86,20 @@ export function useQuestManager(): QuestManagerResult {
       if (!canComplete(quest.branch)) return;
 
       const streakMult = getStreakMultiplier(user?.streak ?? 0);
-      const xpEarned = Math.floor(quest.xp_reward * xpMultiplier * streakMult);
+      const moodState = useMoodStore.getState();
+
+      // Comeback bonus: +50 XP when completing 3rd quest after streak break
+      let comebackBonus = 0;
+      if (moodState.comebackDayActive) {
+        moodState.incrementComebackQuests();
+        const newCount = useMoodStore.getState().comebackQuestsCompleted;
+        if (newCount >= 3) {
+          comebackBonus = 50;
+          moodState.setComebackDayActive(false);
+        }
+      }
+
+      const xpEarned = Math.floor(quest.xp_reward * xpMultiplier * streakMult) + comebackBonus;
       incrementDailyQuestCount(quest.branch);
       const result = addXP(xpEarned);
 

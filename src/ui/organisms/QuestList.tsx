@@ -5,7 +5,7 @@ import { StaminaBar } from '@/src/ui/molecules/StaminaBar';
 import { AppText } from '@/src/ui/atoms/Text';
 import { Emoji } from '@/src/ui/atoms/Emoji';
 import { GlassView } from '@/src/ui/atoms/GlassView';
-import { Icon } from '@/src/ui/atoms/Icon';
+import { WarningIcon } from '@/src/ui/atoms';
 import { useTheme } from '@/src/ui/tokens';
 
 import { Spacing, Radius } from '@/src/ui/tokens/spacing';
@@ -58,7 +58,7 @@ export function QuestList({ quests, stamina, resetTime, onCompleteQuest, onPress
       {/* Stamina gate warning */}
       {isStaminaGate && (
         <GlassView style={styles.gateWarning}>
-          <Icon name="warning" size="sm" color={colors.danger} />
+          <WarningIcon size={16} color={colors.danger} />
           <AppText variant="caption" color={colors.danger} style={styles.gateText}>
             Stamina = 0%. Hoàn thành Wellbeing quest trước để tiếp tục.
           </AppText>

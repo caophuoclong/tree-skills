@@ -21,4 +21,24 @@ export type { Placed } from "./SvgPaths";
 export { TierBannerView } from "./TierBanner";
 export type { Banner } from "./TierBanner";
 export { NodeCircle } from "./NodeCircle";
+export {
+  HomeFaceIcon,
+  QuestFaceIcon,
+  TreeFaceIcon,
+  ProfileFaceIcon,
+  ExhaustedIcon,
+  SadIcon,
+  NeutralIcon,
+  HappyIcon,
+  FiredUpIcon,
+  StreakFaceIcon,
+  XPGainIcon,
+  LockedIcon,
+  CompleteIcon,
+  WarningIcon,
+  GraceDayIcon,
+  StreakFlameIcon,
+  getFlameLevel,
+} from "./FaceIcons";
+export type { FlameLevel } from "./FaceIcons";
 

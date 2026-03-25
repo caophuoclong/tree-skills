@@ -9,6 +9,17 @@
  */
 
 import { NeoBrutalBox } from "@/src/ui/atoms";
+import {
+  CompleteIcon,
+  FiredUpIcon,
+  HappyIcon,
+  HomeFaceIcon,
+  ProfileFaceIcon,
+  QuestFaceIcon,
+  StreakFlameIcon,
+  TreeFaceIcon,
+  XPGainIcon,
+} from "@/src/ui/atoms/FaceIcons";
 import { AppText } from "@/src/ui/atoms/Text";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import { useUserStore } from "@/src/business-logic/stores/userStore";
@@ -18,7 +29,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 interface Badge {
   id: string;
-  emoji: string;
+  icon: (size: number) => React.ReactNode;
   title: string;
   description: string;
   unlocked: boolean;
@@ -37,7 +48,6 @@ function useBadges(): Badge[] {
     const bestStreak = user?.best_streak ?? 0;
     const totalXP = user?.total_xp ?? 0;
 
-    // Per-branch quests completed from skill tree nodes
     const careerDone = nodes
       .filter((n) => n.branch === "career")
       .reduce((s, n) => s + n.quests_completed, 0);
@@ -51,14 +61,13 @@ function useBadges(): Badge[] {
       .filter((n) => n.branch === "softskills")
       .reduce((s, n) => s + n.quests_completed, 0);
 
-    // Total daily quests assigned today (as denominator for Perfectionist)
     const questsDoneToday = dailyStats.quests_completed_today;
 
     return [
       // ── Streak ──────────────────────────────────────────────────────────
       {
         id: "streak_seedling",
-        emoji: "🌱",
+        icon: (s) => <StreakFlameIcon level={1} size={s} />,
         title: "Seedling",
         description: "Ngày đầu tiên",
         unlocked: bestStreak >= 1,
@@ -67,7 +76,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "streak_on_fire",
-        emoji: "🔥",
+        icon: (s) => <StreakFlameIcon level={2} size={s} />,
         title: "On Fire",
         description: "Streak 7 ngày",
         unlocked: bestStreak >= 7,
@@ -76,7 +85,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "streak_grinder",
-        emoji: "💪",
+        icon: (s) => <StreakFlameIcon level={4} size={s} />,
         title: "Grinder",
         description: "Streak 30 ngày",
         unlocked: bestStreak >= 30,
@@ -85,7 +94,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "streak_legend",
-        emoji: "👑",
+        icon: (s) => <StreakFlameIcon level={5} size={s} />,
         title: "Legend",
         description: "Streak 100 ngày",
         unlocked: bestStreak >= 100,
@@ -96,7 +105,7 @@ function useBadges(): Badge[] {
       // ── Branch ──────────────────────────────────────────────────────────
       {
         id: "branch_career",
-        emoji: "💼",
+        icon: (s) => <HomeFaceIcon size={s} color={colors.career} />,
         title: "Career Climber",
         description: "10 career quests",
         unlocked: careerDone >= 10,
@@ -105,7 +114,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "branch_finance",
-        emoji: "💰",
+        icon: (s) => <ProfileFaceIcon size={s} color={colors.finance} />,
         title: "Money Moves",
         description: "10 finance quests",
         unlocked: financeDone >= 10,
@@ -114,7 +123,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "branch_wellbeing",
-        emoji: "🧘",
+        icon: (s) => <HappyIcon size={s} color={colors.wellbeing} />,
         title: "Zen Master",
         description: "10 wellbeing quests",
         unlocked: wellbeingDone >= 10,
@@ -123,7 +132,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "branch_soft",
-        emoji: "🎤",
+        icon: (s) => <QuestFaceIcon size={s} color={colors.softskills} />,
         title: "People Person",
         description: "10 soft skills quests",
         unlocked: softDone >= 10,
@@ -134,7 +143,7 @@ function useBadges(): Badge[] {
       // ── XP ──────────────────────────────────────────────────────────────
       {
         id: "xp_first_blood",
-        emoji: "⚡",
+        icon: (s) => <XPGainIcon size={s} color="#facc15" />,
         title: "First Blood",
         description: "Đạt 100 XP",
         unlocked: totalXP >= 100,
@@ -143,7 +152,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "xp_rocket",
-        emoji: "🚀",
+        icon: (s) => <XPGainIcon size={s} color="#60a5fa" />,
         title: "Rocket",
         description: "Đạt 1,000 XP",
         unlocked: totalXP >= 1000,
@@ -152,7 +161,7 @@ function useBadges(): Badge[] {
       },
       {
         id: "xp_diamond",
-        emoji: "💎",
+        icon: (s) => <XPGainIcon size={s} color="#a78bfa" />,
         title: "Diamond",
         description: "Đạt 10,000 XP",
         unlocked: totalXP >= 10000,
@@ -163,7 +172,7 @@ function useBadges(): Badge[] {
       // ── Special ─────────────────────────────────────────────────────────
       {
         id: "special_perfectionist",
-        emoji: "🎯",
+        icon: (s) => <CompleteIcon size={s} color="#ec4899" />,
         title: "Perfectionist",
         description: "Hoàn thành tất cả quests trong 1 ngày",
         unlocked: questsDoneToday >= 5,
@@ -172,12 +181,16 @@ function useBadges(): Badge[] {
       },
       {
         id: "special_comeback",
-        emoji: "🔄",
+        icon: (s) => <FiredUpIcon size={s} color="#fb923c" />,
         title: "Comeback",
         description: "Quay lại sau 7+ ngày",
-        unlocked: bestStreak >= 1 && streak === 1 && (user?.last_active_date
-          ? (Date.now() - new Date(user.last_active_date).getTime()) > 7 * 86400000
-          : false),
+        unlocked:
+          bestStreak >= 1 &&
+          streak === 1 &&
+          (user?.last_active_date
+            ? Date.now() - new Date(user.last_active_date).getTime() >
+              7 * 86400000
+            : false),
         color: "#fb923c",
         category: "special" as const,
       },
@@ -207,48 +220,54 @@ export function AchievementBadgesSection() {
         contentContainerStyle={styles.list}
       >
         {badges.map((badge) => (
-          <View key={badge.id} style={{ opacity: badge.unlocked ? 1 : 0.45 }}>
-          <NeoBrutalBox
-            borderColor={badge.unlocked ? badge.color : colors.glassBorder}
-            backgroundColor={colors.bgSurface}
-            shadowColor={badge.unlocked ? badge.color : "#000"}
-            shadowOffsetX={badge.unlocked ? 5 : 2}
-            shadowOffsetY={badge.unlocked ? 5 : 2}
-            borderWidth={2}
-            borderRadius={18}
-            style={styles.badgeBox}
-            contentStyle={styles.badgeContent}
-          >
-            {badge.unlocked && (
-              <View
-                style={[styles.accentBar, { backgroundColor: badge.color }]}
-              />
-            )}
-            <AppText style={styles.badgeEmoji}>{badge.emoji}</AppText>
-            <AppText
-              variant="caption"
-              style={[
-                styles.badgeTitle,
-                { color: badge.unlocked ? colors.textPrimary : colors.textMuted },
-              ]}
-              numberOfLines={1}
+          <View key={badge.id} style={{ opacity: badge.unlocked ? 1 : 0.38 }}>
+            <NeoBrutalBox
+              borderColor={badge.unlocked ? badge.color : colors.glassBorder}
+              backgroundColor={colors.bgSurface}
+              shadowColor={badge.unlocked ? badge.color : "#333"}
+              shadowOffsetX={badge.unlocked ? 5 : 3}
+              shadowOffsetY={badge.unlocked ? 5 : 3}
+              borderWidth={2}
+              borderRadius={0}
+              style={styles.badgeBox}
+              contentStyle={styles.badgeContent}
             >
-              {badge.title}
-            </AppText>
-            <AppText
-              variant="caption"
-              color={colors.textMuted}
-              style={styles.badgeDesc}
-              numberOfLines={2}
-            >
-              {badge.description}
-            </AppText>
-            {badge.unlocked && (
-              <View
-                style={[styles.unlockedDot, { backgroundColor: badge.color }]}
-              />
-            )}
-          </NeoBrutalBox>
+              {badge.unlocked && (
+                <View
+                  style={[styles.accentBar, { backgroundColor: badge.color }]}
+                />
+              )}
+
+              {/* Face icon */}
+              <View style={styles.iconWrap}>
+                {badge.icon(44)}
+              </View>
+
+              <AppText
+                variant="caption"
+                style={[
+                  styles.badgeTitle,
+                  { color: badge.unlocked ? colors.textPrimary : colors.textMuted },
+                ]}
+                numberOfLines={1}
+              >
+                {badge.title}
+              </AppText>
+              <AppText
+                variant="caption"
+                color={colors.textMuted}
+                style={styles.badgeDesc}
+                numberOfLines={2}
+              >
+                {badge.description}
+              </AppText>
+
+              {badge.unlocked && (
+                <View
+                  style={[styles.unlockedDot, { backgroundColor: badge.color }]}
+                />
+              )}
+            </NeoBrutalBox>
           </View>
         ))}
       </ScrollView>
@@ -279,13 +298,13 @@ const styles = StyleSheet.create({
   },
   badgeBox: {
     width: 110,
-    height: 130,
+    height: 140,
   },
   badgeContent: {
     alignItems: "center",
     justifyContent: "center",
     padding: 12,
-    gap: 4,
+    gap: 6,
     height: "100%",
   },
   accentBar: {
@@ -294,12 +313,9 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 5,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
   },
-  badgeEmoji: {
-    fontSize: 28,
-    marginBottom: 4,
+  iconWrap: {
+    marginBottom: 2,
   },
   badgeTitle: {
     fontWeight: "900",

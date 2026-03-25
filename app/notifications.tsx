@@ -2,6 +2,13 @@ import {
   AppNotification,
   useNotificationStore,
 } from "@/src/business-logic/stores/notificationStore";
+import {
+  CompleteIcon,
+  HappyIcon,
+  NeutralIcon,
+  StreakFlameIcon,
+  XPGainIcon,
+} from "@/src/ui/atoms/FaceIcons";
 import { useTheme } from "@/src/ui/tokens";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -14,11 +21,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const NOTIF_ICONS: Record<string, string> = {
-  milestone: "🏆",
-  streak: "🔥",
-  levelup: "⭐",
-  suggestion: "💡",
+const NOTIF_ICONS: Record<string, () => React.ReactNode> = {
+  milestone: () => <CompleteIcon size={32} color="#ffd700" />,
+  streak:    () => <StreakFlameIcon level={3} size={32} />,
+  levelup:   () => <XPGainIcon size={32} color="#facc15" />,
+  suggestion:() => <HappyIcon size={32} color="#a78bfa" />,
 };
 
 function relativeTime(isoDate: string): string {
@@ -107,7 +114,7 @@ export default function NotificationsScreen() {
                 },
               ]}
             >
-              <Text style={styles.emptyEmoji}>🎉</Text>
+              <HappyIcon size={72} />
               <Text
                 style={[
                   styles.emptyTitle,
@@ -165,9 +172,9 @@ export default function NotificationsScreen() {
                 )}
                 <View style={styles.notifContent}>
                   <View style={styles.notifRow}>
-                    <Text style={styles.notifIcon}>
-                      {NOTIF_ICONS[item.type] ?? "🔔"}
-                    </Text>
+                    <View style={styles.notifIcon}>
+                      {(NOTIF_ICONS[item.type] ?? (() => <NeutralIcon size={32} />))()}
+                    </View>
                     <Text
                       style={[
                         styles.notifTitle,
@@ -239,16 +246,15 @@ const styles = StyleSheet.create({
     left: 5,
     right: -5,
     bottom: -5,
-    borderRadius: 16,
+    borderRadius: 0,
   },
   emptyCard: {
     padding: 32,
-    borderRadius: 16,
-    borderWidth: 2,
+    borderRadius: 0,
+    borderWidth: 3,
     alignItems: "center",
-    gap: 8,
+    gap: 12,
   },
-  emptyEmoji: { fontSize: 48, marginBottom: 4 },
   emptyTitle: { fontSize: 20, textAlign: "center" },
   emptySub: { fontSize: 14, textAlign: "center" },
   notifItem: {
@@ -260,7 +266,7 @@ const styles = StyleSheet.create({
   unreadBar: { width: 4 },
   notifContent: { flex: 1, padding: 12, gap: 4 },
   notifRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  notifIcon: { fontSize: 18 },
+  notifIcon: { width: 32, height: 32 },
   notifTitle: { flex: 1, fontSize: 14 },
   notifTime: { fontSize: 11 },
   notifBody: { fontSize: 13, lineHeight: 18 },

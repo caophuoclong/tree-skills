@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
@@ -9,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Emoji } from "@/src/ui/atoms";
+import { Emoji, CompleteIcon, LockedIcon } from "@/src/ui/atoms";
 import type { Branch, SkillNode } from "@/src/business-logic/types";
 import type { Placed } from "./SvgPaths";
 
@@ -155,15 +154,9 @@ export function NodeCircle({
           },
         ]}
       >
-        {isCompleted && <Ionicons name="checkmark" size={26} color="#fff" />}
+        {isCompleted && <CompleteIcon size={26} color="#fff" />}
         {isInProgress && <Emoji size={24}>{BRANCH_ICON[node.branch]}</Emoji>}
-        {isLocked && (
-          <Ionicons
-            name="lock-closed"
-            size={20}
-            color="rgba(255,255,255,0.25)"
-          />
-        )}
+        {isLocked && <LockedIcon size={20} color="rgba(255,255,255,0.25)" />}
       </View>
 
       {/* XP badge on completed */}

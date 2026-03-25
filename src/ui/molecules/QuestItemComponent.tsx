@@ -1,10 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useRef, useMemo } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useTheme } from '@/src/ui/tokens';
-import { NeoBrutalAccent, NeoBrutalBox } from '@/src/ui/atoms';
+import { NeoBrutalAccent, NeoBrutalBox, CompleteIcon } from '@/src/ui/atoms';
 import type { Quest } from '@/src/business-logic/types';
 
 const BRANCH_LABELS: Record<string, string> = {
@@ -113,7 +112,7 @@ export function QuestItem({ quest, onComplete }: QuestItemProps) {
           </View>
 
           {isCompleted ? (
-            <Ionicons name="checkmark-circle" size={22} color={colors.finance} />
+            <CompleteIcon size={22} color={colors.finance} />
           ) : (
             <TouchableOpacity
               style={[styles.checkbox, { borderColor: branchColor, borderWidth: 2 }]}

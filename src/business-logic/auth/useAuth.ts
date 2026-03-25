@@ -65,11 +65,9 @@ export function useAuth(): AuthState {
         fetchProfile(data.session.user.id);
       } else {
         console.log(
-          "[useAuth] No session found on mount — user needs to login",
+          "[useAuth] No session found — redirecting to welcome",
         );
-        setSessionReady(false);
-        setIsLoading(false);
-        setAuthLoading(false);
+        handleAuthFailure();
       }
     });
 
