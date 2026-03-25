@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { questService } from "@/src/business-logic/api/services/questService";
 import { useQuestManager } from "@/src/business-logic/hooks/useQuestManager";
 import { useStaminaSystem } from "@/src/business-logic/hooks/useStaminaSystem";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
@@ -179,7 +182,17 @@ export default function QuestDetailScreen() {
   const { stamina, status, isGated } = useStaminaSystem();
   const { dailyStats } = useUserStore();
 
-  const quest: Quest | undefined = quests.find((q) => q.quest_id === id);
+  // Fetch quest from server
+  const { data: serverQuest, isLoading } = useQuery({
+    queryKey: ["quest", id],
+    queryFn: () => questService.getById(id!),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Use server quest, fallback to local store
+  const localQuest = quests.find((q) => q.quest_id === id);
+  const quest = serverQuest ?? localQuest;
 
   const isCompleted = quest ? quest.completed_at !== null : false;
   const branchColor = quest
@@ -200,6 +213,16 @@ export default function QuestDetailScreen() {
     // Auto-navigate back after animations finish
     setTimeout(() => router.back(), 1200);
   }, [quest, isCompleted, completeQuest]);
+
+  if (isLoading && !quest) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+        <View style={styles.notFound}>
+          <ActivityIndicator size="large" color={colors.brandPrimary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!quest) {
     return (

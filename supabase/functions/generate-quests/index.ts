@@ -5,7 +5,12 @@ import {
   getSystemPrompt,
   getUserContext,
 } from "../_shared/prompt.ts";
-import { createServiceClient } from "../_shared/supabase.ts";
+import {
+  createServiceClient,
+  getUserFromRequest,
+  unauthorized,
+} from "../_shared/supabase.ts";
+import { GeneratedQuest } from "../_shared/types.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,14 +18,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id, branch } = await req.json();
+    // Verify JWT and get authenticated user
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) return unauthorized();
 
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: "user_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const user_id = authUser.id;
+    const { branch, node_id } = await req.json();
 
     // 1. Fetch system prompt
     const prompt = await getSystemPrompt("quest_generation");
@@ -43,8 +46,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Get current node in progress
+    // 3. Get node info if generating for a specific node
     const supabase = createServiceClient();
+    let targetNode = null;
+    if (node_id) {
+      const { data: node } = await supabase
+        .from("skill_nodes")
+        .select("node_id, branch, tier, title, description, quests_total")
+        .eq("node_id", node_id)
+        .single();
+      targetNode = node;
+    }
+
+    // 4. Get current node in progress
     const { data: currentNode } = await supabase
       .from("user_skill_nodes")
       .select("node_id, status")
@@ -53,29 +67,45 @@ Deno.serve(async (req) => {
       .limit(1)
       .single();
 
-    // 4. Fill prompt template
-    const targetBranch = branch ?? context.profile.primary_branch ?? "career";
+    // 5. Fill prompt template
+    const targetBranch =
+      targetNode?.branch ??
+      branch ??
+      context.profile.primary_branch ??
+      "career";
+    const localization = context.profile.localization || { language: "vi" };
     const filledPrompt = fillPromptTemplate(prompt.prompt, {
       branch: targetBranch,
+      language: localization.language,
       stamina: String(context.profile.stamina),
       level: String(context.profile.level),
       current_node: currentNode?.node_id ?? "none",
+      node_id: targetNode?.node_id ?? "none",
+      node_title: targetNode?.title ?? "none",
+      node_description: targetNode?.description ?? "none",
+      node_tier: String(targetNode?.tier ?? 1),
+      quests_needed: String(targetNode?.quests_total ?? 4),
       recent_quests: JSON.stringify(
         context.recentQuests.map((q) => q.quest_id),
       ),
     });
 
-    // 5. Generate with AI
+    // 6. Generate with AI
     const aiResponse = await generateWithAI(
       filledPrompt,
-      `Tạo nhiệm vụ hàng ngày cho nhánh ${targetBranch}.`,
+      targetNode
+        ? `Tạo ${targetNode.quests_total} nhiệm vụ cho node "${targetNode.title}" (nhánh ${targetBranch}). Language: ${localization.language}`
+        : `Tạo nhiệm vụ hàng ngày cho nhánh ${targetBranch}. Language: ${localization.language}`,
     );
 
-    const generatedQuests = parseAIResponse<unknown[]>(aiResponse);
+    const generatedQuests = parseAIResponse<{ quests: GeneratedQuest[] }>(
+      aiResponse,
+    );
 
-    // 6. Insert generated quests into quests table
-    const questsToInsert = (generatedQuests ?? []).map(
-      (q: Record<string, unknown>) => ({
+    // 7. Insert generated quests into quests table
+    const today = new Date().toISOString().split("T")[0];
+    const questsToInsert = (generatedQuests?.quests ?? []).map(
+      (q: GeneratedQuest) => ({
         quest_id: `gen_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
         title: q.title,
         description: q.description,
@@ -83,11 +113,38 @@ Deno.serve(async (req) => {
         difficulty: q.difficulty,
         duration_min: q.duration_min,
         xp_reward: q.xp_reward,
+        node_id: targetNode?.node_id ?? null,
       }),
     );
 
     if (questsToInsert.length > 0) {
-      await supabase.from("quests").insert(questsToInsert);
+      // Insert into quests table
+      const { error: insertError } = await supabase
+        .from("quests")
+        .insert(questsToInsert);
+
+      if (insertError) {
+        console.error("Failed to insert quests:", insertError);
+      }
+
+      // Also insert into user_quests to assign today
+      const userQuestsToInsert = questsToInsert.map((q) => ({
+        user_id: user_id,
+        quest_id: q.quest_id,
+        date: today,
+        xp_earned: q.xp_reward,
+        assigned: false,
+      }));
+
+      const { error: assignError } = await supabase
+        .from("user_quests")
+        .upsert(userQuestsToInsert, {
+          onConflict: "user_id,quest_id",
+        });
+
+      if (assignError) {
+        console.error("Failed to assign quests:", assignError);
+      }
     }
 
     return new Response(

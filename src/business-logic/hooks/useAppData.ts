@@ -33,7 +33,6 @@ function handleAuthError() {
  */
 export function useAppData() {
   const { user, isAuthenticated, isAuthLoading, sessionReady } = useUserStore();
-  console.log("🚀 ~ useAppData ~ isAuthenticated:", isAuthenticated);
   const { setNodes } = useSkillTreeStore();
   const { setDailyQuests } = useQuestStore();
   const { setChallenges } = useChallengeStore();

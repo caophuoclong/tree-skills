@@ -17,6 +17,7 @@ import { questService } from "@/src/business-logic/api/services/questService";
 import { useQuestStore } from "@/src/business-logic/stores/questStore";
 import { useSkillTreeStore } from "@/src/business-logic/stores/skillTreeStore";
 import type { Quest } from "@/src/business-logic/types";
+import { NeoBrutalBox } from "@/src/ui/atoms";
 import { useTheme } from "@/src/ui/tokens";
 
 const BRANCH_COLORS: Record<string, string> = {
@@ -56,6 +57,7 @@ export default function NodeDetailScreen() {
 
   const [nodeQuests, setNodeQuests] = useState<Quest[]>([]);
   const [loadingQuests, setLoadingQuests] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const node = nodes.find((n) => n.node_id === node_id) ?? null;
 
@@ -71,6 +73,22 @@ export default function NodeDetailScreen() {
 
   useEffect(() => { fetchQuests(); }, [fetchQuests]);
   useFocusEffect(useCallback(() => { fetchQuests(); }, [fetchQuests]));
+
+  // Generate quests for this node
+  const handleGenerate = async () => {
+    if (!node_id || generating) return;
+    setGenerating(true);
+    try {
+      const newQuests = await questService.generateForNode(node_id);
+      if (newQuests.length > 0) {
+        setNodeQuests((prev) => [...prev, ...newQuests]);
+      }
+    } catch (err) {
+      if (__DEV__) console.warn("[node-detail] generateForNode failed:", err);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   // Persist quest to DB + add to local store
   const handleAddToToday = async (quest: Quest) => {
@@ -287,9 +305,30 @@ export default function NodeDetailScreen() {
               {loadingQuests ? (
                 <ActivityIndicator size="small" color={branchColor} style={styles.loader} />
               ) : nodeQuests.length === 0 ? (
-                <Text style={[styles.emptyQuestsText, { color: colors.textMuted }]}>
-                  Không có nhiệm vụ nào
-                </Text>
+                <View style={styles.emptyState}>
+                  <Text style={[styles.emptyQuestsText, { color: colors.textMuted }]}>
+                    Chưa có nhiệm vụ nào cho node này
+                  </Text>
+                  <NeoBrutalBox
+                    borderColor={branchColor}
+                    backgroundColor={`${branchColor}22`}
+                    shadowColor={colors.textPrimary}
+                    shadowOffsetX={3}
+                    shadowOffsetY={3}
+                    borderWidth={2}
+                    borderRadius={12}
+                    onPress={generating ? undefined : handleGenerate}
+                    contentStyle={styles.generateBtnContent}
+                  >
+                    {generating ? (
+                      <ActivityIndicator size="small" color={branchColor} />
+                    ) : (
+                      <Text style={[styles.generateBtnText, { color: branchColor }]}>
+                        Tạo nhiệm vụ
+                      </Text>
+                    )}
+                  </NeoBrutalBox>
+                </View>
               ) : (
                 nodeQuests.map((quest) => {
                   const isCompleted = quest.completed_at !== null;
@@ -517,6 +556,22 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGrotesk-Regular",
     textAlign: "center",
     paddingVertical: 12,
+  },
+  emptyState: {
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 16,
+  },
+  generateBtnText: {
+    fontSize: 14,
+    fontFamily: "SpaceGrotesk-Bold",
+    fontWeight: "700",
+  },
+  generateBtnContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minWidth: 160,
+    alignItems: "center",
   },
   questRow: {
     flexDirection: "row",

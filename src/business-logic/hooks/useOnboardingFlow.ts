@@ -144,12 +144,9 @@ export function useOnboardingFlow() {
           console.log("[onboarding] Profile updated");
 
           // Fire and forget - don't wait for edge function
-          const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+          // JWT is automatically included by supabase.functions.invoke
           supabase.functions.invoke('onboarding-generate', {
-            body: { user_id: userId },
-            headers: {
-              'Authorization': `Bearer ${anonKey}`,
-            }
+            body: {},
           }).then(({ data, error }) => {
             console.log("[onboarding] Edge function result:", { data, error });
           }).catch((fnError) => {

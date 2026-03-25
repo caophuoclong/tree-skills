@@ -21,6 +21,45 @@ function dailyLimit(stamina: number): number {
 
 export const questService = {
   /**
+   * Get a single quest by ID from the server
+   */
+  async getById(questId: string): Promise<Quest | null> {
+    const userId = await getAuthUserId();
+    if (!userId) return null;
+
+    // Fetch quest details
+    const { data: questData, error: questError } = await supabase
+      .from("quests")
+      .select("quest_id, title, description, branch, difficulty, duration_min, xp_reward, node_id")
+      .eq("quest_id", questId)
+      .single();
+
+    if (questError || !questData) return null;
+
+    // Fetch completion status
+    const { data: userQuest } = await supabase
+      .from("user_quests")
+      .select("completed_at")
+      .eq("user_id", userId)
+      .eq("quest_id", questId)
+      .order("date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      quest_id: questData.quest_id,
+      title: questData.title,
+      description: questData.description,
+      branch: questData.branch as Quest["branch"],
+      difficulty: questData.difficulty as Quest["difficulty"],
+      duration_min: questData.duration_min as Quest["duration_min"],
+      xp_reward: questData.xp_reward as Quest["xp_reward"],
+      completed_at: userQuest?.completed_at ?? null,
+      node_id: questData.node_id ?? undefined,
+    };
+  },
+
+  /**
    * Get user's personalized daily quests
    * Only fetches quests from unlocked skill nodes
    */
@@ -326,5 +365,30 @@ export const questService = {
       .eq("user_id", userId)
       .eq("quest_id", questId)
       .is("completed_at", null);
+  },
+
+  /**
+   * Generate quests for a specific node via edge function
+   */
+  async generateForNode(nodeId: string): Promise<Quest[]> {
+    const { data, error } = await supabase.functions.invoke("generate-quests", {
+      body: { node_id: nodeId },
+    });
+    console.log("🚀 ~ error:", error);
+
+    if (error || !data?.data?.quests) return [];
+
+    // Return the generated quests
+    return data.data.quests.map((q: any) => ({
+      quest_id: q.quest_id,
+      title: q.title,
+      description: q.description,
+      branch: q.branch,
+      difficulty: q.difficulty,
+      duration_min: q.duration_min as Quest["duration_min"],
+      xp_reward: q.xp_reward as Quest["xp_reward"],
+      completed_at: null,
+      node_id: nodeId,
+    }));
   },
 };

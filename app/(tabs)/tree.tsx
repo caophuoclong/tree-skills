@@ -96,7 +96,6 @@ export default function TreeScreen() {
     nodeGoalMap,
   ]);
 
-  console.log("🚀 ~ TreeScreen ~ visibleNodes:", visibleNodes);
   const { placed, banners, totalHeight } = useTreeLayout(visibleNodes);
 
   // When goal filter is active, progress counts across all goal nodes (not just this branch)

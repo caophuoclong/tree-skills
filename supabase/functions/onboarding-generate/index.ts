@@ -1,8 +1,12 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { generateWithAILogged } from "../_shared/prompt-logger.ts";
 import { fillPromptTemplate, getSystemPrompt } from "../_shared/prompt.ts";
-import { createServiceClient } from "../_shared/supabase.ts";
-import { SystemPrompt } from "../_shared/types.ts";
+import {
+  createSupabaseClient,
+  getUserFromRequest,
+  unauthorized,
+} from "../_shared/supabase.ts";
+import { GeneratedQuest, SystemPrompt } from "../_shared/types.ts";
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -30,7 +34,7 @@ export async function filledPrompts({
   skillVariables: Record<string, string>;
   branch: Record<string, string>;
 }> {
-  const supabase = createServiceClient();
+  const supabase = createSupabaseClient(req);
 
   // 4. Fetch user's completed nodes
   const { data: userNodes } = await supabase
@@ -104,14 +108,6 @@ interface SkillNode {
   description: string;
   xp_required: number;
   quests_total: number;
-}
-
-interface GeneratedQuest {
-  title: string;
-  description: string;
-  difficulty: string;
-  duration_min: number;
-  xp_reward: number;
 }
 
 async function updateTracking(
@@ -311,17 +307,14 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const supabase = createServiceClient();
+  const supabase = createSupabaseClient(req);
 
   try {
-    const { user_id } = await req.json();
+    // Verify JWT and get authenticated user
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) return unauthorized();
 
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: "user_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const user_id = authUser.id;
 
     // Initialize tracking
     await supabase.from("generation_tracking").upsert(

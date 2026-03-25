@@ -34,7 +34,8 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); expo=d.get\\(''''expo'''',{}\\); print\\(''''plugins:'''', json.dumps\\(expo.get\\(''''plugins'''',[]\\), indent=2\\)\\); print\\(''''fonts:'''', expo.get\\(''''fonts''''\\)\\)\")",
       "Bash(find /Users/phuoclong/Code/Personal/life-skills/assets -name *.ttf -o -name *.otf)",
       "Bash(grep -r \"expo-font\\\\|loadFonts\\\\|withExpoFonts\" /Users/phuoclong/Code/Personal/life-skills/package.json /Users/phuoclong/Code/Personal/life-skills/app.json /Users/phuoclong/Code/Personal/life-skills/app.config.*)",
-      "Bash(node -e \"const f = require\\(''@expo-google-fonts/inter''\\); console.log\\(Object.keys\\(f\\).filter\\(k => k.includes\\(''Regular''\\) || k.includes\\(''SemiBold''\\) || k.includes\\(''Bold''\\) || k.includes\\(''ExtraBold''\\)\\).slice\\(0,10\\)\\)\")"
+      "Bash(node -e \"const f = require\\(''@expo-google-fonts/inter''\\); console.log\\(Object.keys\\(f\\).filter\\(k => k.includes\\(''Regular''\\) || k.includes\\(''SemiBold''\\) || k.includes\\(''Bold''\\) || k.includes\\(''ExtraBold''\\)\\).slice\\(0,10\\)\\)\")",
+      "WebFetch(domain:supabase.com)"
     ]
   }
 }

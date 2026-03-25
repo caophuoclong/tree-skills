@@ -3,8 +3,8 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { supabase } from "../api/supabase";
 import type { Tables } from "../api/supabase/database.types";
-import { useUserStore } from "../stores/userStore";
 import { computeLevel } from "../hooks/useXPEngine";
+import { useUserStore } from "../stores/userStore";
 
 type ProfileRow = Tables<"profiles">;
 
@@ -121,13 +121,11 @@ export function useAuth(): AuthState {
 
   async function fetchProfile(userId: string) {
     setIsLoading(true);
-    console.log("[useAuth] Fetching profile for user:", userId);
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
-    console.log("[useAuth] Profile fetch result:", { data, error });
     if (data && !error) {
       setProfile(data);
       // Recompute level from total_xp to ensure consistency

@@ -5,7 +5,11 @@ import {
   getSystemPrompt,
   getUserContext,
 } from "../_shared/prompt.ts";
-import { createServiceClient } from "../_shared/supabase.ts";
+import {
+  createSupabaseClient,
+  getUserFromRequest,
+  unauthorized,
+} from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,14 +17,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id } = await req.json();
+    // Verify JWT and get authenticated user
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) return unauthorized();
 
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: "user_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const user_id = authUser.id;
 
     // 1. Fetch system prompt
     const prompt = await getSystemPrompt("challenge_generation");
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
     const generatedChallenges = parseAIResponse<unknown[]>(aiResponse);
 
     // 6. Insert into challenges table
-    const supabase = createServiceClient();
+    const supabase = createSupabaseClient(req);
     const challengesToInsert = (generatedChallenges ?? []).map(
       (c: Record<string, unknown>) => ({
         id: `ch_gen_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,

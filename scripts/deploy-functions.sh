@@ -81,7 +81,6 @@ else
     "generate-skills"
     "generate-quests"
     "generate-challenges"
-    "analyze-assessment"
     "onboarding-generate"
   )
 
